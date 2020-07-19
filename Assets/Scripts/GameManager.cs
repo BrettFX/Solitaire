@@ -14,6 +14,14 @@ namespace Solitaire
             }
         }
 
+        public enum CardSuit
+        {
+            HEARTS,
+            DIAMONDS,
+            CLUBS,
+            SPADES
+        };
+
         /**
          * Ensure this class remains a singleton instance
          * */
