@@ -14,6 +14,8 @@ namespace Solitaire
             }
         }
 
+        public static bool DEBUG_MODE = true;
+
         public enum CardSuit
         {
             HEARTS,

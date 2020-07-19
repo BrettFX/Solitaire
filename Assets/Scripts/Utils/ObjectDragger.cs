@@ -9,18 +9,23 @@ namespace Solitaire
 
         void OnMouseDown()
         {
-            screenPoint = Camera.main.WorldToScreenPoint(gameObject.transform.position);
+            if (GameManager.DEBUG_MODE) { Debug.Log("Clicked on " + gameObject.name); }
 
-            offset = gameObject.transform.position - Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z));
+            screenPoint = Camera.main.WorldToScreenPoint(gameObject.transform.position);
+            Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
+            offset = gameObject.transform.position - Camera.main.ScreenToWorldPoint(curScreenPoint);
 
         }
 
         void OnMouseDrag()
         {
-            Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
-
-            Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
-            transform.position = curPosition;
+            // Only allow dragging cards
+            if (gameObject.tag.Equals("Card"))
+            {
+                Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
+                Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
+                transform.position = curPosition;
+            }
         }
     }
 }
