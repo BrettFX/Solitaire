@@ -28,6 +28,10 @@ namespace Solitaire
             {
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
+
+                // Set z-value to a large negative number so that the card that is being dragged always appears on top
+                curPosition.z = -50.0f;
+
                 transform.position = curPosition;
             }
         }
@@ -48,12 +52,15 @@ namespace Solitaire
 
                 // Validate the dragged location to determine if the card should be snapped back to original location
                 // or snapped to the respective target (e.g., attempted drag location)
-                bool collides = Physics.CheckSphere(curPosition, 5.0f);
+                //bool collides = Physics.CheckSphere(curPosition, 5.0f);
+                Vector3 collisionVector = new Vector3(10.0f, 10.0f, 1000.0f);
+                bool collides = Physics.CheckBox(curPosition, collisionVector);
                 bool valid = false;
 
                 if (collides)
                 {
-                    Collider[] hitColliders = Physics.OverlapSphere(curPosition, 5.0f);
+                    //Collider[] hitColliders = Physics.OverlapSphere(curPosition, 5.0f);
+                    Collider[] hitColliders = Physics.OverlapBox(curPosition, collisionVector);
                     int i = 0;
                     while (i < hitColliders.Length)
                     {
@@ -67,7 +74,7 @@ namespace Solitaire
                             Vector3 newPos = new Vector3(
                                 collidedTransform.position.x, 
                                 collidedTransform.position.y, 
-                                        transform.position.z
+                                                  startPos.z
                             );
 
                             transform.position = newPos;
