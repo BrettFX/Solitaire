@@ -38,7 +38,7 @@ namespace Solitaire
 
         private void OnMouseUp()
         {
-            // Only allow dragging cards
+            // Only process if it was a card being dragged
             if (gameObject.tag.Equals("Card"))
             {
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
@@ -80,6 +80,15 @@ namespace Solitaire
                             transform.position = newPos;
                             valid = true;
                             break;
+                        }
+                        else if (collidedTransform.tag.Equals("Card"))
+                        {
+                            // Offset y position by 30 so that the card that is below is still shown
+                            Vector3 newPos = new Vector3(
+                               collidedTransform.position.x,
+                               collidedTransform.position.y - 30.0f,
+                                                 startPos.z
+                           );
                         }
 
                         i++;
