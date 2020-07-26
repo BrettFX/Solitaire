@@ -32,7 +32,7 @@ namespace Solitaire
                         card.GetComponent<MeshCollider>().enabled = false;
                     }
 
-                    Debug.Log(GameManager.VALUE_REF[card.value] + " of " + card.suit);
+                    Debug.Log(card.transform.position + ": " + GameManager.VALUE_REF[card.value] + " of " + card.suit);
                 }
             }
         }

@@ -29,6 +29,12 @@ namespace Solitaire
             SPADES
         };
 
+        [Header("Set Up")]
+        public GameObject tableau;
+        public GameObject stock;
+        public GameObject talon;
+        public GameObject foundations;
+
         /**
          * Ensure this class remains a singleton instance
          * */
