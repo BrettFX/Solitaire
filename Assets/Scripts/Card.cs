@@ -7,17 +7,17 @@ namespace Solitaire
     {
         public int value;
         public CardSuit suit;
-        
-        // Start is called before the first frame update
-        void Start()
-        {
 
+        private bool m_stackable = true;
+
+        public void SetStackable(bool stackable)
+        {
+            m_stackable = stackable;
         }
 
-        // Update is called once per frame
-        void Update()
+        public bool IsStackable()
         {
-
+            return m_stackable;
         }
     }
 }

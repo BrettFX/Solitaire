@@ -29,6 +29,9 @@ namespace Solitaire
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
 
+                // Need to temporarily remove the game object from its stack so that snap manager can update cards in each stack
+                transform.parent = null;
+
                 // Set z-value to a large negative number so that the card that is being dragged always appears on top
                 curPosition.z = -50.0f;
 
@@ -74,8 +77,12 @@ namespace Solitaire
                             Vector3 newPos = new Vector3(
                                 collidedTransform.position.x, 
                                 collidedTransform.position.y, 
-                                                  startPos.z
+                                                       -1.0f
                             );
+
+                            // Add the card to the stack
+                            transform.parent = collidedTransform;
+                            Debug.Log("Set transform parent to " + transform.parent);
 
                             transform.position = newPos;
                             valid = true;
@@ -83,12 +90,37 @@ namespace Solitaire
                         }
                         else if (collidedTransform.tag.Equals("Card"))
                         {
-                            // Offset y position by 30 so that the card that is below is still shown
-                            Vector3 newPos = new Vector3(
-                               collidedTransform.position.x,
-                               collidedTransform.position.y - 30.0f,
-                                                 startPos.z
-                           );
+                            // Determine if the card was the same one that is being dragged/dropped
+                            if (collidedTransform.Equals(transform))
+                            {
+                                Debug.Log("Collided object is self, skippig...");
+                            }                            
+                            else
+                            {
+                                // Get the card object to determine if the respective card is stackable
+                                Card card = collidedTransform.GetComponent<Card>();
+                                if (!card.IsStackable())
+                                {
+                                    Debug.Log("Card is not stackable, skipping...");
+                                }
+                                else
+                                {
+                                    // Offset y position by 30 so that the card that is below is still shown
+                                    Vector3 newPos = new Vector3(
+                                        collidedTransform.position.x,
+                                        collidedTransform.position.y - 30.0f,
+                                        collidedTransform.position.z - 1.0f
+                                    );
+
+                                    // Add the card to the stack
+                                    transform.parent = collidedTransform.parent;
+                                    Debug.Log("Set transform parent to " + transform.parent);
+
+                                    transform.position = newPos;
+                                    valid = true;
+                                    break;
+                                }
+                            }
                         }
 
                         i++;
