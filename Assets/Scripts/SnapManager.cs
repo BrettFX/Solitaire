@@ -29,7 +29,9 @@ namespace Solitaire
                     // Need to turn off collision for all cards except for the last one in the stack
                     if (i != m_attachedCards.Length - 1)
                     {
-                        card.GetComponent<MeshCollider>().enabled = false;
+                        MeshCollider collider = card.GetComponent<MeshCollider>();
+                        if (collider.enabled)
+                            collider.enabled = false;
                     }
 
                     Debug.Log(card.transform.position + ": " + GameManager.VALUE_REF[card.value] + " of " + card.suit);
