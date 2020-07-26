@@ -16,6 +16,11 @@ namespace Solitaire
 
         public static bool DEBUG_MODE = true;
 
+        public static readonly string[] VALUE_REF =
+        {
+            "0", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"
+        };
+
         public enum CardSuit
         {
             HEARTS,
