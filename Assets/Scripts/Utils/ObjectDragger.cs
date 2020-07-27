@@ -9,6 +9,9 @@ namespace Solitaire
 
         private Vector3 startPos;
 
+        // Keep track of the cards that are currently being dragged (can be 1 or many at a time)
+        private Card[] m_draggedCards;
+
         void OnMouseDown()
         {
             if (GameManager.DEBUG_MODE) { Debug.Log("Clicked on " + gameObject.name); }
@@ -19,6 +22,13 @@ namespace Solitaire
 
             // Keep track of the starting position for future validation
             startPos = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
+
+            // If card, we need to get a list of the cards that are to be dragged (through the use of the Snap Manager)
+            if (gameObject.tag.Equals("Card"))
+            {
+                // TODO initialize the dragged cards list by referencing the set of cards that are attached to the
+                // respective snap that one or many cards are to be dragged from.
+            }
         }
 
         void OnMouseDrag()
