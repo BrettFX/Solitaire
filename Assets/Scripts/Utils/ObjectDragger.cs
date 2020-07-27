@@ -73,27 +73,36 @@ namespace Solitaire
                         // Snap to the snap location if there is one
                         if (collidedTransform.tag.Equals("Snap"))
                         {
-                            // Need to keep the original card's z value so it can be moved again once snapped
-                            Vector3 newPos = new Vector3(
-                                collidedTransform.position.x, 
-                                collidedTransform.position.y, 
-                                                       -1.0f
-                            );
+                            // Make sure there isn't already a card attached to the snap (otherwise need to search for card)
+                            SnapManager snapManager = collidedTransform.GetComponent<SnapManager>();
+                            if (snapManager.HasCard())
+                            {
+                                Debug.Log("Snap already has a card, skipping...");
+                            }
+                            else
+                            {
+                                // Need to keep the original card's z value so it can be moved again once snapped
+                                Vector3 newPos = new Vector3(
+                                    collidedTransform.position.x,
+                                    collidedTransform.position.y,
+                                                           -1.0f // Set to a z value of -1 for initial card in stack
+                                );
 
-                            // Add the card to the stack
-                            transform.parent = collidedTransform;
-                            Debug.Log("Set transform parent to " + transform.parent);
+                                // Add the card to the stack
+                                transform.parent = collidedTransform;
+                                Debug.Log("Set transform parent to " + transform.parent);
 
-                            transform.position = newPos;
-                            valid = true;
-                            break;
+                                transform.position = newPos;
+                                valid = true;
+                                break;
+                            }
                         }
                         else if (collidedTransform.tag.Equals("Card"))
                         {
                             // Determine if the card was the same one that is being dragged/dropped
                             if (collidedTransform.Equals(transform))
                             {
-                                Debug.Log("Collided object is self, skippig...");
+                                Debug.Log("Collided object is self, skipping...");
                             }                            
                             else
                             {

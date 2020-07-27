@@ -47,5 +47,10 @@ namespace Solitaire
                 }
             }
         }
+
+        public bool HasCard()
+        {
+            return m_attachedCards.Length != 0;
+        }
     }
 }
