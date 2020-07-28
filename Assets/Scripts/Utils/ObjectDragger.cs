@@ -28,6 +28,8 @@ namespace Solitaire
             {
                 // TODO initialize the dragged cards list by referencing the set of cards that are attached to the
                 // respective snap that one or many cards are to be dragged from.
+
+                m_draggedCards = GetComponentInParent<SnapManager>().GetCardSet(GetComponent<Card>());
             }
         }
 
@@ -40,12 +42,26 @@ namespace Solitaire
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
 
                 // Need to temporarily remove the game object from its stack so that snap manager can update cards in each stack
-                transform.parent = null;
+                //transform.parent = null;
 
                 // Set z-value to a large negative number so that the card that is being dragged always appears on top
                 curPosition.z = -50.0f;
 
-                transform.position = curPosition;
+                //transform.position = curPosition;
+
+                // Need to iterate the set of dragged cards and adjust the position accordingly
+                float yOffset = 30.0f;
+                int i = 0;
+                foreach (Card card in m_draggedCards)
+                {
+                    // Need to temporarily remove the game object from its stack so that snap manager can update cards in each stack
+                    card.transform.parent = null;
+
+                    Vector3 cardPosition = card.transform.position;
+                    Vector3 newCardPos = new Vector3(curPosition.x, curPosition.y - (yOffset * i), curPosition.z - i);
+                    card.transform.position = newCardPos;
+                    i++;
+                }
             }
         }
 
