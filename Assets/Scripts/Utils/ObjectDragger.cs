@@ -26,10 +26,16 @@ namespace Solitaire
             // If card, we need to get a list of the cards that are to be dragged (through the use of the Snap Manager)
             if (gameObject.tag.Equals("Card"))
             {
-                // TODO initialize the dragged cards list by referencing the set of cards that are attached to the
+                // Initialize the dragged cards list by referencing the set of cards that are attached to the
                 // respective snap that one or many cards are to be dragged from.
-
                 m_draggedCards = GetComponentInParent<SnapManager>().GetCardSet(GetComponent<Card>());
+
+                // Set each dragged card's start position and parent
+                foreach (Card card in m_draggedCards)
+                {
+                    card.SetStartPos(card.transform.position);
+                    card.SetStartParent(card.transform.parent);
+                }
             }
         }
 
@@ -165,7 +171,13 @@ namespace Solitaire
                 if (!valid)
                 {
                     // If the drag location is deemed invalid then we should snap back to starting position
-                    transform.position = startPos;
+                    // Need to iterate the list of dragged cards and set each card back to their respective 
+                    // starting position and starting parent
+                    foreach(Card card in m_draggedCards)
+                    {
+                        card.transform.position = card.GetStartPos();
+                        card.transform.parent = card.GetStartParent();
+                    }
                 }
             }
         }
