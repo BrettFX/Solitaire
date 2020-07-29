@@ -114,6 +114,8 @@ namespace Solitaire
                             }
                             else
                             {
+                                Debug.Log("Placing card(s) in: " + collidedTransform.parent.tag);
+
                                 // Set the new position relative to the snap, adjusting the z value appropriately
                                 Vector3 newPos = new Vector3(
                                     collidedTransform.position.x,
@@ -122,7 +124,17 @@ namespace Solitaire
                                 );
 
                                 // Need to iterate the set of dragged cards and adjust the position accordingly
-                                float yOffset = 30.0f;
+                                bool isFoundation = collidedTransform.parent.tag.Equals("Foundations");
+
+                                // Assert that there is only one card being placed if target is foundation
+                                if (isFoundation && m_draggedCards.Length > 1)
+                                {
+                                    Debug.Log("Cannot move more than one card at once to a foundation.");
+                                    valid = false;
+                                    break;
+                                }
+
+                                float yOffset = isFoundation ? 0.0f : 30.0f;
                                 int j = 0;
                                 foreach (Card card in m_draggedCards)
                                 {
@@ -160,15 +172,27 @@ namespace Solitaire
                                 }
                                 else
                                 {
+                                    Debug.Log("Placing card(s) in: " + collidedTransform.parent.parent.tag);
+                                    bool isFoundation = collidedTransform.parent.parent.tag.Equals("Foundations");
+
+                                    // Assert that there is only one card being placed if target is foundation
+                                    if (isFoundation && m_draggedCards.Length > 1)
+                                    {
+                                        Debug.Log("Cannot move more than one card at once to a foundation.");
+                                        valid = false;
+                                        break;
+                                    }
+
+                                    float yOffset = isFoundation ? 0.0f : 30.0f;
+
                                     // Offset y position by 30 so that the card that is below is still shown
                                     Vector3 newPos = new Vector3(
                                         collidedTransform.position.x,
-                                        collidedTransform.position.y - 30.0f,
+                                        collidedTransform.position.y - yOffset,
                                         collidedTransform.position.z - 1.0f
                                     );
 
                                     // Need to iterate the set of dragged cards and adjust the position accordingly
-                                    float yOffset = 30.0f;
                                     int j = 0;
                                     foreach (Card card in m_draggedCards)
                                     {
@@ -185,11 +209,6 @@ namespace Solitaire
                                         j++;
                                     }
 
-                                    // Add the card to the stack
-                                    //transform.parent = collidedTransform.parent;
-                                    //Debug.Log("Set transform parent to " + transform.parent);
-
-                                    //transform.position = newPos;
                                     valid = true;
                                     break;
                                 }
