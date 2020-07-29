@@ -31,10 +31,16 @@ namespace Solitaire
                 m_draggedCards = GetComponentInParent<SnapManager>().GetCardSet(GetComponent<Card>());
 
                 // Set each dragged card's start position and parent
+                int i = 0;
                 foreach (Card card in m_draggedCards)
                 {
                     card.SetStartPos(card.transform.position);
                     card.SetStartParent(card.transform.parent);
+
+                    // Temporarily disable the mesh collider for all cards except the first one in the set of dragged cards.
+                    if (i != 0)
+                        card.GetComponent<MeshCollider>().enabled = false;
+                    i++;
                 }
             }
         }
@@ -47,13 +53,8 @@ namespace Solitaire
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
 
-                // Need to temporarily remove the game object from its stack so that snap manager can update cards in each stack
-                //transform.parent = null;
-
                 // Set z-value to a large negative number so that the card that is being dragged always appears on top
                 curPosition.z = -50.0f;
-
-                //transform.position = curPosition;
 
                 // Need to iterate the set of dragged cards and adjust the position accordingly
                 float yOffset = 30.0f;
@@ -113,18 +114,31 @@ namespace Solitaire
                             }
                             else
                             {
-                                // Need to keep the original card's z value so it can be moved again once snapped
+                                // Set the new position relative to the snap, adjusting the z value appropriately
                                 Vector3 newPos = new Vector3(
                                     collidedTransform.position.x,
                                     collidedTransform.position.y,
                                                            -1.0f // Set to a z value of -1 for initial card in stack
                                 );
 
-                                // Add the card to the stack
-                                transform.parent = collidedTransform;
-                                Debug.Log("Set transform parent to " + transform.parent);
+                                // Need to iterate the set of dragged cards and adjust the position accordingly
+                                float yOffset = 30.0f;
+                                int j = 0;
+                                foreach (Card card in m_draggedCards)
+                                {
+                                    Vector3 cardPosition = card.transform.position;
+                                    Vector3 newCardPos = new Vector3(newPos.x, newPos.y - (yOffset * j), newPos.z - j);
+                                    card.transform.position = newCardPos;
 
-                                transform.position = newPos;
+                                    // Add the card to the stack
+                                    card.transform.parent = collidedTransform;
+
+                                    // Re-enable the mesh colliders on the cards
+                                    card.GetComponent<MeshCollider>().enabled = true;
+
+                                    j++;
+                                }
+
                                 valid = true;
                                 break;
                             }
@@ -139,8 +153,8 @@ namespace Solitaire
                             else
                             {
                                 // Get the card object to determine if the respective card is stackable
-                                Card card = collidedTransform.GetComponent<Card>();
-                                if (!card.IsStackable())
+                                Card targetCard = collidedTransform.GetComponent<Card>();
+                                if (!targetCard.IsStackable())
                                 {
                                     Debug.Log("Card is not stackable, skipping...");
                                 }
@@ -153,11 +167,29 @@ namespace Solitaire
                                         collidedTransform.position.z - 1.0f
                                     );
 
-                                    // Add the card to the stack
-                                    transform.parent = collidedTransform.parent;
-                                    Debug.Log("Set transform parent to " + transform.parent);
+                                    // Need to iterate the set of dragged cards and adjust the position accordingly
+                                    float yOffset = 30.0f;
+                                    int j = 0;
+                                    foreach (Card card in m_draggedCards)
+                                    {
+                                        Vector3 cardPosition = card.transform.position;
+                                        Vector3 newCardPos = new Vector3(newPos.x, newPos.y - (yOffset * j), newPos.z - j);
+                                        card.transform.position = newCardPos;
 
-                                    transform.position = newPos;
+                                        // Add the card to the stack (note that the parent is not the collided transform)
+                                        card.transform.parent = collidedTransform.parent;
+
+                                        // Re-enable the mesh colliders on the cards
+                                        card.GetComponent<MeshCollider>().enabled = true;
+
+                                        j++;
+                                    }
+
+                                    // Add the card to the stack
+                                    //transform.parent = collidedTransform.parent;
+                                    //Debug.Log("Set transform parent to " + transform.parent);
+
+                                    //transform.position = newPos;
                                     valid = true;
                                     break;
                                 }
@@ -177,6 +209,9 @@ namespace Solitaire
                     {
                         card.transform.position = card.GetStartPos();
                         card.transform.parent = card.GetStartParent();
+
+                        // Re-enable the mesh colliders on the cards
+                        card.GetComponent<MeshCollider>().enabled = true;
                     }
                 }
             }
