@@ -21,6 +21,11 @@ namespace Solitaire
             "0", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"
         };
 
+        public enum CardState
+        {
+            FACE_UP, FACE_DOWN
+        };
+
         public enum CardSuit
         {
             HEARTS,
@@ -34,6 +39,9 @@ namespace Solitaire
         public GameObject stock;
         public GameObject talon;
         public GameObject foundations;
+
+        [Header("Template")]
+        public GameObject cardPrefab;
 
         /**
          * Ensure this class remains a singleton instance
@@ -62,13 +70,38 @@ namespace Solitaire
         // Start is called before the first frame update
         void Start()
         {
-
+            SpawnStack();
         }
 
         // Update is called once per frame
         void Update()
         {
 
+        }
+
+        private void SpawnStack()
+        {
+            // Card spawn location is dependent on the location of the Stock parent
+            Transform stackTarget = stock.GetComponentInChildren<SnapManager>().GetComponent<Transform>();
+            Debug.Log("Stack target is " + stackTarget.tag + " at " + stackTarget.position);
+
+            // Generate the initial list of 52 cards first before shuffling
+            Card[] deck = new Card[52];
+            CardSuit[] cardSuits = new CardSuit[]
+            {
+                CardSuit.CLUBS, CardSuit.DIAMONDS, CardSuit.HEARTS, CardSuit.SPADES
+            };
+
+            for (int i = 0; i < 13; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    Card card = cardPrefab.GetComponent<Card>();
+                    card.value = i + 1;
+                    card.suit = cardSuits[j];
+                    Instantiate(cardPrefab, stackTarget.position, Quaternion.identity);
+                }
+            }
         }
     }
 }

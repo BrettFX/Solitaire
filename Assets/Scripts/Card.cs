@@ -5,6 +5,8 @@ namespace Solitaire
 {
     public class Card : MonoBehaviour
     {
+        public CardState currentState;
+
         public int value;
         public CardSuit suit;
 
