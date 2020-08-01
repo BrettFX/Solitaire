@@ -4,8 +4,6 @@ namespace Solitaire
 {
     public class ObjectDragger : MonoBehaviour
     {
-        private const float SPEED = 500.0f;
-
         private Vector3 screenPoint;
         private Vector3 offset;
 
@@ -15,33 +13,6 @@ namespace Solitaire
         private Card[] m_draggedCards;
 
         private int m_clickCount = 0;
-
-        private bool m_translating = false;
-        private Vector3 m_targetTranslatePos;
-
-        private void Start()
-        {
-            m_targetTranslatePos = GameManager.Instance.GetTalonPileLocation();
-        }
-
-        // Only used for dynamic card translation animations
-        private void Update()
-        {
-            if (m_translating)
-            {
-                gameObject.transform.position = Vector3.MoveTowards(
-                    gameObject.transform.position,
-                    m_targetTranslatePos,
-                    SPEED * Time.deltaTime
-                );
-
-                // Stop translating once the x and y values match the translation target
-                m_translating = !(
-                    gameObject.transform.position.x == m_targetTranslatePos.x && 
-                    gameObject.transform.position.y == m_targetTranslatePos.y
-                );
-            }
-        }
 
         void OnMouseDown()
         {
@@ -111,6 +82,9 @@ namespace Solitaire
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
 
+                Card cardOfInterest = gameObject.GetComponent<Card>();
+                string cardParentSetTag = cardOfInterest.GetStartParent().parent.tag;
+
                 if (GameManager.DEBUG_MODE)
                 {
                     Debug.Log("Stopped dragging at: " + curPosition);
@@ -120,25 +94,22 @@ namespace Solitaire
                 // Mouse up will be determined as a click if the current position is the same as the start position
                 if (curPosition.Equals(startPos))
                 {
-                    Card card = gameObject.GetComponent<Card>();
-
-                    if (card.GetStartParent().parent.tag.Equals("Stock"))
+                    if (cardParentSetTag.Equals("Stock"))
                     {
                         m_clickCount++;
                         Debug.Log("Click count: " + m_clickCount);
 
-                        // TEST: Play the respective card's flip animation
-                        card.SetFlipped(!card.IsFlipped());
-
-                        Debug.Log("Card belongs to: " + card.GetStartParent().parent.tag);
-
-                        Animator animator = gameObject.GetComponent<Animator>();
-                        animator.SetTrigger(card.IsFlipped() ? "FlipForward" : "FlipBackward");
-
-                        Debug.Log("Translating to: " + m_targetTranslatePos);
-                        m_translating = true;
+                        // Move the card to the talon pile once it has been clicked on the stock
+                        cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
                     }
 
+                    return;
+                }
+
+                // Don't allow dropping dragged cards in prohibited locations
+                if (GameManager.PROHIBITED_DROP_LOCATIONS.Contains(cardParentSetTag))
+                {
+                    Debug.Log("Can't manually drop card in " + cardParentSetTag);
                     return;
                 }
 

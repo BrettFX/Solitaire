@@ -16,9 +16,17 @@ namespace Solitaire
 
         public static bool DEBUG_MODE = true;
 
+        // Control the speed that cards are moved from one point to the next
+        public const float CARD_TRANSLATION_SPEED = 500.0f;
+
         public static readonly string[] VALUE_REF =
         {
             "0", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"
+        };
+
+        public static readonly HashSet<string> PROHIBITED_DROP_LOCATIONS = new HashSet<string>
+        {
+            "Stock", "Tableau"
         };
 
         public enum CardState
@@ -43,7 +51,7 @@ namespace Solitaire
         [Header("Template")]
         public GameObject cardPrefab;
 
-        private Vector3 m_talonPileLocation;
+        private Transform m_talonPile;
 
         /**
          * Ensure this class remains a singleton instance
@@ -72,8 +80,7 @@ namespace Solitaire
         // Start is called before the first frame update
         void Start()
         {
-            SnapManager snapManager = talon.GetComponentInChildren<SnapManager>();
-            m_talonPileLocation = snapManager.transform.position;
+            m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
             SpawnStack();
         }
 
@@ -83,9 +90,9 @@ namespace Solitaire
 
         }
 
-        public Vector3 GetTalonPileLocation()
+        public Transform GetTalonPile()
         {
-            return m_talonPileLocation;
+            return m_talonPile;
         }
 
         private void SpawnStack()

@@ -34,7 +34,32 @@ namespace Solitaire
 
                     // Need to set each card as non-stackable except for the last one in the stack
                     card.SetStackable(i == m_attachedCards.Length - 1);
+
+                    // TODO consider normalizing the positons to ensure that the y and z values
+                    // are consistent for each card in the stack
+
                 }
+            }
+        }
+
+        /**
+         * Iterate through the list of cards attached to this snap and normalize
+         * the z-value of the positions to ensure that each card is properly stacked on
+         * one another. The purpose of this function is to set things back to normal after
+         * animations.
+         */
+        public void NormalizeCardPositions()
+        {
+            int zOffset = 1;
+            foreach (Card card in m_attachedCards)
+            {
+                card.transform.position = new Vector3(
+                    card.transform.position.x,
+                    card.transform.position.y,
+                    -zOffset
+                );
+
+                zOffset++;
             }
         }
 
