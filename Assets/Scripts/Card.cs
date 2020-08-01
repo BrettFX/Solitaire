@@ -11,6 +11,7 @@ namespace Solitaire
         public CardSuit suit;
 
         private bool m_stackable = true;
+        private bool m_flipped = false;
         private Vector3 m_startPos;
         private Transform m_startParent;
 
@@ -42,6 +43,17 @@ namespace Solitaire
         public Transform GetStartParent()
         {
             return m_startParent;
+        }
+
+        public bool IsFlipped()
+        {
+            return m_flipped;
+        }
+
+        public void SetFlipped(bool flip)
+        {
+            m_flipped = flip;
+            currentState = m_flipped ? CardState.FACE_DOWN : CardState.FACE_UP;
         }
     }
 }

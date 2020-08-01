@@ -43,6 +43,8 @@ namespace Solitaire
         [Header("Template")]
         public GameObject cardPrefab;
 
+        private Vector3 m_talonPileLocation;
+
         /**
          * Ensure this class remains a singleton instance
          * */
@@ -70,6 +72,8 @@ namespace Solitaire
         // Start is called before the first frame update
         void Start()
         {
+            SnapManager snapManager = talon.GetComponentInChildren<SnapManager>();
+            m_talonPileLocation = snapManager.transform.position;
             SpawnStack();
         }
 
@@ -77,6 +81,11 @@ namespace Solitaire
         void Update()
         {
 
+        }
+
+        public Vector3 GetTalonPileLocation()
+        {
+            return m_talonPileLocation;
         }
 
         private void SpawnStack()
@@ -92,6 +101,7 @@ namespace Solitaire
                 CardSuit.CLUBS, CardSuit.DIAMONDS, CardSuit.HEARTS, CardSuit.SPADES
             };
 
+            int zOffset = 1;
             for (int i = 0; i < 13; i++)
             {
                 for (int j = 0; j < 4; j++)
@@ -99,7 +109,19 @@ namespace Solitaire
                     Card card = cardPrefab.GetComponent<Card>();
                     card.value = i + 1;
                     card.suit = cardSuits[j];
-                    Instantiate(cardPrefab, stackTarget.position, Quaternion.identity);
+                    Vector3 posOffset = new Vector3(
+                        stackTarget.position.x,
+                        stackTarget.position.y,
+                        stackTarget.position.z - zOffset
+                    );
+
+                    // Spawn the card and add it to the stock
+                    GameObject spawnedCard = Instantiate(cardPrefab, posOffset, Quaternion.identity);
+                    Vector3 rot = spawnedCard.transform.eulerAngles;
+                    rot = new Vector3(rot.x, rot.y + 180, rot.z);
+                    spawnedCard.transform.rotation = Quaternion.Euler(rot);
+                    spawnedCard.transform.parent = stackTarget;
+                    zOffset++;
                 }
             }
         }

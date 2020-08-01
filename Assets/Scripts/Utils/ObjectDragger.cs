@@ -4,6 +4,8 @@ namespace Solitaire
 {
     public class ObjectDragger : MonoBehaviour
     {
+        private const float SPEED = 500.0f;
+
         private Vector3 screenPoint;
         private Vector3 offset;
 
@@ -11,6 +13,35 @@ namespace Solitaire
 
         // Keep track of the cards that are currently being dragged (can be 1 or many at a time)
         private Card[] m_draggedCards;
+
+        private int m_clickCount = 0;
+
+        private bool m_translating = false;
+        private Vector3 m_targetTranslatePos;
+
+        private void Start()
+        {
+            m_targetTranslatePos = GameManager.Instance.GetTalonPileLocation();
+        }
+
+        // Only used for dynamic card translation animations
+        private void Update()
+        {
+            if (m_translating)
+            {
+                gameObject.transform.position = Vector3.MoveTowards(
+                    gameObject.transform.position,
+                    m_targetTranslatePos,
+                    SPEED * Time.deltaTime
+                );
+
+                // Stop translating once the x and y values match the translation target
+                m_translating = !(
+                    gameObject.transform.position.x == m_targetTranslatePos.x && 
+                    gameObject.transform.position.y == m_targetTranslatePos.y
+                );
+            }
+        }
 
         void OnMouseDown()
         {
@@ -84,6 +115,31 @@ namespace Solitaire
                 {
                     Debug.Log("Stopped dragging at: " + curPosition);
                     Debug.Log("Starting point was: " + startPos);
+                }
+
+                // Mouse up will be determined as a click if the current position is the same as the start position
+                if (curPosition.Equals(startPos))
+                {
+                    Card card = gameObject.GetComponent<Card>();
+
+                    if (card.GetStartParent().parent.tag.Equals("Stock"))
+                    {
+                        m_clickCount++;
+                        Debug.Log("Click count: " + m_clickCount);
+
+                        // TEST: Play the respective card's flip animation
+                        card.SetFlipped(!card.IsFlipped());
+
+                        Debug.Log("Card belongs to: " + card.GetStartParent().parent.tag);
+
+                        Animator animator = gameObject.GetComponent<Animator>();
+                        animator.SetTrigger(card.IsFlipped() ? "FlipForward" : "FlipBackward");
+
+                        Debug.Log("Translating to: " + m_targetTranslatePos);
+                        m_translating = true;
+                    }
+
+                    return;
                 }
 
                 // Validate the dragged location to determine if the card should be snapped back to original location

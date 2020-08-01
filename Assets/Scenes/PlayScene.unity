@@ -963,7 +963,7 @@ PrefabInstance:
     - target: {fileID: 8276857029497463385, guid: b12f8b8b6577c244890a4f64d59f2dc6,
         type: 3}
       propertyPath: m_Name
-      value: Pile 1
+      value: Talon Pile
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b12f8b8b6577c244890a4f64d59f2dc6, type: 3}
@@ -1292,7 +1292,7 @@ PrefabInstance:
     - target: {fileID: 3671427380648830252, guid: 89122728123be5b4ab9ba1cda28008f1,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -2.820513
+      value: -2.8205132
       objectReference: {fileID: 0}
     - target: {fileID: 3671427380648830252, guid: 89122728123be5b4ab9ba1cda28008f1,
         type: 3}
@@ -1647,6 +1647,11 @@ PrefabInstance:
       value: 
       objectReference: {fileID: -5121338850117761611, guid: ed9f0eddf051d314cb25423c3e1f2d9a,
         type: 3}
+    - target: {fileID: 5263716625021561995, guid: 89122728123be5b4ab9ba1cda28008f1,
+        type: 3}
+      propertyPath: talonPile
+      value: 
+      objectReference: {fileID: 1528228473}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 89122728123be5b4ab9ba1cda28008f1, type: 3}
 --- !u!1001 &1066207688
@@ -1679,7 +1684,7 @@ PrefabInstance:
     - target: {fileID: 3671427380648830252, guid: 89122728123be5b4ab9ba1cda28008f1,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.7948719
+      value: -1.794872
       objectReference: {fileID: 0}
     - target: {fileID: 3671427380648830252, guid: 89122728123be5b4ab9ba1cda28008f1,
         type: 3}
@@ -2164,6 +2169,12 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1520938846}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1528228473 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8276857029497463385, guid: b12f8b8b6577c244890a4f64d59f2dc6,
+    type: 3}
+  m_PrefabInstance: {fileID: 667503965}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1582103411
 GameObject:
   m_ObjectHideFlags: 0
@@ -2558,7 +2569,7 @@ PrefabInstance:
     - target: {fileID: 3671427380648830252, guid: 89122728123be5b4ab9ba1cda28008f1,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -2.3076925
+      value: -2.3076928
       objectReference: {fileID: 0}
     - target: {fileID: 3671427380648830252, guid: 89122728123be5b4ab9ba1cda28008f1,
         type: 3}
@@ -2871,6 +2882,8 @@ MonoBehaviour:
   stock: {fileID: 106844950}
   talon: {fileID: 910336326}
   foundations: {fileID: 1582103411}
+  cardPrefab: {fileID: 3671427380648830263, guid: 89122728123be5b4ab9ba1cda28008f1,
+    type: 3}
 --- !u!4 &2113728848
 Transform:
   m_ObjectHideFlags: 0
