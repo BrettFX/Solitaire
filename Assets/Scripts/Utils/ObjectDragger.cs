@@ -56,7 +56,7 @@ namespace Solitaire
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
 
                 // Set z-value to a large negative number so that the card that is being dragged always appears on top
-                curPosition.z = -50.0f;
+                curPosition.z = -GameManager.Z_OFFSET;
 
                 // Need to iterate the set of dragged cards and adjust the position accordingly
                 float yOffset = 30.0f;

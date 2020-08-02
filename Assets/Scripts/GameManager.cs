@@ -19,6 +19,8 @@ namespace Solitaire
         // Control the speed that cards are moved from one point to the next
         public const float CARD_TRANSLATION_SPEED = 500.0f;
 
+        public const float Z_OFFSET = 60.0f;
+
         public static readonly string[] VALUE_REF =
         {
             "0", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"
@@ -124,9 +126,9 @@ namespace Solitaire
 
                     // Spawn the card and add it to the stock
                     GameObject spawnedCard = Instantiate(cardPrefab, posOffset, Quaternion.identity);
-                    Vector3 rot = spawnedCard.transform.eulerAngles;
-                    rot = new Vector3(rot.x, rot.y + 180, rot.z);
-                    spawnedCard.transform.rotation = Quaternion.Euler(rot);
+                    //Vector3 rot = spawnedCard.transform.eulerAngles;
+                    //rot = new Vector3(rot.x, rot.y + 180, rot.z);
+                    //spawnedCard.transform.rotation = Quaternion.Euler(rot);
                     spawnedCard.transform.parent = stackTarget;
                     zOffset++;
                 }

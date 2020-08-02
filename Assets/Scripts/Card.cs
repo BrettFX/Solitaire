@@ -41,17 +41,17 @@ namespace Solitaire
                 if (!m_translating)
                 {
                     // Set the z-value to high value to prevent clipping
-                    transform.position = new Vector3(transform.position.x, transform.position.y, -50);
+                    transform.position = new Vector3(transform.position.x, transform.position.y, -Z_OFFSET);
 
                     // Play the respective card's flip animation
                     Animator animator = gameObject.GetComponent<Animator>();
                     animator.SetTrigger(m_flipped ? "FlipForward" : "FlipBackward");
 
                     // Put the z value of the card to it's original z-value after the animation completes
-                    //transform.position = new Vector3(transform.position.x, transform.position.y, m_startPos.z);
+                    transform.position = new Vector3(transform.position.x, transform.position.y, m_startPos.z);
 
                     // Place the card in the respective snap parent
-                    //transform.parent = m_targetTranslateSnap;
+                    transform.parent = m_targetTranslateSnap;
                 }
             }
         }
