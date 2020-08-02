@@ -26,7 +26,7 @@ namespace Solitaire
 
         public static readonly HashSet<string> PROHIBITED_DROP_LOCATIONS = new HashSet<string>
         {
-            "Stock", "Tableau"
+            "Stock", "Talon"
         };
 
         public enum CardState

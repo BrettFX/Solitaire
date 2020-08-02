@@ -82,9 +82,6 @@ namespace Solitaire
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
 
-                Card cardOfInterest = gameObject.GetComponent<Card>();
-                string cardParentSetTag = cardOfInterest.GetStartParent().parent.tag;
-
                 if (GameManager.DEBUG_MODE)
                 {
                     Debug.Log("Stopped dragging at: " + curPosition);
@@ -94,6 +91,9 @@ namespace Solitaire
                 // Mouse up will be determined as a click if the current position is the same as the start position
                 if (curPosition.Equals(startPos))
                 {
+                    Card cardOfInterest = gameObject.GetComponent<Card>();
+                    string cardParentSetTag = cardOfInterest.GetStartParent().parent.tag;
+
                     if (cardParentSetTag.Equals("Stock"))
                     {
                         m_clickCount++;
@@ -106,20 +106,13 @@ namespace Solitaire
                     return;
                 }
 
-                // Don't allow dropping dragged cards in prohibited locations
-                if (GameManager.PROHIBITED_DROP_LOCATIONS.Contains(cardParentSetTag))
-                {
-                    Debug.Log("Can't manually drop card in " + cardParentSetTag);
-                    return;
-                }
-
                 // Validate the dragged location to determine if the card should be snapped back to original location
                 // or snapped to the respective target (e.g., attempted drag location)
                 //bool collides = Physics.CheckSphere(curPosition, 5.0f);
                 Vector3 collisionVector = new Vector3(10.0f, 10.0f, 1000.0f);
                 bool collides = Physics.CheckBox(curPosition, collisionVector);
                 bool valid = false;
-
+                
                 if (collides)
                 {
                     //Collider[] hitColliders = Physics.OverlapSphere(curPosition, 5.0f);
@@ -133,6 +126,14 @@ namespace Solitaire
                         // Snap to the snap location if there is one
                         if (collidedTransform.tag.Equals("Snap"))
                         {
+                            // Don't allow dropping dragged cards in prohibited locations
+                            if (GameManager.PROHIBITED_DROP_LOCATIONS.Contains(collidedTransform.parent.tag))
+                            {
+                                Debug.Log("Can't manually drop card in " + collidedTransform.parent.tag);
+                                valid = false;
+                                break;
+                            }
+
                             // Make sure there isn't already a card attached to the snap (otherwise need to search for card)
                             SnapManager snapManager = collidedTransform.GetComponent<SnapManager>();
                             if (snapManager.HasCard())
