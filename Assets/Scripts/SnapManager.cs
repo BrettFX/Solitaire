@@ -7,22 +7,11 @@ namespace Solitaire
     {
         private Card[] m_attachedCards;
 
-        // Start is called before the first frame update
-        void Start()
-        {
-            
-        }
-
         // Update is called once per frame
         void Update()
         {
             // Keep the list of attached cards updated
             m_attachedCards = gameObject.GetComponentsInChildren<Card>();
-
-            //if (m_attachedCards.Length == 0)
-            //{
-            //    Debug.Log("No cards attached to " + gameObject.name);
-            //}
 
             // Determine if there are some attached cards
             if (m_attachedCards.Length > 0)
@@ -35,31 +24,17 @@ namespace Solitaire
                     // Need to set each card as non-stackable except for the last one in the stack
                     card.SetStackable(i == m_attachedCards.Length - 1);
 
-                    // TODO consider normalizing the positons to ensure that the y and z values
-                    // are consistent for each card in the stack
+                    // Normalize z-pos to ensure thatz values are consistent for each card in the stack
+                    if (card.transform.position.z != -i)
+                    {
+                        card.transform.position = new Vector3(
+                            card.transform.position.x,
+                            card.transform.position.y,
+                            -i
+                        );
+                    }
 
                 }
-            }
-        }
-
-        /**
-         * Iterate through the list of cards attached to this snap and normalize
-         * the z-value of the positions to ensure that each card is properly stacked on
-         * one another. The purpose of this function is to set things back to normal after
-         * animations.
-         */
-        public void NormalizeCardPositions()
-        {
-            int zOffset = 1;
-            foreach (Card card in m_attachedCards)
-            {
-                card.transform.position = new Vector3(
-                    card.transform.position.x,
-                    card.transform.position.y,
-                    -zOffset
-                );
-
-                zOffset++;
             }
         }
 

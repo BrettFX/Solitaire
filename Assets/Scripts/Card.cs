@@ -40,15 +40,12 @@ namespace Solitaire
                 // Perform final steps after translation is complete
                 if (!m_translating)
                 {
-                    // Set the z-value to high value to prevent clipping
-                    transform.position = new Vector3(transform.position.x, transform.position.y, -Z_OFFSET);
-
-                    // Play the respective card's flip animation
-                    Animator animator = gameObject.GetComponent<Animator>();
-                    animator.SetTrigger(m_flipped ? "FlipForward" : "FlipBackward");
-
-                    // Put the z value of the card to it's original z-value after the animation completes
-                    transform.position = new Vector3(transform.position.x, transform.position.y, m_startPos.z);
+                    // Need to temporarily disable mesh collider and remove from parent when doing rotation
+                    MeshCollider meshCollider = gameObject.GetComponent<MeshCollider>();
+                    meshCollider.enabled = false;
+                    
+                    transform.rotation = Quaternion.Euler(0, 180, 0);   // Flip the card 180 degrees about the y axis
+                    meshCollider.enabled = true;                        // Re-enable the mesh collider
 
                     // Place the card in the respective snap parent
                     transform.parent = m_targetTranslateSnap;
@@ -56,6 +53,10 @@ namespace Solitaire
             }
         }
 
+        /**
+         * Move this card to specified the target snap transform
+         * @param Transform snap the target snap transform to move this card to
+         */
         public void MoveTo(Transform snap)
         {
             m_targetTranslateSnap = snap;
@@ -63,10 +64,15 @@ namespace Solitaire
             m_startPos = transform.position;
             m_flipped = !m_flipped;
 
-            Debug.Log("Card belongs to: " + m_startParent.parent.tag);
-            Debug.Log("Translating to: " + m_targetTranslatePos);
-
-            m_translating = true;
+            // Set the z-value of the transform to move to be high enough to hover over all other cards
+            transform.position = new Vector3(
+                transform.position.x,
+                transform.position.y,
+                -Z_OFFSET
+            );
+           
+            transform.parent = null;     // Temporarily detatch from the parent
+            m_translating = true;        // Begin the translating animation
         }
 
         public void SetStackable(bool stackable)
