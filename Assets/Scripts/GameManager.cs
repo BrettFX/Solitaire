@@ -41,7 +41,8 @@ namespace Solitaire
             HEARTS,
             DIAMONDS,
             CLUBS,
-            SPADES
+            SPADES,
+            NONE
         };
 
         [Header("Set Up")]
@@ -52,6 +53,9 @@ namespace Solitaire
 
         [Header("Template")]
         public GameObject cardPrefab;
+
+        private Sprite[] m_cardSprites;
+        private Dictionary<CardSuit, Sprite[]> m_cardSpritesMap;
 
         private Transform m_talonPile;
 
@@ -83,6 +87,7 @@ namespace Solitaire
         void Start()
         {
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
+            LoadCardSprites();
             SpawnStack();
         }
 
@@ -97,6 +102,65 @@ namespace Solitaire
             return m_talonPile;
         }
 
+        private void LoadCardSprites()
+        {
+            // Load the card sprites from resources
+            m_cardSprites = Resources.LoadAll<Sprite>("Sprites/playing_cards_spritesheet_01");
+            Debug.Log("Loaded " + m_cardSprites.Length + " card sprites...");
+            m_cardSpritesMap = new Dictionary<CardSuit, Sprite[]>();
+            for (int i = 0; i < 52; i++)
+            {
+                if (i == m_cardSprites.Length)
+                {
+                    break;
+                }
+
+                Sprite sprite = m_cardSprites[i];
+                string[] tokens = sprite.name.Split('_');
+                int value = int.Parse(tokens[0]);
+                string suitString = tokens[1];
+                CardSuit suit;
+
+                // Only process when value is between 0 and length of the card sprites
+                if ((value - 1) < m_cardSprites.Length && (value - 1) >= 0)
+                {
+                    switch (suitString)
+                    {
+                        case "HEARTS":
+                            suit = CardSuit.HEARTS;
+                            break;
+                        case "DIAMONDS":
+                            suit = CardSuit.DIAMONDS;
+                            break;
+                        case "CLUBS":
+                            suit = CardSuit.CLUBS;
+                            break;
+                        case "SPADES":
+                            suit = CardSuit.SPADES;
+                            break;
+                        default:
+                            suit = CardSuit.NONE;
+                            break;
+                    }
+
+                    // Create the suit entry if it doesn't exist
+                    if (!m_cardSpritesMap.ContainsKey(suit))
+                    {
+                        // 13 cards per suit
+                        m_cardSpritesMap.Add(suit, new Sprite[13]);
+                    }
+
+                    // Value is not zero-indexed so we have to compensate for that
+                    // Add the sprite to the respective suit entry and array slot
+                    m_cardSpritesMap[suit][value - 1] = sprite;
+                }
+                else
+                {
+                    Debug.Log("Skipping sprite: " + sprite.name);
+                }
+            }
+        }
+
         private void SpawnStack()
         {
             // Card spawn location is dependent on the location of the Stock parent
@@ -107,17 +171,34 @@ namespace Solitaire
             Card[] deck = new Card[52];
             CardSuit[] cardSuits = new CardSuit[]
             {
-                CardSuit.CLUBS, CardSuit.DIAMONDS, CardSuit.HEARTS, CardSuit.SPADES
+                CardSuit.HEARTS, CardSuit.DIAMONDS, CardSuit.CLUBS, CardSuit.SPADES
             };
 
             int zOffset = 1;
-            for (int i = 0; i < 13; i++)
+            for (int i = 0; i < 4; i++)
             {
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < 13; j++)
                 {
                     Card card = cardPrefab.GetComponent<Card>();
-                    card.value = i + 1;
-                    card.suit = cardSuits[j];
+                    card.value = j + 1;
+                    card.suit = cardSuits[i]; // Purposefully using 'i' to cycle through all cards before changing suit
+
+                    // Set the card front face based on the respective card and suit
+                    // Need to get object representing the front of the card
+                    Transform cardTransform = card.transform;
+                    int k = 0;
+                    for (; k < cardTransform.childCount; k++)
+                    {
+                        if (cardTransform.GetChild(k).tag.Equals("Front"))
+                            break;
+                    }
+
+                    // Get the sprite renderer for the current front face of this card
+                    SpriteRenderer cardSprite = card.transform.GetChild(k).GetComponent<SpriteRenderer>();
+
+                    // Set the sprite for the front face
+                    cardSprite.sprite = m_cardSpritesMap[card.suit][card.value - 1];
+
                     Vector3 posOffset = new Vector3(
                         stackTarget.position.x,
                         stackTarget.position.y,
@@ -133,6 +214,9 @@ namespace Solitaire
                     //spawnedCard.transform.Rotate(rot);
                     //spawnedCard.transform.Rotate(Vector3.up, 90, Space.Self);
                     spawnedCard.transform.parent = stackTarget;
+
+                    // Add the card to the deck
+                    deck[zOffset - 1] = card;
                     zOffset++;
                 }
             }

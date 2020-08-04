@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3671427380421192090}
   m_Layer: 0
   m_Name: Front
-  m_TagString: Back
+  m_TagString: Front
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -70,7 +70,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -432776200609870204, guid: ed9f0eddf051d314cb25423c3e1f2d9a,
+  m_Sprite: {fileID: 7712930728382904679, guid: e8e99a41639f14cf6b87b6c22da211d3,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -239,7 +239,7 @@ GameObject:
   - component: {fileID: 3671427381797332325}
   m_Layer: 0
   m_Name: Back
-  m_TagString: Front
+  m_TagString: Back
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -297,7 +297,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -6702691834896040362, guid: ed9f0eddf051d314cb25423c3e1f2d9a,
+  m_Sprite: {fileID: 1990159062087516468, guid: e8e99a41639f14cf6b87b6c22da211d3,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
