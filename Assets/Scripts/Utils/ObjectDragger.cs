@@ -26,7 +26,7 @@ namespace Solitaire
             startPos = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
 
             // If card, we need to get a list of the cards that are to be dragged (through the use of the Snap Manager)
-            if (gameObject.tag.Equals("Card"))
+            if (gameObject.CompareTag("Card"))
             {
                 // Initialize the dragged cards list by referencing the set of cards that are attached to the
                 // respective snap that one or many cards are to be dragged from.
@@ -77,7 +77,7 @@ namespace Solitaire
         private void OnMouseUp()
         {
             // Only process if it was a card being dragged
-            if (gameObject.tag.Equals("Card"))
+            if (gameObject.CompareTag("Card") || gameObject.CompareTag("Snap"))
             {
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
@@ -91,16 +91,28 @@ namespace Solitaire
                 // Mouse up will be determined as a click if the current position is the same as the start position
                 if (curPosition.Equals(startPos))
                 {
-                    Card cardOfInterest = gameObject.GetComponent<Card>();
-                    string cardParentSetTag = cardOfInterest.GetStartParent().parent.tag;
-
-                    if (cardParentSetTag.Equals("Stock"))
+                    if (gameObject.tag.Equals("Snap"))
                     {
-                        m_clickCount++;
-                        Debug.Log("Click count: " + m_clickCount);
+                        if (transform.parent.CompareTag("Stock"))
+                        {
+                            // Only way to get to this point is if the stock was clicked and there are no cards on it
+                            // TODO transfer all cards attached to talon back to stock
+                            Debug.Log("Clicked on empty stock");
+                        }
+                    }
+                    else
+                    {
+                        Card cardOfInterest = gameObject.GetComponent<Card>();
+                        string cardParentSetTag = cardOfInterest.GetStartParent().parent.tag;
 
-                        // Move the card to the talon pile once it has been clicked on the stock
-                        cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
+                        if (cardParentSetTag.Equals("Stock"))
+                        {
+                            m_clickCount++;
+                            Debug.Log("Click count: " + m_clickCount);
+
+                            // Move the card to the talon pile once it has been clicked on the stock
+                            cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
+                        }
                     }
 
                     return;
