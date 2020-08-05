@@ -3,12 +3,20 @@ using static Solitaire.GameManager;
 
 namespace Solitaire
 {
-    public class Card : MonoBehaviour
+    public struct CardTpl
     {
-        public CardState currentState;
-
         public int value;
         public CardSuit suit;
+    }
+
+    public class Card : MonoBehaviour
+    {
+        [Header("Card Settings")]
+        public CardState currentState;
+        public int value;
+        public CardSuit suit;
+        public GameObject frontFace;
+        public GameObject backFace;
 
         private bool m_stackable = true;
         private bool m_flipped = false;

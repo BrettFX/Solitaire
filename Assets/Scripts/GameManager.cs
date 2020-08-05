@@ -163,58 +163,76 @@ namespace Solitaire
             Debug.Log("Stack target is " + stackTarget.tag + " at " + stackTarget.position);
 
             // Generate the initial list of 52 cards first before shuffling
-            Card[] deck = new Card[52];
+            CardTpl[] deck = new CardTpl[52];
             CardSuit[] cardSuits = new CardSuit[]
             {
                 CardSuit.HEARTS, CardSuit.DIAMONDS, CardSuit.CLUBS, CardSuit.SPADES
             };
 
-            int zOffset = 1;
-            for (int i = 0; i < 4; i++)
+            int cardsPerSuit = 13;
+            for (int i = 0; i < cardSuits.Length; i++)
             {
-                for (int j = 0; j < 13; j++)
+                for (int j = 0; j < cardsPerSuit; j++)
                 {
-                    Card card = cardPrefab.GetComponent<Card>();
-                    card.value = j + 1;
-                    card.suit = cardSuits[i]; // Purposefully using 'i' to cycle through all cards before changing suit
-
-                    // Set the card front face based on the respective card and suit
-                    // Need to get object representing the front of the card
-                    Transform cardTransform = card.transform;
-                    int k = 0;
-                    for (; k < cardTransform.childCount; k++)
+                    CardTpl card = new CardTpl
                     {
-                        if (cardTransform.GetChild(k).tag.Equals("Front"))
-                            break;
-                    }
+                        value = j + 1,
+                        suit = cardSuits[i] // Purposefully using 'i' to cycle through all cards before changing suit
+                    };
 
-                    // Get the sprite renderer for the current front face of this card
-                    SpriteRenderer cardSprite = card.transform.GetChild(k).GetComponent<SpriteRenderer>();
+                    // Add the card to the deck (in 1D fashion)
+                    deck[j + (i * cardsPerSuit)] = card;
+                }
+            }
 
-                    // Set the sprite for the front face
-                    cardSprite.sprite = m_cardSpritesMap[card.suit][card.value - 1];
+            // Shuffle the cards
+            deck = Shuffle(deck);
 
-                    Vector3 posOffset = new Vector3(
+            // Iterate and actually spawn the cards
+            int zOffset = 1;
+            for (int i = 0; i < deck.Length; i++)
+            {
+                Card card = cardPrefab.GetComponent<Card>();
+                card.value = deck[i].value;
+                card.suit = deck[i].suit;
+
+                // Get the sprite renderer for the current front face of this card
+                SpriteRenderer cardSprite = card.frontFace.GetComponent<SpriteRenderer>();
+
+                // Set the sprite for the front face
+                cardSprite.sprite = m_cardSpritesMap[card.suit][card.value - 1];
+
+                Vector3 posOffset = new Vector3(
                         stackTarget.position.x,
                         stackTarget.position.y,
                         stackTarget.position.z - zOffset
                     );
 
-                    // Spawn the card and add it to the stock
-                    GameObject spawnedCard = Instantiate(cardPrefab, posOffset, Quaternion.identity);
-                    spawnedCard.name = cardPrefab.name + "_" + zOffset;
-                    //Vector3 rot = spawnedCard.transform.eulerAngles;
-                    //rot = new Vector3(rot.x, rot.y + 180, rot.z);
-                    //spawnedCard.transform.rotation = Quaternion.Euler(rot);
-                    //spawnedCard.transform.Rotate(rot);
-                    //spawnedCard.transform.Rotate(Vector3.up, 90, Space.Self);
-                    spawnedCard.transform.parent = stackTarget;
-
-                    // Add the card to the deck
-                    deck[zOffset - 1] = card;
-                    zOffset++;
-                }
+                // Spawn the card and add it to the stock
+                GameObject spawnedCard = Instantiate(cardPrefab, posOffset, Quaternion.identity);
+                spawnedCard.name = cardPrefab.name + "_" + zOffset;
+                spawnedCard.transform.parent = stackTarget;
+                zOffset++;
             }
+        }
+
+        /**
+         * Shuffle an array of values based on specified datatype.
+         * @param T[] array the template based array to shuffle.
+         * @return T[] the array representing the shuffled version of the input array.
+         */
+        public T[] Shuffle<T>(T[] array)
+        {
+            for (int i = array.Length; i > 1; i--)
+            {
+                // Pick random element to swap.
+                int j = Random.Range(0, array.Length - 1); // 0 <= j <= i-1
+                                        // Swap.
+                T tmp = array[j];
+                array[j] = array[i - 1];
+                array[i - 1] = tmp;
+            }
+            return array;
         }
     }
 }

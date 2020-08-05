@@ -196,6 +196,8 @@ MonoBehaviour:
   currentState: 1
   value: 13
   suit: 3
+  frontFace: {fileID: 3671427380421192088}
+  backFace: {fileID: 3671427381797332323}
 --- !u!114 &5263716625021561995
 MonoBehaviour:
   m_ObjectHideFlags: 0
