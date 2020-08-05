@@ -108,13 +108,8 @@ namespace Solitaire
             m_cardSprites = Resources.LoadAll<Sprite>("Sprites/playing_cards_spritesheet_01");
             Debug.Log("Loaded " + m_cardSprites.Length + " card sprites...");
             m_cardSpritesMap = new Dictionary<CardSuit, Sprite[]>();
-            for (int i = 0; i < 52; i++)
+            for (int i = 0; i < m_cardSprites.Length; i++)
             {
-                if (i == m_cardSprites.Length)
-                {
-                    break;
-                }
-
                 Sprite sprite = m_cardSprites[i];
                 string[] tokens = sprite.name.Split('_');
                 int value = int.Parse(tokens[0]);
@@ -156,7 +151,7 @@ namespace Solitaire
                 }
                 else
                 {
-                    Debug.Log("Skipping sprite: " + sprite.name);
+                    Debug.Log("Excluding " + sprite.name + " from the deck.");
                 }
             }
         }
