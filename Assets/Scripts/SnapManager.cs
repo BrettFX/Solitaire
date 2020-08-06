@@ -53,7 +53,7 @@ namespace Solitaire
         public Card[] GetCardSet(int startIndex)
         {
             // Default to returning the entire set of attached card if the start index is out of lower bounds
-            if (startIndex < 0)
+            if (startIndex <= 0)
             {
                 return m_attachedCards;
             }

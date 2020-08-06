@@ -115,8 +115,11 @@ namespace Solitaire
                         }
                         else
                         {
-                            // Need to set the parent back to the original parent so the card doesn't stay in limbo
-                            cardOfInterest.transform.parent = cardOfInterest.GetStartParent();
+                            // Need to set the parent back to the original parent for card(s) in the set of dragged cards.
+                            foreach (Card card in m_draggedCards)
+                            {
+                                card.transform.parent = card.GetStartParent();
+                            }
                         }
                     }
 
