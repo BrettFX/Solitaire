@@ -229,7 +229,7 @@ namespace Solitaire
 
             // Iterate and actually spawn the cards
             int zOffset = 1;
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < deck.Length; i++)
             {
                 Card card = cardPrefab.GetComponent<Card>();
                 card.value = deck[i].value;
