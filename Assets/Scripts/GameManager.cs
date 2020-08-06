@@ -57,6 +57,7 @@ namespace Solitaire
         private Sprite[] m_cardSprites;
         private Dictionary<CardSuit, Sprite[]> m_cardSpritesMap;
 
+        private Transform m_stockPile;
         private Transform m_talonPile;
 
         /**
@@ -86,6 +87,7 @@ namespace Solitaire
         // Start is called before the first frame update
         void Start()
         {
+            m_stockPile = stock.GetComponentInChildren<SnapManager>().transform;
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
             LoadCardSprites();
             SpawnStack();
@@ -100,6 +102,43 @@ namespace Solitaire
         public Transform GetTalonPile()
         {
             return m_talonPile;
+        }
+
+        /**
+         * Take all cards from talon and put them back in the stock
+         */
+        public void ReplinishStock()
+        {
+            SnapManager talonSnapManager = talon.GetComponentInChildren<SnapManager>();
+
+            Card[] talonCards = talonSnapManager.GetCardSet(0);
+            Debug.Log("Cards in talon:");
+            
+            // Need to iterate in reverse order so that the cards are drawn from the stock in the same order as before
+            for (int i = talonCards.Length - 1; i >= 0; i--)
+            {
+                Card card = talonCards[i];
+
+                // Remove from talon
+                card.transform.parent = null;
+
+                // Move the card position from the talon to the stock
+                card.transform.position = new Vector3(
+                    m_stockPile.position.x,
+                    m_stockPile.position.y,
+                    card.transform.position.z
+                );
+
+                // Rotate the card to be face down again
+                CardState cardState = card.Flip(false);
+                if (DEBUG_MODE)
+                {
+                    Debug.Log(card.value + " of " + card.suit + " is " + cardState);
+                }
+
+                // Add the card to the stock
+                card.transform.parent = m_stockPile;
+            }
         }
 
         private void LoadCardSprites()
@@ -190,7 +229,7 @@ namespace Solitaire
 
             // Iterate and actually spawn the cards
             int zOffset = 1;
-            for (int i = 0; i < deck.Length; i++)
+            for (int i = 0; i < 2; i++)
             {
                 Card card = cardPrefab.GetComponent<Card>();
                 card.value = deck[i].value;

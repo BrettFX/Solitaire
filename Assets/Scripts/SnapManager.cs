@@ -20,11 +20,12 @@ namespace Solitaire
                 for (int i = 0; i < m_attachedCards.Length; i++)
                 {
                     Card card = m_attachedCards[i];
+                    card.SetStartParent(card.transform.parent);
 
                     // Need to set each card as non-stackable except for the last one in the stack
                     card.SetStackable(i == m_attachedCards.Length - 1);
 
-                    // Normalize z-pos to ensure thatz values are consistent for each card in the stack
+                    // Normalize z-pos to ensure that z-values are consistent for each card in the stack
                     if (card.transform.position.z != -i)
                     {
                         card.transform.position = new Vector3(
@@ -34,6 +35,7 @@ namespace Solitaire
                         );
                     }
 
+                    card.SetStartPos(card.transform.position);
                 }
             }
         }

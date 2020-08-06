@@ -98,6 +98,7 @@ namespace Solitaire
                             // Only way to get to this point is if the stock was clicked and there are no cards on it
                             // TODO transfer all cards attached to talon back to stock
                             Debug.Log("Clicked on empty stock");
+                            GameManager.Instance.ReplinishStock();
                         }
                     }
                     else

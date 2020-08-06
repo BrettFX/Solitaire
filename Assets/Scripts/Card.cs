@@ -48,12 +48,8 @@ namespace Solitaire
                 // Perform final steps after translation is complete
                 if (!m_translating)
                 {
-                    // Need to temporarily disable mesh collider and remove from parent when doing rotation
-                    MeshCollider meshCollider = gameObject.GetComponent<MeshCollider>();
-                    meshCollider.enabled = false;
-                    
-                    transform.rotation = Quaternion.Euler(0, 180, 0);   // Flip the card 180 degrees about the y axis
-                    meshCollider.enabled = true;                        // Re-enable the mesh collider
+                    // Flip the card without an animation
+                    Flip(false);
 
                     // Place the card in the respective snap parent
                     transform.parent = m_targetTranslateSnap;
@@ -70,7 +66,6 @@ namespace Solitaire
             m_targetTranslateSnap = snap;
             m_targetTranslatePos = m_targetTranslateSnap.position;
             m_startPos = transform.position;
-            m_flipped = !m_flipped;
 
             // Set the z-value of the transform to move to be high enough to hover over all other cards
             transform.position = new Vector3(
@@ -113,15 +108,26 @@ namespace Solitaire
             return m_startParent;
         }
 
-        public bool IsFlipped()
+        public CardState Flip(bool animate)
         {
-            return m_flipped;
-        }
-
-        public void SetFlipped(bool flip)
-        {
-            m_flipped = flip;
+            m_flipped = !m_flipped;
             currentState = m_flipped ? CardState.FACE_DOWN : CardState.FACE_UP;
+
+            if (animate)
+            {
+                // TODO implement flip animation
+
+            }
+
+            // Need to temporarily disable mesh collider and remove from parent when doing rotation
+            MeshCollider meshCollider = gameObject.GetComponent<MeshCollider>();
+            meshCollider.enabled = false;
+
+            int degrees = m_flipped ? 180 : 0;
+            transform.rotation = Quaternion.Euler(0, degrees, 0);   // Flip the card 180 degrees about the y axis
+            meshCollider.enabled = true;                            // Re-enable the mesh collider
+
+            return currentState;
         }
     }
 }
