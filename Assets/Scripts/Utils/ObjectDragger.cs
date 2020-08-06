@@ -96,8 +96,7 @@ namespace Solitaire
                         if (transform.parent.CompareTag("Stock"))
                         {
                             // Only way to get to this point is if the stock was clicked and there are no cards on it
-                            // TODO transfer all cards attached to talon back to stock
-                            Debug.Log("Clicked on empty stock");
+                            // Transfer all cards attached to talon back to stock
                             GameManager.Instance.ReplinishStock();
                         }
                     }
@@ -113,6 +112,11 @@ namespace Solitaire
 
                             // Move the card to the talon pile once it has been clicked on the stock
                             cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
+                        }
+                        else
+                        {
+                            // Need to set the parent back to the original parent so the card doesn't stay in limbo
+                            cardOfInterest.transform.parent = cardOfInterest.GetStartParent();
                         }
                     }
 
