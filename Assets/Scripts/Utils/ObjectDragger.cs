@@ -13,6 +13,7 @@ namespace Solitaire
         private Card[] m_draggedCards;
 
         private int m_clickCount = 0;
+        bool m_isStockCard = false;
 
         void OnMouseDown()
         {
@@ -28,9 +29,15 @@ namespace Solitaire
             // If card, we need to get a list of the cards that are to be dragged (through the use of the Snap Manager)
             if (gameObject.CompareTag("Card"))
             {
+
                 // Initialize the dragged cards list by referencing the set of cards that are attached to the
                 // respective snap that one or many cards are to be dragged from.
                 m_draggedCards = GetComponentInParent<SnapManager>().GetCardSet(GetComponent<Card>());
+
+                // Check the first card to see if it's a stock card
+                Debug.Log("Tag Clicked: " + m_draggedCards[0].transform.parent.parent.tag);
+                m_isStockCard = m_draggedCards[0].transform.parent.parent.CompareTag("Stock");
+                Debug.Log("Is Stock Card: " + m_isStockCard);
 
                 // Set each dragged card's start position and parent
                 int i = 0;
@@ -52,6 +59,12 @@ namespace Solitaire
             // Only allow dragging cards
             if (gameObject.tag.Equals("Card"))
             {
+                if (m_isStockCard)
+                {
+                    // Don't allow dragging stock cards
+                    return;
+                }
+
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
 
@@ -123,6 +136,12 @@ namespace Solitaire
                         }
                     }
 
+                    return;
+                }
+
+                if (m_isStockCard)
+                {
+                    // Don't allow dropping stock cards
                     return;
                 }
 
