@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using static Solitaire.GameManager;
 
 namespace Solitaire
 {
     public class SnapManager : MonoBehaviour
     {
+        public Sections belongsTo;
         private Card[] m_attachedCards;
 
         // Update is called once per frame
@@ -38,6 +40,101 @@ namespace Solitaire
                     card.SetStartPos(card.transform.position);
                 }
             }
+        }
+
+        /**
+         * Determine if the card to be placed on this snap is valid or not.
+         * Handles checking specific parent that this snap is a part of (e.g., Foundation or
+         * Tableau). Immediately determined as invalid if dropping on Stock or Talon.
+         */
+        public bool IsValidMove(Card card)
+        {
+            bool valid = false;
+            switch(belongsTo)
+            {
+                case Sections.FOUNDATIONS:
+                    valid = IsValidNextFoundationCard(card);
+                    break;
+                case Sections.TABLEAU:
+                    valid = IsValidNextTableauCard(card);
+                    break;
+                default:
+                    break;
+            }
+
+            return valid;
+        }
+
+        /**
+         * Determine if the next card to be placed on the foundation is valid or not.
+         * Rules for next card to be placed in foundation stack:
+         * 1) Card value must be exactly 1 value greater than current card value. If no cards, then value must be 1 (Ace).
+         * 2) Suit must match the current card. If no cards then this rule doesn't apply.
+         */
+        private bool IsValidNextFoundationCard(Card nextCard)
+        {
+            bool valid;
+            // Check if there are no cards
+            if (m_attachedCards.Length == 0)
+            {
+                valid = nextCard.value == 1;
+            }
+            else
+            {
+                // Get the top card and validate
+                Card currentCard = m_attachedCards[m_attachedCards.Length - 1];
+                valid = (nextCard.value == currentCard.value + 1) && (nextCard.suit.Equals(currentCard.suit));
+            }
+
+            return valid;
+        }
+
+        /*
+         * Determine if the next card to be placed on the respective tableau snap is valid or not.
+         * Rules for next card to be placed in the tableau stack:
+         * 1) Card value must be exactly 1 value less than current card value. If no cards, then value must be 13 (King).
+         * 2) Suit must alternate in color from current card (e.g, if current card is red then the next card must be black
+         *    and vice versa). If no cards, then this rule doesn't apply. 
+         */
+        private bool IsValidNextTableauCard(Card nextCard)
+        {
+            bool valid;
+            // Check if thre are no cards
+            if (m_attachedCards.Length == 0)
+            {
+                valid = nextCard.value == 13;
+            }
+            else
+            {
+                // Get the top card and validate
+                Card currentCard = m_attachedCards[m_attachedCards.Length - 1];
+                bool altColorSuit = GetSuitColor(currentCard.suit, true) == GetSuitColor(nextCard.suit, false);
+                valid = (nextCard.value == currentCard.value - 1) && altColorSuit;
+            }
+
+            return valid;
+        }
+
+        private CardSuitColor GetSuitColor(CardSuit currentSuit, bool alternate)
+        {
+            CardSuitColor suitColor = CardSuitColor.NONE;
+            switch (currentSuit)
+            {
+                case CardSuit.CLUBS:
+                case CardSuit.SPADES:
+                    // Color would be black; alternate to red if specified
+                    suitColor = alternate ? CardSuitColor.RED : CardSuitColor.BLACK;
+                    break;
+                case CardSuit.HEARTS:
+                case CardSuit.DIAMONDS:
+                    // Color would be red; alternate to black if specified
+                    suitColor = alternate ? CardSuitColor.BLACK : CardSuitColor.RED;
+                    break;
+                default:
+                    break;
+            }
+
+            return suitColor;
         }
 
         public bool HasCard()

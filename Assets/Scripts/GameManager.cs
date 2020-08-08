@@ -45,6 +45,21 @@ namespace Solitaire
             NONE
         };
 
+        public enum CardSuitColor
+        {
+            RED,
+            BLACK,
+            NONE
+        }
+
+        public enum Sections
+        {
+            TABLEAU,
+            STOCK,
+            TALON,
+            FOUNDATIONS
+        };
+
         [Header("Set Up")]
         public GameObject tableau;
         public GameObject stock;
