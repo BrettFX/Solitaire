@@ -97,8 +97,8 @@ namespace Solitaire
 
                 if (GameManager.DEBUG_MODE)
                 {
-                    Debug.Log("Stopped dragging at: " + curPosition);
-                    Debug.Log("Starting point was: " + startPos);
+                    //Debug.Log("Stopped dragging at: " + curPosition);
+                    //Debug.Log("Starting point was: " + startPos);
                 }
 
                 // Mouse up will be determined as a click if the current position is the same as the start position
@@ -163,7 +163,7 @@ namespace Solitaire
                         if (GameManager.DEBUG_MODE) { Debug.Log("Would collide with object: " + collidedTransform); }
 
                         // Snap to the snap location if there is one
-                        if (collidedTransform.tag.Equals("Snap"))
+                        if (collidedTransform.CompareTag("Snap"))
                         {
                             // Don't allow dropping dragged cards in prohibited locations
                             if (GameManager.PROHIBITED_DROP_LOCATIONS.Contains(collidedTransform.parent.tag))
@@ -191,7 +191,7 @@ namespace Solitaire
                                 );
 
                                 // Need to iterate the set of dragged cards and adjust the position accordingly
-                                bool isFoundation = collidedTransform.parent.tag.Equals("Foundations");
+                                bool isFoundation = collidedTransform.parent.CompareTag("Foundations");
 
                                 // Assert that there is only one card being placed if target is foundation
                                 if (isFoundation && m_draggedCards.Length > 1)
@@ -222,7 +222,7 @@ namespace Solitaire
                                 break;
                             }
                         }
-                        else if (collidedTransform.tag.Equals("Card"))
+                        else if (collidedTransform.CompareTag("Card"))
                         {
                             // Determine if the card was the same one that is being dragged/dropped
                             if (collidedTransform.Equals(transform))
@@ -240,7 +240,7 @@ namespace Solitaire
                                 else
                                 {
                                     Debug.Log("Placing card(s) in: " + collidedTransform.parent.parent.tag);
-                                    bool isFoundation = collidedTransform.parent.parent.tag.Equals("Foundations");
+                                    bool isFoundation = collidedTransform.parent.parent.CompareTag("Foundations");
 
                                     // Assert that there is only one card being placed if target is foundation
                                     if (isFoundation && m_draggedCards.Length > 1)
