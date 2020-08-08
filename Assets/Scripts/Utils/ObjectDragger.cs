@@ -154,7 +154,6 @@ namespace Solitaire
                 
                 if (collides)
                 {
-                    //Collider[] hitColliders = Physics.OverlapSphere(curPosition, 5.0f);
                     Collider[] hitColliders = Physics.OverlapBox(curPosition, collisionVector);
                     int i = 0;
                     while (i < hitColliders.Length)
@@ -166,6 +165,7 @@ namespace Solitaire
                         if (collidedTransform.CompareTag("Snap"))
                         {
                             // Don't allow dropping dragged cards in prohibited locations
+                            SnapManager snapManager = collidedTransform.GetComponent<SnapManager>();
                             if (GameManager.PROHIBITED_DROP_LOCATIONS.Contains(collidedTransform.parent.tag))
                             {
                                 Debug.Log("Can't manually drop card in " + collidedTransform.parent.tag);
@@ -174,7 +174,6 @@ namespace Solitaire
                             }
 
                             // Make sure there isn't already a card attached to the snap (otherwise need to search for card)
-                            SnapManager snapManager = collidedTransform.GetComponent<SnapManager>();
                             if (snapManager.HasCard())
                             {
                                 Debug.Log("Snap already has a card, skipping...");
@@ -201,24 +200,29 @@ namespace Solitaire
                                     break;
                                 }
 
-                                float yOffset = isFoundation ? 0.0f : 30.0f;
-                                int j = 0;
-                                foreach (Card card in m_draggedCards)
+                                // General validation step to take card value and suit into consideration
+                                valid = snapManager.IsValidMove(m_draggedCards[0]);
+                                if (valid)
                                 {
-                                    Vector3 cardPosition = card.transform.position;
-                                    Vector3 newCardPos = new Vector3(newPos.x, newPos.y - (yOffset * j), newPos.z - j);
-                                    card.transform.position = newCardPos;
+                                    float yOffset = isFoundation ? 0.0f : 30.0f;
+                                    int j = 0;
+                                    foreach (Card card in m_draggedCards)
+                                    {
+                                        Vector3 cardPosition = card.transform.position;
+                                        Vector3 newCardPos = new Vector3(newPos.x, newPos.y - (yOffset * j), newPos.z - j);
+                                        card.transform.position = newCardPos;
 
-                                    // Add the card to the stack
-                                    card.transform.parent = collidedTransform;
+                                        // Add the card to the stack
+                                        card.transform.parent = collidedTransform;
 
-                                    // Re-enable the mesh colliders on the cards
-                                    card.GetComponent<MeshCollider>().enabled = true;
+                                        // Re-enable the mesh colliders on the cards
+                                        card.GetComponent<MeshCollider>().enabled = true;
 
-                                    j++;
+                                        j++;
+                                    }
                                 }
 
-                                valid = true;
+                                //valid = true;
                                 break;
                             }
                         }
@@ -239,6 +243,9 @@ namespace Solitaire
                                 }
                                 else
                                 {
+                                    // Reference the snap manager the card is attached to
+                                    SnapManager snapManager = targetCard.GetComponentInParent<SnapManager>();
+
                                     Debug.Log("Placing card(s) in: " + collidedTransform.parent.parent.tag);
                                     bool isFoundation = collidedTransform.parent.parent.CompareTag("Foundations");
 
@@ -250,33 +257,38 @@ namespace Solitaire
                                         break;
                                     }
 
-                                    float yOffset = isFoundation ? 0.0f : 30.0f;
-
-                                    // Offset y position by 30 so that the card that is below is still shown
-                                    Vector3 newPos = new Vector3(
-                                        collidedTransform.position.x,
-                                        collidedTransform.position.y - yOffset,
-                                        collidedTransform.position.z - 1.0f
-                                    );
-
-                                    // Need to iterate the set of dragged cards and adjust the position accordingly
-                                    int j = 0;
-                                    foreach (Card card in m_draggedCards)
+                                    // General validation step to take card value and suit into consideration
+                                    valid = snapManager.IsValidMove(m_draggedCards[0]);
+                                    if (valid)
                                     {
-                                        Vector3 cardPosition = card.transform.position;
-                                        Vector3 newCardPos = new Vector3(newPos.x, newPos.y - (yOffset * j), newPos.z - j);
-                                        card.transform.position = newCardPos;
+                                        float yOffset = isFoundation ? 0.0f : 30.0f;
 
-                                        // Add the card to the stack (note that the parent is not the collided transform)
-                                        card.transform.parent = collidedTransform.parent;
+                                        // Offset y position by 30 so that the card that is below is still shown
+                                        Vector3 newPos = new Vector3(
+                                            collidedTransform.position.x,
+                                            collidedTransform.position.y - yOffset,
+                                            collidedTransform.position.z - 1.0f
+                                        );
 
-                                        // Re-enable the mesh colliders on the cards
-                                        card.GetComponent<MeshCollider>().enabled = true;
+                                        // Need to iterate the set of dragged cards and adjust the position accordingly
+                                        int j = 0;
+                                        foreach (Card card in m_draggedCards)
+                                        {
+                                            Vector3 cardPosition = card.transform.position;
+                                            Vector3 newCardPos = new Vector3(newPos.x, newPos.y - (yOffset * j), newPos.z - j);
+                                            card.transform.position = newCardPos;
 
-                                        j++;
+                                            // Add the card to the stack (note that the parent is not the collided transform)
+                                            card.transform.parent = collidedTransform.parent;
+
+                                            // Re-enable the mesh colliders on the cards
+                                            card.GetComponent<MeshCollider>().enabled = true;
+
+                                            j++;
+                                        }
                                     }
 
-                                    valid = true;
+                                    //valid = true;
                                     break;
                                 }
                             }
@@ -288,6 +300,7 @@ namespace Solitaire
 
                 if (!valid)
                 {
+                    Debug.Log("Invalid Move.");
                     // If the drag location is deemed invalid then we should snap back to starting position
                     // Need to iterate the list of dragged cards and set each card back to their respective 
                     // starting position and starting parent
