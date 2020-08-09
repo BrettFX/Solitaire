@@ -108,12 +108,6 @@ namespace Solitaire
             SpawnStack();
         }
 
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
-
         public Transform GetTalonPile()
         {
             return m_talonPile;
@@ -212,12 +206,8 @@ namespace Solitaire
 
         private void SpawnStack()
         {
-            // Card spawn location is dependent on the location of the Stock parent
-            Transform stackTarget = stock.GetComponentInChildren<SnapManager>().GetComponent<Transform>();
-            Debug.Log("Stack target is " + stackTarget.tag + " at " + stackTarget.position);
-
             // Generate the initial list of 52 cards first before shuffling
-            CardTpl[] deck = new CardTpl[52];
+            List<CardTpl> deck = new List<CardTpl>();
             CardSuit[] cardSuits = new CardSuit[]
             {
                 CardSuit.HEARTS, CardSuit.DIAMONDS, CardSuit.CLUBS, CardSuit.SPADES
@@ -234,21 +224,56 @@ namespace Solitaire
                         suit = cardSuits[i] // Purposefully using 'i' to cycle through all cards before changing suit
                     };
 
-                    // Add the card to the deck (in 1D fashion)
-                    deck[j + (i * cardsPerSuit)] = card;
+                    // Add the card to the deck
+                    deck.Add(card);
                 }
             }
 
             // Shuffle the cards
-            deck = Shuffle(deck);
+            Shuffle(ref deck);
 
-            // Iterate and actually spawn the cards
+            // Spwan Tableau cards
+            SpawnTableauCards(ref deck);
+
+            // Spawn remaining cards to the stock
+            SpawnStockCards(ref deck);
+        }
+
+        /**
+         * Shuffle an array of values based on specified datatype.
+         * @param T[] array the template based array to shuffle.
+         * @return T[] the array representing the shuffled version of the input array.
+         */
+        public void Shuffle<T>(ref List<T> array)
+        {
+            for (int i = array.Count; i > 1; i--)
+            {
+                // Pick random element to swap.
+                int j = Random.Range(0, array.Count - 1); // 0 <= j <= i-1
+                                        // Swap.
+                T tmp = array[j];
+                array[j] = array[i - 1];
+                array[i - 1] = tmp;
+            }
+        }
+
+        private void SpawnTableauCards(ref List<CardTpl> deck)
+        {
+            // TODO iterate through the tableau snaps and spawn cards from deck to them
+        }
+
+        private void SpawnStockCards(ref List<CardTpl> deck)
+        {
+            // Card spawn location is dependent on the location of the Stock parent
+            Transform stackTarget = stock.GetComponentInChildren<SnapManager>().GetComponent<Transform>();
+            Debug.Log("Stack target is " + stackTarget.tag + " at " + stackTarget.position);
+
             int zOffset = 1;
-            for (int i = 0; i < deck.Length; i++)
+            while (deck.Count != 0)
             {
                 Card card = cardPrefab.GetComponent<Card>();
-                card.value = deck[i].value;
-                card.suit = deck[i].suit;
+                card.value = deck[0].value;
+                card.suit = deck[0].suit;
 
                 // Get the sprite renderer for the current front face of this card
                 SpriteRenderer cardSprite = card.frontFace.GetComponent<SpriteRenderer>();
@@ -267,26 +292,10 @@ namespace Solitaire
                 spawnedCard.name = cardPrefab.name + "_" + zOffset;
                 spawnedCard.transform.parent = stackTarget;
                 zOffset++;
-            }
-        }
 
-        /**
-         * Shuffle an array of values based on specified datatype.
-         * @param T[] array the template based array to shuffle.
-         * @return T[] the array representing the shuffled version of the input array.
-         */
-        public T[] Shuffle<T>(T[] array)
-        {
-            for (int i = array.Length; i > 1; i--)
-            {
-                // Pick random element to swap.
-                int j = Random.Range(0, array.Length - 1); // 0 <= j <= i-1
-                                        // Swap.
-                T tmp = array[j];
-                array[j] = array[i - 1];
-                array[i - 1] = tmp;
+                // Remove the card reference from the deck and move to the next card
+                deck.RemoveAt(0);
             }
-            return array;
         }
     }
 }
