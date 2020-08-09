@@ -4,6 +4,8 @@ namespace Solitaire
 {
     public class ObjectDragger : MonoBehaviour
     {
+        private const float CLICK_THRESHOLD = 100.0f;
+
         private Vector3 screenPoint;
         private Vector3 offset;
 
@@ -14,6 +16,25 @@ namespace Solitaire
 
         private int m_clickCount = 0;
         bool m_isStockCard = false;
+
+        /**
+         * Compare the distance between the starting position and current position
+         * of a click by computing the square magnitude of the difference between the
+         * two respective vectors. As long as the result of the computation is within
+         * the globally defined click threshold then the move is deemed as a click.
+         * 
+         * @see https://docs.unity3d.com/ScriptReference/Vector3-sqrMagnitude.html
+         * @param Vector3 currentPos the current pointer position to compare against the
+         *                           start position.
+         *                           
+         * @return bool whether or not the move is a click.
+         */
+        private bool IsClick(Vector3 currentPos)
+        {
+            // Valid click if within +/- threshold
+            float sqrMagnitude = Vector3.SqrMagnitude(startPos - currentPos);
+            return sqrMagnitude <= CLICK_THRESHOLD;
+        }
 
         void OnMouseDown()
         {
@@ -97,12 +118,12 @@ namespace Solitaire
 
                 if (GameManager.DEBUG_MODE)
                 {
-                    //Debug.Log("Stopped dragging at: " + curPosition);
-                    //Debug.Log("Starting point was: " + startPos);
+                    Debug.Log("Stopped dragging at: " + curPosition);
+                    Debug.Log("Starting point was: " + startPos);
                 }
 
                 // Mouse up will be determined as a click if the current position is the same as the start position
-                if (curPosition.Equals(startPos))
+                if (IsClick(curPosition))
                 {
                     if (gameObject.tag.Equals("Snap"))
                     {

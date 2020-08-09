@@ -8,6 +8,12 @@ namespace Solitaire
     {
         public Sections belongsTo;
         private Card[] m_attachedCards;
+        private MeshCollider m_snapCollider;
+
+        private void Start()
+        {
+            m_snapCollider = GetComponent<MeshCollider>();
+        }
 
         // Update is called once per frame
         void Update()
@@ -18,6 +24,13 @@ namespace Solitaire
             // Determine if there are some attached cards
             if (m_attachedCards.Length > 0)
             {
+                // Need to turn off snap collision if there is at least one card on it
+                // (fixes bug for clicking snaps instead of cards)
+                if (m_snapCollider.enabled)
+                {
+                    m_snapCollider.enabled = false;
+                }
+
                 // If there are then we need to iterate them to perform some preprocesing steps
                 for (int i = 0; i < m_attachedCards.Length; i++)
                 {
@@ -38,6 +51,14 @@ namespace Solitaire
                     }
 
                     card.SetStartPos(card.transform.position);
+                }
+            }
+            else
+            {
+                // Turn snap collision back on if there are no cards attached
+                if (!m_snapCollider.enabled)
+                {
+                    m_snapCollider.enabled = true;
                 }
             }
         }
