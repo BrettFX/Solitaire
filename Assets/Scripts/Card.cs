@@ -113,6 +113,10 @@ namespace Solitaire
             m_flipped = !m_flipped;
             currentState = m_flipped ? CardState.FACE_DOWN : CardState.FACE_UP;
 
+            // Keep track of original parent so that it can be restored after flipping
+            Transform originalParent = transform.parent;
+            transform.parent = null; // Temporarily detach from parent
+
             if (animate)
             {
                 // TODO implement flip animation
@@ -127,6 +131,8 @@ namespace Solitaire
             transform.rotation = Quaternion.Euler(0, degrees, 0);   // Flip the card 180 degrees about the y axis
             meshCollider.enabled = true;                            // Re-enable the mesh collider
 
+            // Re-attach to parent
+            transform.parent = originalParent;
             return currentState;
         }
     }

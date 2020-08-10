@@ -23,7 +23,7 @@ namespace Solitaire
 
         public static readonly string[] VALUE_REF =
         {
-            "0", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"
+            "0", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "JACK", "QUEEN", "KING"
         };
 
         public static readonly HashSet<string> PROHIBITED_DROP_LOCATIONS = new HashSet<string>
@@ -259,7 +259,51 @@ namespace Solitaire
 
         private void SpawnTableauCards(ref List<CardTpl> deck)
         {
-            // TODO iterate through the tableau snaps and spawn cards from deck to them
+            // Iterate through the tableau snaps and spawn cards from deck to them
+            SnapManager[] tableauSnapManagers = tableau.GetComponentsInChildren<SnapManager>();
+            int zOffset = 1;
+            float yOffset = 10.0f; // Face down cards will have a smaller y-offset
+            for (int i = 0; i < tableauSnapManagers.Length; i++)
+            {
+                Transform stackTarget = tableauSnapManagers[i].transform;
+
+                for (int j = 0; j < i + 1; j++)
+                {
+                    Card card = cardPrefab.GetComponent<Card>();
+                    card.value = deck[0].value;
+                    card.suit = deck[0].suit;
+
+                    // Get the sprite renderer for the current front face of this card
+                    SpriteRenderer cardSprite = card.frontFace.GetComponent<SpriteRenderer>();
+
+                    // Set the sprite for the front face
+                    cardSprite.sprite = m_cardSpritesMap[card.suit][card.value - 1];
+
+                    Vector3 posOffset = new Vector3(
+                       stackTarget.position.x,
+                       stackTarget.position.y - (yOffset * j),
+                       stackTarget.position.z - zOffset
+                    );
+
+                    // Spawn the card and add it to the respective tableau pile
+                    GameObject spawnedCard = Instantiate(cardPrefab, posOffset, Quaternion.identity);
+                    spawnedCard.name = VALUE_REF[card.value] + "_" + card.suit;
+                    spawnedCard.transform.parent = stackTarget;
+
+                    // Only make the last card flip face up
+                    if (j + 1 == i + 1)
+                    {
+                        spawnedCard.GetComponent<Card>().Flip(false);
+                    }
+
+                    zOffset++;
+
+                    // Remove the card reference from the deck and move to the next card
+                    deck.RemoveAt(0);
+                }
+
+                zOffset = 1;
+            }
         }
 
         private void SpawnStockCards(ref List<CardTpl> deck)
@@ -282,14 +326,14 @@ namespace Solitaire
                 cardSprite.sprite = m_cardSpritesMap[card.suit][card.value - 1];
 
                 Vector3 posOffset = new Vector3(
-                        stackTarget.position.x,
-                        stackTarget.position.y,
-                        stackTarget.position.z - zOffset
-                    );
+                    stackTarget.position.x,
+                    stackTarget.position.y,
+                    stackTarget.position.z - zOffset
+                );
 
                 // Spawn the card and add it to the stock
                 GameObject spawnedCard = Instantiate(cardPrefab, posOffset, Quaternion.identity);
-                spawnedCard.name = cardPrefab.name + "_" + zOffset;
+                spawnedCard.name = VALUE_REF[card.value] + "_" + card.suit;
                 spawnedCard.transform.parent = stackTarget;
                 zOffset++;
 
