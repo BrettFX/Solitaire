@@ -17,6 +17,8 @@ namespace Solitaire
         private int m_clickCount = 0;
         bool m_isStockCard = false;
 
+        private SnapManager m_originSnapManager;
+
         /**
          * Compare the distance between the starting position and current position
          * of a click by computing the square magnitude of the difference between the
@@ -62,6 +64,8 @@ namespace Solitaire
 
                 // Set each dragged card's start position and parent
                 int i = 0;
+                m_originSnapManager = m_draggedCards[0].GetComponentInParent<SnapManager>();
+                m_originSnapManager.SetWaiting(true); // Wait until cards are dropped and validated before flipping any cards in tableau
                 foreach (Card card in m_draggedCards)
                 {
                     card.SetStartPos(card.transform.position);
@@ -94,7 +98,7 @@ namespace Solitaire
 
                 // Need to iterate the set of dragged cards and adjust the position accordingly
                 float yOffset = 30.0f;
-                int i = 0;
+                int i = 0;                
                 foreach (Card card in m_draggedCards)
                 {
                     // Need to temporarily remove the game object from its stack so that snap manager can update cards in each stack
@@ -103,6 +107,7 @@ namespace Solitaire
                     Vector3 cardPosition = card.transform.position;
                     Vector3 newCardPos = new Vector3(curPosition.x, curPosition.y - (yOffset * i), curPosition.z - i);
                     card.transform.position = newCardPos;
+
                     i++;
                 }
             }
@@ -334,6 +339,9 @@ namespace Solitaire
                         card.GetComponent<MeshCollider>().enabled = true;
                     }
                 }
+
+                // Can stop waiting now that the move is complete
+                m_originSnapManager.SetWaiting(false);
             }
         }
     }

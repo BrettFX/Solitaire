@@ -9,6 +9,7 @@ namespace Solitaire
         public Sections belongsTo;
         private Card[] m_attachedCards;
         private MeshCollider m_snapCollider;
+        private bool m_waiting = false;
 
         private void Start()
         {
@@ -35,10 +36,20 @@ namespace Solitaire
                 for (int i = 0; i < m_attachedCards.Length; i++)
                 {
                     Card card = m_attachedCards[i];
-                    card.SetStartParent(card.transform.parent);
+                    //card.SetStartParent(card.transform.parent);
 
                     // Need to set each card as non-stackable except for the last one in the stack
                     card.SetStackable(i == m_attachedCards.Length - 1);
+
+                    // Need to flip the last card in the stack face up if it's face down (only applies to Tableau)
+                    if (i == m_attachedCards.Length - 1 && belongsTo.Equals(Sections.TABLEAU) && !m_waiting)
+                    {
+                        // Only flip it face up if it's face down and the previous card move was valid
+                        if (card.currentState.Equals(CardState.FACE_DOWN))
+                        {
+                            card.Flip(false);
+                        }
+                    }
 
                     // Normalize z-pos to ensure that z-values are consistent for each card in the stack
                     if (card.transform.position.z != -i)
@@ -84,6 +95,11 @@ namespace Solitaire
             }
 
             return valid;
+        }
+
+        public void SetWaiting(bool wait)
+        {
+            m_waiting = wait;
         }
 
         /**

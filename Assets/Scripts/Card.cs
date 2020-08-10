@@ -111,7 +111,7 @@ namespace Solitaire
         public CardState Flip(bool animate)
         {
             m_flipped = !m_flipped;
-            currentState = m_flipped ? CardState.FACE_DOWN : CardState.FACE_UP;
+            currentState = m_flipped ? CardState.FACE_UP : CardState.FACE_DOWN;
 
             // Keep track of original parent so that it can be restored after flipping
             Transform originalParent = transform.parent;
