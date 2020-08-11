@@ -108,6 +108,11 @@ namespace Solitaire
             return m_startParent;
         }
 
+        public bool IsFaceDown()
+        {
+            return currentState.Equals(CardState.FACE_DOWN);
+        }
+
         public CardState Flip(bool animate)
         {
             m_flipped = !m_flipped;

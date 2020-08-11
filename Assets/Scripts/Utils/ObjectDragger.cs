@@ -82,11 +82,11 @@ namespace Solitaire
         void OnMouseDrag()
         {
             // Only allow dragging cards
-            if (gameObject.tag.Equals("Card"))
+            if (gameObject.CompareTag("Card"))
             {
-                if (m_isStockCard)
+                if (m_isStockCard || GetComponent<Card>().IsFaceDown())
                 {
-                    // Don't allow dragging stock cards
+                    // Don't allow dragging stock cards or face-down cards
                     return;
                 }
 
@@ -165,20 +165,21 @@ namespace Solitaire
                     return;
                 }
 
-                if (m_isStockCard)
-                {
-                    // Don't allow dropping stock cards
-                    return;
-                }
+                // Don't allow dropping stock cards or face-down cards
+                bool valid = !m_isStockCard && !GetComponent<Card>().IsFaceDown();
+                //if (m_isStockCard || GetComponent<Card>().IsFaceDown())
+                //{
+                    
+                //    return;
+                //}
 
                 // Validate the dragged location to determine if the card should be snapped back to original location
                 // or snapped to the respective target (e.g., attempted drag location)
                 //bool collides = Physics.CheckSphere(curPosition, 5.0f);
                 Vector3 collisionVector = new Vector3(10.0f, 10.0f, 1000.0f);
                 bool collides = Physics.CheckBox(curPosition, collisionVector);
-                bool valid = false;
                 
-                if (collides)
+                if (collides && valid)
                 {
                     Collider[] hitColliders = Physics.OverlapBox(curPosition, collisionVector);
                     int i = 0;
@@ -318,6 +319,11 @@ namespace Solitaire
                                     break;
                                 }
                             }
+                        }
+                        else
+                        {
+                            // If collided with anything else other than a card or a snap then deemed as invalid
+                            valid = false;
                         }
 
                         i++;
