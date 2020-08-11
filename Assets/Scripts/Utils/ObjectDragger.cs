@@ -167,15 +167,9 @@ namespace Solitaire
 
                 // Don't allow dropping stock cards or face-down cards
                 bool valid = !m_isStockCard && !GetComponent<Card>().IsFaceDown();
-                //if (m_isStockCard || GetComponent<Card>().IsFaceDown())
-                //{
-                    
-                //    return;
-                //}
 
                 // Validate the dragged location to determine if the card should be snapped back to original location
                 // or snapped to the respective target (e.g., attempted drag location)
-                //bool collides = Physics.CheckSphere(curPosition, 5.0f);
                 Vector3 collisionVector = new Vector3(10.0f, 10.0f, 1000.0f);
                 bool collides = Physics.CheckBox(curPosition, collisionVector);
                 
@@ -249,7 +243,6 @@ namespace Solitaire
                                     }
                                 }
 
-                                //valid = true;
                                 break;
                             }
                         }
@@ -315,7 +308,6 @@ namespace Solitaire
                                         }
                                     }
 
-                                    //valid = true;
                                     break;
                                 }
                             }
