@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Solitaire
 {
@@ -13,7 +15,9 @@ namespace Solitaire
             }
         }
 
-        public static bool DEBUG_MODE = true;
+        public static bool DEBUG_MODE = false;
+
+        public const int HOME_SCENE = 0;
 
         // Control the speed that cards are moved from one point to the next
         public const float CARD_TRANSLATION_SPEED = 500.0f;
@@ -65,14 +69,20 @@ namespace Solitaire
         public GameObject talon;
         public GameObject foundations;
 
-        [Header("Template")]
+        [Header("Utils")]
         public GameObject cardPrefab;
+        public Text lblTimer;
 
         private Sprite[] m_cardSprites;
         private Dictionary<CardSuit, Sprite[]> m_cardSpritesMap;
 
         private Transform m_stockPile;
         private Transform m_talonPile;
+
+        private SnapManager[] m_foundationSnapManagers;
+
+        // Used to reset the timer
+        private float m_timeBuffer = 0.0f;
 
         /**
          * Ensure this class remains a singleton instance
@@ -103,8 +113,55 @@ namespace Solitaire
         {
             m_stockPile = stock.GetComponentInChildren<SnapManager>().transform;
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
+            m_foundationSnapManagers = foundations.GetComponentsInChildren<SnapManager>();
             LoadCardSprites();
             SpawnStack();
+        }
+
+        private void Update()
+        {
+            if (!IsWinningState())
+            {
+                UpdateTimer();
+            }
+        }
+
+        private bool IsWinningState()
+        {
+            int cardCountSum = 0;
+            foreach (SnapManager snapManager in m_foundationSnapManagers)
+            {
+                cardCountSum += snapManager.GetCardCount();
+            }
+
+            // Game is won if the sum of all cards in the foundations is 52
+            return cardCountSum == 52;
+        }
+
+        /**
+        * 
+        **/
+        private void UpdateTimer()
+        {
+            float t = Time.timeSinceLevelLoad - m_timeBuffer; // time since scene loaded
+
+            float milliseconds = (Mathf.Floor(t * 100) % 100); // calculate the milliseconds for the timer
+
+            int seconds = (int)(t % 60); // return the remainder of the seconds divide by 60 as an int
+            t /= 60; // divide current time y 60 to get minutes
+            int minutes = (int)(t % 60); //return the remainder of the minutes divide by 60 as an int
+            t /= 60; // divide by 60 to get hours
+            int hours = (int)(t % 24); // return the remainder of the hours divided by 60 as an int
+
+            lblTimer.text = string.Format("{0}:{1}:{2}.{3}", hours.ToString("00"), minutes.ToString("00"), seconds.ToString("00"), milliseconds.ToString("00"));
+        }
+
+        public void Reset()
+        {
+            // Set the time buffer to the time since level load so the timer starts back at zero
+            // @see UpdateTimer
+            m_timeBuffer = Time.timeSinceLevelLoad;
+            SceneManager.LoadScene(HOME_SCENE);
         }
 
         public Transform GetTalonPile()
@@ -120,7 +177,7 @@ namespace Solitaire
             SnapManager talonSnapManager = talon.GetComponentInChildren<SnapManager>();
 
             Card[] talonCards = talonSnapManager.GetCardSet(0);
-            Debug.Log("Cards in talon:");
+            if (DEBUG_MODE) Debug.Log("Cards in talon:");
             
             // Need to iterate in reverse order so that the cards are drawn from the stock in the same order as before
             for (int i = talonCards.Length - 1; i >= 0; i--)
@@ -153,7 +210,7 @@ namespace Solitaire
         {
             // Load the card sprites from resources
             m_cardSprites = Resources.LoadAll<Sprite>("Sprites/playing_cards_spritesheet_01");
-            Debug.Log("Loaded " + m_cardSprites.Length + " card sprites...");
+            if (DEBUG_MODE) Debug.Log("Loaded " + m_cardSprites.Length + " card sprites...");
             m_cardSpritesMap = new Dictionary<CardSuit, Sprite[]>();
             for (int i = 0; i < m_cardSprites.Length; i++)
             {
@@ -198,7 +255,7 @@ namespace Solitaire
                 }
                 else
                 {
-                    Debug.Log("Excluding " + sprite.name + " from the deck.");
+                    if (DEBUG_MODE) Debug.Log("Excluding " + sprite.name + " from the deck.");
                 }
             }
         }
@@ -309,7 +366,7 @@ namespace Solitaire
         {
             // Card spawn location is dependent on the location of the Stock parent
             Transform stackTarget = stock.GetComponentInChildren<SnapManager>().GetComponent<Transform>();
-            Debug.Log("Stack target is " + stackTarget.tag + " at " + stackTarget.position);
+            if (DEBUG_MODE) Debug.Log("Stack target is " + stackTarget.tag + " at " + stackTarget.position);
 
             int zOffset = 1;
             while (deck.Count != 0)

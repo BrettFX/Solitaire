@@ -58,9 +58,9 @@ namespace Solitaire
                 m_draggedCards = GetComponentInParent<SnapManager>().GetCardSet(GetComponent<Card>());
 
                 // Check the first card to see if it's a stock card
-                Debug.Log("Tag Clicked: " + m_draggedCards[0].transform.parent.parent.tag);
+                if (GameManager.DEBUG_MODE) Debug.Log("Tag Clicked: " + m_draggedCards[0].transform.parent.parent.tag);
                 m_isStockCard = m_draggedCards[0].transform.parent.parent.CompareTag("Stock");
-                Debug.Log("Is Stock Card: " + m_isStockCard);
+                if (GameManager.DEBUG_MODE) Debug.Log("Is Stock Card: " + m_isStockCard);
 
                 // Set each dragged card's start position and parent
                 int i = 0;
@@ -147,7 +147,7 @@ namespace Solitaire
                         if (cardParentSetTag.Equals("Stock"))
                         {
                             m_clickCount++;
-                            Debug.Log("Click count: " + m_clickCount);
+                            if (GameManager.DEBUG_MODE) Debug.Log("Click count: " + m_clickCount);
 
                             // Move the card to the talon pile once it has been clicked on the stock
                             cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
@@ -189,7 +189,7 @@ namespace Solitaire
                             SnapManager snapManager = collidedTransform.GetComponent<SnapManager>();
                             if (GameManager.PROHIBITED_DROP_LOCATIONS.Contains(collidedTransform.parent.tag))
                             {
-                                Debug.Log("Can't manually drop card in " + collidedTransform.parent.tag);
+                                if (GameManager.DEBUG_MODE) Debug.Log("Can't manually drop card in " + collidedTransform.parent.tag);
                                 valid = false;
                                 break;
                             }
@@ -197,11 +197,11 @@ namespace Solitaire
                             // Make sure there isn't already a card attached to the snap (otherwise need to search for card)
                             if (snapManager.HasCard())
                             {
-                                Debug.Log("Snap already has a card, skipping...");
+                                if (GameManager.DEBUG_MODE) Debug.Log("Snap already has a card, skipping...");
                             }
                             else
                             {
-                                Debug.Log("Placing card(s) in: " + collidedTransform.parent.tag);
+                                if (GameManager.DEBUG_MODE) Debug.Log("Placing card(s) in: " + collidedTransform.parent.tag);
 
                                 // Set the new position relative to the snap, adjusting the z value appropriately
                                 Vector3 newPos = new Vector3(
@@ -216,7 +216,7 @@ namespace Solitaire
                                 // Assert that there is only one card being placed if target is foundation
                                 if (isFoundation && m_draggedCards.Length > 1)
                                 {
-                                    Debug.Log("Cannot move more than one card at once to a foundation.");
+                                    if (GameManager.DEBUG_MODE) Debug.Log("Cannot move more than one card at once to a foundation.");
                                     valid = false;
                                     break;
                                 }
@@ -251,7 +251,7 @@ namespace Solitaire
                             // Determine if the card was the same one that is being dragged/dropped
                             if (collidedTransform.Equals(transform))
                             {
-                                Debug.Log("Collided object is self, skipping...");
+                                if (GameManager.DEBUG_MODE) Debug.Log("Collided object is self, skipping...");
                             }                            
                             else
                             {
@@ -259,20 +259,20 @@ namespace Solitaire
                                 Card targetCard = collidedTransform.GetComponent<Card>();
                                 if (!targetCard.IsStackable())
                                 {
-                                    Debug.Log("Card is not stackable, skipping...");
+                                    if (GameManager.DEBUG_MODE) Debug.Log("Card is not stackable, skipping...");
                                 }
                                 else
                                 {
                                     // Reference the snap manager the card is attached to
                                     SnapManager snapManager = targetCard.GetComponentInParent<SnapManager>();
 
-                                    Debug.Log("Placing card(s) in: " + collidedTransform.parent.parent.tag);
+                                    if (GameManager.DEBUG_MODE) Debug.Log("Placing card(s) in: " + collidedTransform.parent.parent.tag);
                                     bool isFoundation = collidedTransform.parent.parent.CompareTag("Foundations");
 
                                     // Assert that there is only one card being placed if target is foundation
                                     if (isFoundation && m_draggedCards.Length > 1)
                                     {
-                                        Debug.Log("Cannot move more than one card at once to a foundation.");
+                                        if (GameManager.DEBUG_MODE) Debug.Log("Cannot move more than one card at once to a foundation.");
                                         valid = false;
                                         break;
                                     }
@@ -324,7 +324,7 @@ namespace Solitaire
 
                 if (!valid)
                 {
-                    Debug.Log("Invalid Move.");
+                    if (GameManager.DEBUG_MODE) Debug.Log("Invalid Move.");
                     // If the drag location is deemed invalid then we should snap back to starting position
                     // Need to iterate the list of dragged cards and set each card back to their respective 
                     // starting position and starting parent

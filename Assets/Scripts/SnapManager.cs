@@ -179,6 +179,11 @@ namespace Solitaire
             return m_attachedCards.Length != 0;
         }
 
+        public int GetCardCount()
+        {
+            return m_attachedCards.Length;
+        }
+
         /**
          * Get a subset of cards from attached cards to the managed snap.
          * @param int startIndex the starting point in the list of cards to base the subset on.
