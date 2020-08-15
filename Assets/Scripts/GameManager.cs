@@ -203,6 +203,12 @@ namespace Solitaire
 
                 // Add the card to the stock
                 card.transform.parent = m_stockPile;
+
+                // Flip the first card from the stock pile over to the talon automatically
+                if (i == 0)
+                {
+                    card.MoveTo(m_talonPile);
+                }
             }
         }
 
