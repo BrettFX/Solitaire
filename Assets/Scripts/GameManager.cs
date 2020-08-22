@@ -23,6 +23,7 @@ namespace Solitaire
         public const float CARD_TRANSLATION_SPEED = 500.0f;
 
         public const float Z_OFFSET = 70.0f;
+        public const float FOUNDATION_Y_OFFSET = 30.0f;
 
         public static readonly string[] VALUE_REF =
         {
@@ -80,6 +81,7 @@ namespace Solitaire
         private Transform m_talonPile;
 
         private SnapManager[] m_foundationSnapManagers;
+        private SnapManager[] m_talonSnapManagers;
 
         // Globally track if cards are being dragged to prevent multi-touch scenarios
         private ObjectDragger m_activeDragger = null;
@@ -117,6 +119,7 @@ namespace Solitaire
             m_stockPile = stock.GetComponentInChildren<SnapManager>().transform;
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
             m_foundationSnapManagers = foundations.GetComponentsInChildren<SnapManager>();
+            m_talonSnapManagers = talon.GetComponentsInChildren<SnapManager>();
             LoadCardSprites();
             SpawnStack();
         }
@@ -199,6 +202,55 @@ namespace Solitaire
         public Transform GetTalonPile()
         {
             return m_talonPile;
+        }
+
+        /**
+         * Get the next avaiable/valid move for the card in question.
+         * Scan through the placeable card locations in the Talons
+         * and Foundations to determine if there is a valid snap location
+         * to move the specified card.
+         * 
+         * The intended use cases for this function is when a user double clicks
+         * a card to auto-complete a move or if the user desires a hint.
+         * 
+         * @param Card card the card to use to compare to any available drop
+         *                  location in the Talons or Foundations.
+         *                  
+         * @return the Transform of the snap that represents the next
+         *         available move for the card in question. Returns null if
+         *         there are no available moves.
+         */
+        public Transform GetNextAvailableMove(Card card)
+        {
+            Transform nextMove = null;
+
+            // First priority is the Foundations since the primary objective of the game is
+            // to get all cards to the Foundations.
+            foreach (SnapManager snapManager in m_foundationSnapManagers)
+            {
+                if (snapManager.IsValidMove(card))
+                {
+                    nextMove = snapManager.transform;
+                    break;
+                }
+            }
+
+            // Second priority is the Talons. Don't try to find a move if one has already been found
+            // in the foundations
+            if (!nextMove)
+            {
+                foreach (SnapManager snapManager in m_talonSnapManagers)
+                {
+                    if (snapManager.IsValidMove(card))
+                    {
+                        nextMove = snapManager.transform;
+                        break;
+                    }
+                }
+            }
+
+
+            return nextMove;
         }
 
         /**

@@ -48,8 +48,12 @@ namespace Solitaire
                 // Perform final steps after translation is complete
                 if (!m_translating)
                 {
-                    // Flip the card without an animation
-                    Flip(false);
+                    // Only flip card if it's face down
+                    if (currentState.Equals(CardState.FACE_DOWN))
+                    {
+                        // Flip the card without an animation
+                        Flip(false);
+                    }
 
                     // Place the card in the respective snap parent
                     transform.parent = m_targetTranslateSnap;
@@ -63,14 +67,38 @@ namespace Solitaire
          */
         public void MoveTo(Transform snap)
         {
+            // Need to get what the snap belongs to so that the card is placed in the correct location
+            SnapManager snapManager = snap.GetComponent<SnapManager>();
+            Sections targetSection = snapManager.belongsTo;
+
+            // Setting for reference to new parent snap
             m_targetTranslateSnap = snap;
-            m_targetTranslatePos = m_targetTranslateSnap.position;
+
+            // Keep track of the starting position
             m_startPos = transform.position;
+
+            // transform position is a special case for the Tableau cards due to y-offset in addition to z-offset
+            if (targetSection.Equals(Sections.TABLEAU) && snapManager.HasCard())
+            {
+                // Need to target the top card in the respective tableau pile and offset the y and z positions
+                Transform newBaseTarget = snapManager.GetTopCard().transform;
+                Vector3 newTargetPos = new Vector3(
+                   newBaseTarget.position.x,
+                   newBaseTarget.position.y - FOUNDATION_Y_OFFSET,
+                   newBaseTarget.position.z - 1
+               );
+
+               m_targetTranslatePos = newTargetPos;
+            }
+            else
+            {
+                m_targetTranslatePos = m_targetTranslateSnap.position;
+            }
 
             // Set the z-value of the transform to move to be high enough to hover over all other cards
             transform.position = new Vector3(
                 transform.position.x,
-                transform.position.y,
+                transform.position.z,
                 -Z_OFFSET
             );
            

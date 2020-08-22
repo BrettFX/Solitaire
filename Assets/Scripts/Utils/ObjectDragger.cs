@@ -108,7 +108,7 @@ namespace Solitaire
                 curPosition.z = -GameManager.Z_OFFSET;
 
                 // Need to iterate the set of dragged cards and adjust the position accordingly
-                float yOffset = 30.0f;
+                float yOffset = GameManager.FOUNDATION_Y_OFFSET;
                 int i = 0;                
                 foreach (Card card in m_draggedCards)
                 {
@@ -146,7 +146,7 @@ namespace Solitaire
                     // Mouse up will be determined as a click if the current position is the same as the start position
                     if (IsClick(curPosition))
                     {
-                        if (gameObject.tag.Equals("Snap"))
+                        if (gameObject.CompareTag("Snap"))
                         {
                             if (transform.parent.CompareTag("Stock"))
                             {
@@ -157,37 +157,45 @@ namespace Solitaire
                         }
                         else
                         {
+                            Card cardOfInterest = gameObject.GetComponent<Card>();
+                            string cardParentSetTag = cardOfInterest.GetStartParent().parent.tag;
+
                             // Determine if double click
                             float timeDiff = Time.timeSinceLevelLoad - m_timeSinceLastClick;
                             if (GameManager.DEBUG_MODE) { Debug.Log("Time difference since last click: " + timeDiff); }
                             bool doubleClick = (m_timeSinceLastClick >= 0) && timeDiff <= CLICK_DIFF_TIME_THRESHOLD;
-                            
-                            if (doubleClick)
+
+                            // Don't apply double-click logic to stock
+                            if (cardParentSetTag.Equals("Stock"))
+                            {
+                                m_clickCount++;
+                                if (GameManager.DEBUG_MODE) Debug.Log("Click count: " + m_clickCount);
+
+                                // Move the card to the talon pile once it has been clicked on the stock
+                                cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
+                            }
+                            else if (doubleClick)
                             {
                                 if (GameManager.DEBUG_MODE) { Debug.Log("Double clicked!"); }
 
-                                // If double click and no valid moves available relative to double clicked card
-                                // Then, normalize card position to prevent from card position becomming malformed
+                                Transform nextMove = GameManager.Instance.GetNextAvailableMove(cardOfInterest);
 
-
-                                // Otherwise, if valid then automatically move the double clicked card to the most appropriate location.
+                                // If double click and there is a valid next move
+                                // Then, automatically move the double clicked card to the most appropriate location. 
+                                if (nextMove)
+                                {
+                                    cardOfInterest.MoveTo(nextMove);
+                                }
+                                else // Otherwise, normalize card position to prevent from card position becomming malformed.
+                                {
+                                    
+                                }
                             }
                             else // Otherwise, single click (process as normal)
                             {
                                 if (GameManager.DEBUG_MODE) { Debug.Log("Single clicked!"); }
 
-                                Card cardOfInterest = gameObject.GetComponent<Card>();
-                                string cardParentSetTag = cardOfInterest.GetStartParent().parent.tag;
-
-                                if (cardParentSetTag.Equals("Stock"))
-                                {
-                                    m_clickCount++;
-                                    if (GameManager.DEBUG_MODE) Debug.Log("Click count: " + m_clickCount);
-
-                                    // Move the card to the talon pile once it has been clicked on the stock
-                                    cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
-                                }
-                                else
+                                if (!cardParentSetTag.Equals("Stock"))
                                 {
                                     // Need to set the parent back to the original parent for card(s) in the set of dragged cards.
                                     foreach (Card card in m_draggedCards)
@@ -263,7 +271,7 @@ namespace Solitaire
                                     valid = snapManager.IsValidMove(m_draggedCards[0]);
                                     if (valid)
                                     {
-                                        float yOffset = isFoundation ? 0.0f : 30.0f;
+                                        float yOffset = isFoundation ? 0.0f : GameManager.FOUNDATION_Y_OFFSET;
                                         int j = 0;
                                         foreach (Card card in m_draggedCards)
                                         {
@@ -319,9 +327,10 @@ namespace Solitaire
                                         valid = snapManager.IsValidMove(m_draggedCards[0]);
                                         if (valid)
                                         {
-                                            float yOffset = isFoundation ? 0.0f : 30.0f;
+                                            float yOffset = isFoundation ? 0.0f : GameManager.FOUNDATION_Y_OFFSET;
 
-                                            // Offset y position by 30 so that the card that is below is still shown
+                                            // Offset y position by specified foundation y-offset
+                                            // so that the card that is below is still shown
                                             Vector3 newPos = new Vector3(
                                                 collidedTransform.position.x,
                                                 collidedTransform.position.y - yOffset,

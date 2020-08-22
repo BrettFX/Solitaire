@@ -185,6 +185,15 @@ namespace Solitaire
         }
 
         /**
+         * Get the top card on the respective snap.
+         * @return the top card. Returns null if there are no cards on the snap.
+         */
+        public Card GetTopCard()
+        {
+            return HasCard() ? m_attachedCards[m_attachedCards.Length - 1] : null;
+        }
+
+        /**
          * Get a subset of cards from attached cards to the managed snap.
          * @param int startIndex the starting point in the list of cards to base the subset on.
          * @return Card[] the subset of cards in the attached cards list
