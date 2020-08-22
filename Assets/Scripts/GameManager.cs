@@ -15,7 +15,7 @@ namespace Solitaire
             }
         }
 
-        public static bool DEBUG_MODE = false;
+        public static bool DEBUG_MODE = true;
 
         public const int HOME_SCENE = 0;
 

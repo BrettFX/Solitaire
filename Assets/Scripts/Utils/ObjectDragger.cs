@@ -4,7 +4,8 @@ namespace Solitaire
 {
     public class ObjectDragger : MonoBehaviour
     {
-        private const float CLICK_THRESHOLD = 100.0f;
+        private const float CLICK_PROXIMITY_THRESHOLD = 100.0f; // Magnitude proximity threshold
+        private const float CLICK_DIFF_TIME_THRESHOLD = 0.3f;   // Difference time threshold between clicks
 
         private Vector3 screenPoint;
         private Vector3 offset;
@@ -15,6 +16,7 @@ namespace Solitaire
         private Card[] m_draggedCards;
 
         private int m_clickCount = 0;
+        private float m_timeSinceLastClick = -1.0f;
         bool m_isStockCard = false;
 
         private SnapManager m_originSnapManager;
@@ -35,7 +37,7 @@ namespace Solitaire
         {
             // Valid click if within +/- threshold
             float sqrMagnitude = Vector3.SqrMagnitude(startPos - currentPos);
-            return sqrMagnitude <= CLICK_THRESHOLD;
+            return sqrMagnitude <= CLICK_PROXIMITY_THRESHOLD;
         }
 
         void OnMouseDown()
@@ -155,27 +157,49 @@ namespace Solitaire
                         }
                         else
                         {
-                            Card cardOfInterest = gameObject.GetComponent<Card>();
-                            string cardParentSetTag = cardOfInterest.GetStartParent().parent.tag;
-
-                            if (cardParentSetTag.Equals("Stock"))
+                            // Determine if double click
+                            float timeDiff = Time.timeSinceLevelLoad - m_timeSinceLastClick;
+                            if (GameManager.DEBUG_MODE) { Debug.Log("Time difference since last click: " + timeDiff); }
+                            bool doubleClick = (m_timeSinceLastClick >= 0) && timeDiff <= CLICK_DIFF_TIME_THRESHOLD;
+                            
+                            if (doubleClick)
                             {
-                                m_clickCount++;
-                                if (GameManager.DEBUG_MODE) Debug.Log("Click count: " + m_clickCount);
+                                if (GameManager.DEBUG_MODE) { Debug.Log("Double clicked!"); }
 
-                                // Move the card to the talon pile once it has been clicked on the stock
-                                cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
+                                // If double click and no valid moves available relative to double clicked card
+                                // Then, normalize card position to prevent from card position becomming malformed
+
+
+                                // Otherwise, if valid then automatically move the double clicked card to the most appropriate location.
                             }
-                            else
+                            else // Otherwise, single click (process as normal)
                             {
-                                // Need to set the parent back to the original parent for card(s) in the set of dragged cards.
-                                foreach (Card card in m_draggedCards)
+                                if (GameManager.DEBUG_MODE) { Debug.Log("Single clicked!"); }
+
+                                Card cardOfInterest = gameObject.GetComponent<Card>();
+                                string cardParentSetTag = cardOfInterest.GetStartParent().parent.tag;
+
+                                if (cardParentSetTag.Equals("Stock"))
                                 {
-                                    card.transform.parent = card.GetStartParent();
+                                    m_clickCount++;
+                                    if (GameManager.DEBUG_MODE) Debug.Log("Click count: " + m_clickCount);
+
+                                    // Move the card to the talon pile once it has been clicked on the stock
+                                    cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
+                                }
+                                else
+                                {
+                                    // Need to set the parent back to the original parent for card(s) in the set of dragged cards.
+                                    foreach (Card card in m_draggedCards)
+                                    {
+                                        card.transform.parent = card.GetStartParent();
+                                    }
                                 }
                             }
                         }
 
+                        // Keep track of the time of last click
+                        m_timeSinceLastClick = Time.timeSinceLevelLoad;
                         return;
                     }
 
