@@ -19,8 +19,8 @@ namespace Solitaire
 
         public const int HOME_SCENE = 0;
 
-        // Control the speed that cards are moved from one point to the next
-        public const float CARD_TRANSLATION_SPEED = 500.0f;
+        // Control the speed that cards are moved from one point to the next (higher = faster)
+        public const float CARD_TRANSLATION_SPEED = 750.0f;
 
         public const float Z_OFFSET = 70.0f;
         public const float FOUNDATION_Y_OFFSET = 30.0f;
@@ -81,7 +81,7 @@ namespace Solitaire
         private Transform m_talonPile;
 
         private SnapManager[] m_foundationSnapManagers;
-        private SnapManager[] m_talonSnapManagers;
+        private SnapManager[] m_tableauSnapManagers;
 
         // Globally track if cards are being dragged to prevent multi-touch scenarios
         private ObjectDragger m_activeDragger = null;
@@ -119,7 +119,7 @@ namespace Solitaire
             m_stockPile = stock.GetComponentInChildren<SnapManager>().transform;
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
             m_foundationSnapManagers = foundations.GetComponentsInChildren<SnapManager>();
-            m_talonSnapManagers = talon.GetComponentsInChildren<SnapManager>();
+            m_tableauSnapManagers = tableau.GetComponentsInChildren<SnapManager>();
             LoadCardSprites();
             SpawnStack();
         }
@@ -235,11 +235,11 @@ namespace Solitaire
                 }
             }
 
-            // Second priority is the Talons. Don't try to find a move if one has already been found
+            // Second priority is the tableau. Don't try to find a move if one has already been found
             // in the foundations
             if (!nextMove)
             {
-                foreach (SnapManager snapManager in m_talonSnapManagers)
+                foreach (SnapManager snapManager in m_tableauSnapManagers)
                 {
                     if (snapManager.IsValidMove(card))
                     {
@@ -248,7 +248,6 @@ namespace Solitaire
                     }
                 }
             }
-
 
             return nextMove;
         }

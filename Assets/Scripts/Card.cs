@@ -64,8 +64,10 @@ namespace Solitaire
         /**
          * Move this card to specified the target snap transform
          * @param Transform snap the target snap transform to move this card to
+         * @param float yOffset the y-offset for handling multiple card translations at once
+         *                      defaults to the GameManager FOUNDATION_Y_OFFSET.
          */
-        public void MoveTo(Transform snap)
+        public void MoveTo(Transform snap, float yOffset = FOUNDATION_Y_OFFSET)
         {
             // Need to get what the snap belongs to so that the card is placed in the correct location
             SnapManager snapManager = snap.GetComponent<SnapManager>();
@@ -73,6 +75,7 @@ namespace Solitaire
 
             // Setting for reference to new parent snap
             m_targetTranslateSnap = snap;
+            Debug.Log("Target translate snap: " + m_targetTranslateSnap);
 
             // Keep track of the starting position
             m_startPos = transform.position;
@@ -84,7 +87,7 @@ namespace Solitaire
                 Transform newBaseTarget = snapManager.GetTopCard().transform;
                 Vector3 newTargetPos = new Vector3(
                    newBaseTarget.position.x,
-                   newBaseTarget.position.y - FOUNDATION_Y_OFFSET,
+                   newBaseTarget.position.y - yOffset,
                    newBaseTarget.position.z - 1
                );
 
@@ -98,7 +101,7 @@ namespace Solitaire
             // Set the z-value of the transform to move to be high enough to hover over all other cards
             transform.position = new Vector3(
                 transform.position.x,
-                transform.position.z,
+                transform.position.y,
                 -Z_OFFSET
             );
            

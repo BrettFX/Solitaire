@@ -165,6 +165,8 @@ namespace Solitaire
                             if (GameManager.DEBUG_MODE) { Debug.Log("Time difference since last click: " + timeDiff); }
                             bool doubleClick = (m_timeSinceLastClick >= 0) && timeDiff <= CLICK_DIFF_TIME_THRESHOLD;
 
+                            Transform nextMove = null;
+
                             // Don't apply double-click logic to stock
                             if (cardParentSetTag.Equals("Stock"))
                             {
@@ -176,32 +178,45 @@ namespace Solitaire
                             }
                             else if (doubleClick)
                             {
-                                if (GameManager.DEBUG_MODE) { Debug.Log("Double clicked!"); }
-
-                                Transform nextMove = GameManager.Instance.GetNextAvailableMove(cardOfInterest);
+                                nextMove = GameManager.Instance.GetNextAvailableMove(cardOfInterest);
+                                if (GameManager.DEBUG_MODE)
+                                {
+                                    Debug.Log("Double clicked!");
+                                    Debug.Log("Next Move: " + nextMove);
+                                }
 
                                 // If double click and there is a valid next move
                                 // Then, automatically move the double clicked card to the most appropriate location. 
                                 if (nextMove)
                                 {
-                                    cardOfInterest.MoveTo(nextMove);
+                                    // Need to iterate all dragged cards to handle the case of double clicking a card that's not the top card
+                                    for (int i = 0; i < m_draggedCards.Length; i++)
+                                    {
+                                        Card card = m_draggedCards[i];
+                                        card.MoveTo(nextMove, GameManager.FOUNDATION_Y_OFFSET * (i + 1));
+                                    }
+
+                                    foreach(Card card in m_draggedCards)
+                                    {
+                                        card.MoveTo(nextMove);
+                                    }
+
+                                    // Have to notify that waiting is complete for destination snap manager
+                                    m_originSnapManager.GetComponent<SnapManager>().SetWaiting(false);
                                 }
                                 else // Otherwise, normalize card position to prevent from card position becomming malformed.
                                 {
                                     
                                 }
                             }
-                            else // Otherwise, single click (process as normal)
-                            {
-                                if (GameManager.DEBUG_MODE) { Debug.Log("Single clicked!"); }
 
-                                if (!cardParentSetTag.Equals("Stock"))
+                            // Handle cleanup case for 
+                            if (!cardParentSetTag.Equals("Stock") && !nextMove)
+                            {
+                                // Need to set the parent back to the original parent for card(s) in the set of dragged cards.
+                                foreach (Card card in m_draggedCards)
                                 {
-                                    // Need to set the parent back to the original parent for card(s) in the set of dragged cards.
-                                    foreach (Card card in m_draggedCards)
-                                    {
-                                        card.transform.parent = card.GetStartParent();
-                                    }
+                                    card.transform.parent = card.GetStartParent();
                                 }
                             }
                         }
