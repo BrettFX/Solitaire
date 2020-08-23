@@ -178,7 +178,9 @@ namespace Solitaire
                             }
                             else if (doubleClick)
                             {
-                                nextMove = GameManager.Instance.GetNextAvailableMove(cardOfInterest);
+                                // Determine the next valid move. Supply the dragged cards count so prevent the scenario in which
+                                // more than one card is dragged to a foundation in one event.
+                                nextMove = GameManager.Instance.GetNextAvailableMove(cardOfInterest, m_draggedCards.Length);
                                 if (GameManager.DEBUG_MODE)
                                 {
                                     Debug.Log("Double clicked!");
@@ -197,11 +199,11 @@ namespace Solitaire
                                 }
                                 else // Otherwise, normalize card position to prevent from card position becomming malformed.
                                 {
-                                    
+                                    // TODO normalize card positions
                                 }
                             }
 
-                            // Handle cleanup case for 
+                            // Handle cleanup case
                             if (!cardParentSetTag.Equals("Stock") && !nextMove)
                             {
                                 // Need to set the parent back to the original parent for card(s) in the set of dragged cards.

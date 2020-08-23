@@ -216,25 +216,35 @@ namespace Solitaire
          * @param Card card the card to use to compare to any available drop
          *                  location in the Talons or Foundations.
          *                  
+         * @param int cardCount the number of cards that are being dragged 
+         *                      relative to the card in question. Effects
+         *                      the validation process (e.g., can't move more
+         *                      than one card to the Foundations pile with a single
+         *                      drag)
+         *                  
          * @return the Transform of the snap that represents the next
          *         available move for the card in question. Returns null if
          *         there are no available moves.
          */
-        public Transform GetNextAvailableMove(Card card)
+        public Transform GetNextAvailableMove(Card card, int cardCount = 1)
         {
             Transform nextMove = null;
 
             // First priority is the Foundations since the primary objective of the game is
             // to get all cards to the Foundations.
-            foreach (SnapManager snapManager in m_foundationSnapManagers)
+            // Only check valid foundation location if the card count is 1
+            if (cardCount == 1)
             {
-                if (snapManager.IsValidMove(card))
+                foreach (SnapManager snapManager in m_foundationSnapManagers)
                 {
-                    // Skip if the next move is the current card location
-                    if (!snapManager.transform.Equals(card.GetStartParent()))
+                    if (snapManager.IsValidMove(card))
                     {
-                        nextMove = snapManager.transform;
-                        break;
+                        // Skip if the next move is the current card location
+                        if (!snapManager.transform.Equals(card.GetStartParent()))
+                        {
+                            nextMove = snapManager.transform;
+                            break;
+                        }
                     }
                 }
             }
