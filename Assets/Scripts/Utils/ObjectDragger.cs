@@ -105,7 +105,7 @@ namespace Solitaire
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
 
                 // Set z-value to a large negative number so that the card that is being dragged always appears on top
-                curPosition.z = -GameManager.Z_OFFSET;
+                curPosition.z = -GameManager.Z_OFFSET_DRAGGING;
 
                 // Need to iterate the set of dragged cards and adjust the position accordingly
                 float yOffset = GameManager.FOUNDATION_Y_OFFSET;
@@ -190,15 +190,11 @@ namespace Solitaire
                                 if (nextMove)
                                 {
                                     // Need to iterate all dragged cards to handle the case of double clicking a card that's not the top card
+                                    // TODO Can't rely on m_dragged cards. Need to use snap manager to get the set of cards to drag
                                     for (int i = 0; i < m_draggedCards.Length; i++)
                                     {
                                         Card card = m_draggedCards[i];
-                                        card.MoveTo(nextMove, GameManager.FOUNDATION_Y_OFFSET * (i + 1));
-                                    }
-
-                                    foreach(Card card in m_draggedCards)
-                                    {
-                                        card.MoveTo(nextMove);
+                                        card.MoveTo(nextMove, GameManager.FOUNDATION_Y_OFFSET * (i + 1), i);
                                     }
 
                                     // Have to notify that waiting is complete for destination snap manager

@@ -22,7 +22,7 @@ namespace Solitaire
         // Control the speed that cards are moved from one point to the next (higher = faster)
         public const float CARD_TRANSLATION_SPEED = 750.0f;
 
-        public const float Z_OFFSET = 70.0f;
+        public const float Z_OFFSET_DRAGGING = 70.0f;
         public const float FOUNDATION_Y_OFFSET = 30.0f;
 
         public static readonly string[] VALUE_REF =

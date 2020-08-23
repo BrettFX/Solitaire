@@ -67,7 +67,7 @@ namespace Solitaire
          * @param float yOffset the y-offset for handling multiple card translations at once
          *                      defaults to the GameManager FOUNDATION_Y_OFFSET.
          */
-        public void MoveTo(Transform snap, float yOffset = FOUNDATION_Y_OFFSET)
+        public void MoveTo(Transform snap, float yOffset = FOUNDATION_Y_OFFSET, float zOffset = 1)
         {
             // Need to get what the snap belongs to so that the card is placed in the correct location
             SnapManager snapManager = snap.GetComponent<SnapManager>();
@@ -88,7 +88,7 @@ namespace Solitaire
                 Vector3 newTargetPos = new Vector3(
                    newBaseTarget.position.x,
                    newBaseTarget.position.y - yOffset,
-                   newBaseTarget.position.z - 1
+                   newBaseTarget.position.z - zOffset
                );
 
                m_targetTranslatePos = newTargetPos;
@@ -102,7 +102,7 @@ namespace Solitaire
             transform.position = new Vector3(
                 transform.position.x,
                 transform.position.y,
-                -Z_OFFSET
+                -Z_OFFSET_DRAGGING
             );
            
             transform.parent = null;     // Temporarily detatch from the parent
