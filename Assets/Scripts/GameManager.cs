@@ -230,8 +230,12 @@ namespace Solitaire
             {
                 if (snapManager.IsValidMove(card))
                 {
-                    nextMove = snapManager.transform;
-                    break;
+                    // Skip if the next move is the current card location
+                    if (!snapManager.transform.Equals(card.GetStartParent()))
+                    {
+                        nextMove = snapManager.transform;
+                        break;
+                    }
                 }
             }
 
@@ -243,8 +247,12 @@ namespace Solitaire
                 {
                     if (snapManager.IsValidMove(card))
                     {
-                        nextMove = snapManager.transform;
-                        break;
+                        // Skip if the next move is the current card location
+                        if (!snapManager.transform.Equals(card.GetStartParent()))
+                        {
+                            nextMove = snapManager.transform;
+                            break;
+                        }
                     }
                 }
             }

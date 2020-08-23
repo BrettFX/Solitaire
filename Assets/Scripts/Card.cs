@@ -28,85 +28,173 @@ namespace Solitaire
         private Transform m_targetTranslateSnap;
         private Vector3 m_targetTranslatePos;
 
+        private Card[] m_draggedCards;
+
         // Only used for dynamic card translation animations
         private void Update()
         {
             if (m_translating)
             {
-                transform.position = Vector3.MoveTowards(
-                    transform.position,
-                    m_targetTranslatePos,
-                    CARD_TRANSLATION_SPEED * Time.deltaTime
-                );
+                if (m_draggedCards != null && m_draggedCards.Length > 1)
+                {
+                    foreach (Card card in m_draggedCards)
+                    {
+                        Vector3 modTargetPos = card.GetTargetTranslatePosition();
 
-                // Stop translating once the x and y values match the translation target
-                m_translating = !(
-                    transform.position.x == m_targetTranslatePos.x &&
-                    transform.position.y == m_targetTranslatePos.y
-                );
+                        card.transform.position = Vector3.MoveTowards(
+                            card.transform.position,
+                            modTargetPos,
+                            CARD_TRANSLATION_SPEED * Time.deltaTime
+                        );
+
+                        // Stop translating once the x and y values match the translation target
+                        m_translating = !(
+                            card.transform.position.x == modTargetPos.x &&
+                            card.transform.position.y == modTargetPos.y
+                        );
+                    }
+                }
+                else
+                {
+                    transform.position = Vector3.MoveTowards(
+                        transform.position,
+                        m_targetTranslatePos,
+                        CARD_TRANSLATION_SPEED * Time.deltaTime
+                    );
+
+                    // Stop translating once the x and y values match the translation target
+                    m_translating = !(
+                        transform.position.x == m_targetTranslatePos.x &&
+                        transform.position.y == m_targetTranslatePos.y
+                    );
+                }
 
                 // Perform final steps after translation is complete
                 if (!m_translating)
                 {
-                    // Only flip card if it's face down
-                    if (currentState.Equals(CardState.FACE_DOWN))
+                    if (m_draggedCards != null && m_draggedCards.Length > 1)
                     {
-                        // Flip the card without an animation
-                        Flip(false);
-                    }
+                        // Don't need to check current state when dragging more than one card
+                        // since the only case when the card is face down is if it came from the
+                        // stock pile.
+                        foreach (Card card in m_draggedCards)
+                        {
+                            // Place the card in the respective snap parent (this ensures proper card order)
+                            card.transform.parent = m_targetTranslateSnap;
 
-                    // Place the card in the respective snap parent
-                    transform.parent = m_targetTranslateSnap;
+                            // Re-enable the mesh colliders on the cards
+                            card.GetComponent<MeshCollider>().enabled = true;
+                        }
+                    }
+                    else
+                    {
+                        // Only flip card if it's face down
+                        if (currentState.Equals(CardState.FACE_DOWN))
+                        {
+                            // Flip the card without an animation
+                            Flip(false);
+                        }
+
+                        // Place the card in the respective snap parent
+                        transform.parent = m_targetTranslateSnap;
+
+                        // Re-enable the mesh colliders on this card
+                        GetComponent<MeshCollider>().enabled = true;
+                    }
                 }
             }
         }
 
         /**
-         * Move this card to specified the target snap transform
+         * Move this card instance and/or other cards in it's card set to the specified target snap transform
          * @param Transform snap the target snap transform to move this card to
-         * @param float yOffset the y-offset for handling multiple card translations at once
-         *                      defaults to the GameManager FOUNDATION_Y_OFFSET.
+         * @param Card[] cardSet the set of dragged cards to handle translation all at once
+         *                       with respect to this card instance. Defaults to null if a card set is not provided.
+         *                       If the card set has only one card in it then it's assumed that the one card is
+         *                       this card instance and will be processed as such.
          */
-        public void MoveTo(Transform snap, float yOffset = FOUNDATION_Y_OFFSET, float zOffset = 1)
+        public void MoveTo(Transform snap, Card[] cardSet = null)
         {
             // Need to get what the snap belongs to so that the card is placed in the correct location
             SnapManager snapManager = snap.GetComponent<SnapManager>();
             Sections targetSection = snapManager.belongsTo;
 
+            // Need to target the top card in the respective tableau pile and offset the y and z positions
+            Transform tableauHasCardTarget = targetSection.Equals(Sections.TABLEAU) && snapManager.HasCard() ?
+                                                                     snapManager.GetTopCard().transform : snap;
+
             // Setting for reference to new parent snap
             m_targetTranslateSnap = snap;
+            m_targetTranslatePos = m_targetTranslateSnap.position; // Defaults to target snap position
             Debug.Log("Target translate snap: " + m_targetTranslateSnap);
 
             // Keep track of the starting position
             m_startPos = transform.position;
 
-            // transform position is a special case for the Tableau cards due to y-offset in addition to z-offset
-            if (targetSection.Equals(Sections.TABLEAU) && snapManager.HasCard())
-            {
-                // Need to target the top card in the respective tableau pile and offset the y and z positions
-                Transform newBaseTarget = snapManager.GetTopCard().transform;
-                Vector3 newTargetPos = new Vector3(
-                   newBaseTarget.position.x,
-                   newBaseTarget.position.y - yOffset,
-                   newBaseTarget.position.z - zOffset
-               );
+            m_draggedCards = cardSet;
 
-               m_targetTranslatePos = newTargetPos;
-            }
-            else
+            // Process a bit differently if a card set has been provided
+            if (m_draggedCards != null && m_draggedCards.Length > 1)
             {
-                m_targetTranslatePos = m_targetTranslateSnap.position;
-            }
+                // Do a first pass-through to remove parent and bring z-value of each of the dragged cards
+                // to the z-offset dragging value
+                for (int i = 0; i < m_draggedCards.Length; i++)
+                {
+                    Card draggedCard = m_draggedCards[i];
+                    draggedCard.transform.parent = null;
 
-            // Set the z-value of the transform to move to be high enough to hover over all other cards
-            transform.position = new Vector3(
-                transform.position.x,
-                transform.position.y,
-                -Z_OFFSET_DRAGGING
-            );
-           
-            transform.parent = null;     // Temporarily detatch from the parent
+                    Vector3 newTargetPos = new Vector3(
+                       tableauHasCardTarget.position.x,
+                       tableauHasCardTarget.position.y - (FOUNDATION_Y_OFFSET * (i + 1)),
+                       tableauHasCardTarget.position.z - (i + 1)
+                    );
+
+                    // Set the new translate position for the dragged card
+                    draggedCard.SetTargetTranslatePosition(newTargetPos);
+
+                    // Set the z-value of the transform to move to be high enough to hover over all other cards
+                    draggedCard.transform.position = new Vector3(
+                        draggedCard.transform.position.x,
+                        draggedCard.transform.position.y,
+                        -Z_OFFSET_DRAGGING - i
+                    );
+                }
+            }
+            else // Otherwise, process on one card
+            {
+                // transform position is a special case for the Tableau cards due to y-offset in addition to z-offset
+                if (targetSection.Equals(Sections.TABLEAU) && snapManager.HasCard())
+                {
+                    Vector3 newTargetPos = new Vector3(
+                       tableauHasCardTarget.position.x,
+                       tableauHasCardTarget.position.y - FOUNDATION_Y_OFFSET,
+                       tableauHasCardTarget.position.z - 1
+                    );
+
+                    m_targetTranslatePos = newTargetPos;
+                }
+
+                transform.parent = null;     // Temporarily detatch from the parent
+
+                // Set the z-value of the transform to move to be high enough to hover over all other cards
+                transform.position = new Vector3(
+                    transform.position.x,
+                    transform.position.y,
+                    -Z_OFFSET_DRAGGING
+                );
+            }
+            
             m_translating = true;        // Begin the translating animation
+        }
+
+        public void SetTargetTranslatePosition(Vector3 targetPos)
+        {
+            m_targetTranslatePos = targetPos;
+        }
+
+        public Vector3 GetTargetTranslatePosition()
+        {
+            return m_targetTranslatePos;
         }
 
         public void SetStackable(bool stackable)

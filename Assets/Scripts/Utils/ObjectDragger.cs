@@ -189,13 +189,8 @@ namespace Solitaire
                                 // Then, automatically move the double clicked card to the most appropriate location. 
                                 if (nextMove)
                                 {
-                                    // Need to iterate all dragged cards to handle the case of double clicking a card that's not the top card
-                                    // TODO Can't rely on m_dragged cards. Need to use snap manager to get the set of cards to drag
-                                    for (int i = 0; i < m_draggedCards.Length; i++)
-                                    {
-                                        Card card = m_draggedCards[i];
-                                        card.MoveTo(nextMove, GameManager.FOUNDATION_Y_OFFSET * (i + 1), i);
-                                    }
+                                    // Move all cards in set of dragged cards (can be 1)
+                                    cardOfInterest.MoveTo(nextMove, m_draggedCards);
 
                                     // Have to notify that waiting is complete for destination snap manager
                                     m_originSnapManager.GetComponent<SnapManager>().SetWaiting(false);
