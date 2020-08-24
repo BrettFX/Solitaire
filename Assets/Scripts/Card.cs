@@ -142,9 +142,10 @@ namespace Solitaire
                     Card draggedCard = m_draggedCards[i];
                     draggedCard.transform.parent = null;
 
+                    // Apply y-offset when dragging multiple cards (start without y-offset if there isn't a card on the snap)
                     Vector3 newTargetPos = new Vector3(
                        tableauHasCardTarget.position.x,
-                       tableauHasCardTarget.position.y - (FOUNDATION_Y_OFFSET * (i + 1)),
+                       tableauHasCardTarget.position.y - (FOUNDATION_Y_OFFSET * (snapManager.HasCard() ? i + 1 : i)),
                        tableauHasCardTarget.position.z - (i + 1)
                     );
 
