@@ -210,6 +210,9 @@ namespace Solitaire
                                 foreach (Card card in m_draggedCards)
                                 {
                                     card.transform.parent = card.GetStartParent();
+
+                                    // Ensure all mesh colliders are re-enabled (corner case when double clicking a face down card)
+                                    card.GetComponent<MeshCollider>().enabled = true;
                                 }
                             }
                         }

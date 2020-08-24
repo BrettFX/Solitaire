@@ -15,7 +15,7 @@ namespace Solitaire
             }
         }
 
-        public static bool DEBUG_MODE = true;
+        public static bool DEBUG_MODE = false;
 
         public const int HOME_SCENE = 0;
 
@@ -228,40 +228,45 @@ namespace Solitaire
          */
         public Transform GetNextAvailableMove(Card card, int cardCount = 1)
         {
+
             Transform nextMove = null;
 
-            // First priority is the Foundations since the primary objective of the game is
-            // to get all cards to the Foundations.
-            // Only check valid foundation location if the card count is 1
-            if (cardCount == 1)
+            // Handle face-down card corner case (only process if the card is face up)
+            if (!card.IsFaceDown())
             {
-                foreach (SnapManager snapManager in m_foundationSnapManagers)
+                // First priority is the Foundations since the primary objective of the game is
+                // to get all cards to the Foundations.
+                // Only check valid foundation location if the card count is 1
+                if (cardCount == 1)
                 {
-                    if (snapManager.IsValidMove(card))
+                    foreach (SnapManager snapManager in m_foundationSnapManagers)
                     {
-                        // Skip if the next move is the current card location
-                        if (!snapManager.transform.Equals(card.GetStartParent()))
+                        if (snapManager.IsValidMove(card))
                         {
-                            nextMove = snapManager.transform;
-                            break;
+                            // Skip if the next move is the current card location
+                            if (!snapManager.transform.Equals(card.GetStartParent()))
+                            {
+                                nextMove = snapManager.transform;
+                                break;
+                            }
                         }
                     }
                 }
-            }
 
-            // Second priority is the tableau. Don't try to find a move if one has already been found
-            // in the foundations
-            if (!nextMove)
-            {
-                foreach (SnapManager snapManager in m_tableauSnapManagers)
+                // Second priority is the tableau. Don't try to find a move if one has already been found
+                // in the foundations
+                if (!nextMove)
                 {
-                    if (snapManager.IsValidMove(card))
+                    foreach (SnapManager snapManager in m_tableauSnapManagers)
                     {
-                        // Skip if the next move is the current card location
-                        if (!snapManager.transform.Equals(card.GetStartParent()))
+                        if (snapManager.IsValidMove(card))
                         {
-                            nextMove = snapManager.transform;
-                            break;
+                            // Skip if the next move is the current card location
+                            if (!snapManager.transform.Equals(card.GetStartParent()))
+                            {
+                                nextMove = snapManager.transform;
+                                break;
+                            }
                         }
                     }
                 }

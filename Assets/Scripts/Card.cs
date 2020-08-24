@@ -126,7 +126,6 @@ namespace Solitaire
             // Setting for reference to new parent snap
             m_targetTranslateSnap = snap;
             m_targetTranslatePos = m_targetTranslateSnap.position; // Defaults to target snap position
-            Debug.Log("Target translate snap: " + m_targetTranslateSnap);
 
             // Keep track of the starting position
             m_startPos = transform.position;
