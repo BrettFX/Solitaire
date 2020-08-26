@@ -30,6 +30,8 @@ namespace Solitaire
 
         private Card[] m_draggedCards;
 
+        private float m_totalTime = 0.0f;
+
         // Only used for dynamic card translation animations
         private void Update()
         {
@@ -41,33 +43,32 @@ namespace Solitaire
                     {
                         Vector3 modTargetPos = card.GetTargetTranslatePosition();
 
-                        card.transform.position = Vector3.MoveTowards(
-                            card.transform.position,
+                        // Use linear interpolation (lerp) to move from point a to point b within a specific amount of time
+                        card.transform.position = Vector3.Lerp(
+                            card.GetStartPos(),
                             modTargetPos,
-                            CARD_TRANSLATION_SPEED * Time.deltaTime
+                            m_totalTime
                         );
 
-                        // Stop translating once the x and y values match the translation target
-                        m_translating = !(
-                            card.transform.position.x == modTargetPos.x &&
-                            card.transform.position.y == modTargetPos.y
-                        );
+                        // Stop translating once the total time has elapsed for linear interpolation
+                        m_translating = m_totalTime < 1.0f;
                     }
                 }
                 else
                 {
-                    transform.position = Vector3.MoveTowards(
-                        transform.position,
+                    // Use linear interpolation (lerp) to move from point a to point b within a specific amount of time
+                    transform.position = Vector3.Lerp(
+                        GetStartPos(),
                         m_targetTranslatePos,
-                        CARD_TRANSLATION_SPEED * Time.deltaTime
-                    );
+                        m_totalTime
+                     );
 
-                    // Stop translating once the x and y values match the translation target
-                    m_translating = !(
-                        transform.position.x == m_targetTranslatePos.x &&
-                        transform.position.y == m_targetTranslatePos.y
-                    );
+                    // Stop translating once the total time has elapsed for linear interpolation
+                    m_translating = m_totalTime < 1.0f;
                 }
+
+                // Accumulate total time with respect to the card translation speed
+                m_totalTime += Time.deltaTime / CARD_TRANSLATION_SPEED;
 
                 // Perform final steps after translation is complete
                 if (!m_translating)
@@ -101,6 +102,9 @@ namespace Solitaire
                         // Re-enable the mesh colliders on this card
                         GetComponent<MeshCollider>().enabled = true;
                     }
+
+                    // Reset the total time for correct linear interpolation (lerp)
+                    m_totalTime = 0.0f;
                 }
             }
         }
@@ -142,6 +146,9 @@ namespace Solitaire
                     Card draggedCard = m_draggedCards[i];
                     draggedCard.transform.parent = null;
 
+                    // Keep track of each card's starting position
+                    draggedCard.SetStartPos(draggedCard.transform.position);
+
                     // Apply y-offset when dragging multiple cards (start without y-offset if there isn't a card on the snap)
                     Vector3 newTargetPos = new Vector3(
                        tableauHasCardTarget.position.x,
@@ -174,7 +181,8 @@ namespace Solitaire
                     m_targetTranslatePos = newTargetPos;
                 }
 
-                transform.parent = null;     // Temporarily detatch from the parent
+                transform.parent = null;         // Temporarily detatch from the parent
+                SetStartPos(transform.position); // Keep track of this card instance start position
 
                 // Set the z-value of the transform to move to be high enough to hover over all other cards
                 transform.position = new Vector3(
