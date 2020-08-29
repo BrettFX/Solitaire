@@ -23,7 +23,7 @@ namespace Solitaire
         public const float CARD_TRANSLATION_SPEED = 0.25f; 
 
         public const float Z_OFFSET_DRAGGING = 70.0f;
-        public const float FOUNDATION_Y_OFFSET = 30.0f;
+        public const float FOUNDATION_Y_OFFSET = 37.5f;
 
         public static readonly string[] VALUE_REF =
         {
