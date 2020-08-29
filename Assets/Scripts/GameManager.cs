@@ -5,6 +5,43 @@ using UnityEngine.UI;
 
 namespace Solitaire
 {
+    public class Move
+    {
+        private Card[] m_cards;
+        private SnapManager m_prevParent;
+        private SnapManager m_nextParent;
+
+        public void SetCards(Card[] cards)
+        {
+            m_cards = cards;
+        }
+
+        public void SetPreviousParent(SnapManager prevParent)
+        {
+            m_prevParent = prevParent;
+        }
+
+        public void SetNextParent(SnapManager nextParent)
+        {
+            m_nextParent = nextParent;
+        }
+
+        public Card[] GetCards()
+        {
+            return m_cards;
+        }
+
+        public SnapManager GetPreviousParent()
+        {
+            return m_prevParent;
+        }
+
+        public SnapManager GetNextParent()
+        {
+            return m_nextParent;
+        }
+    }
+
     public class GameManager : MonoBehaviour
     {
         private static GameManager instance;
@@ -89,6 +126,9 @@ namespace Solitaire
         // Used to reset the timer
         private float m_timeBuffer = 0.0f;
 
+        // Keep track of moves to allow for undoing and redoing
+        private List<Move> m_moves;
+
         /**
          * Ensure this class remains a singleton instance
          * */
@@ -120,6 +160,7 @@ namespace Solitaire
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
             m_foundationSnapManagers = foundations.GetComponentsInChildren<SnapManager>();
             m_tableauSnapManagers = tableau.GetComponentsInChildren<SnapManager>();
+            m_moves = new List<Move>();
             LoadCardSprites();
             SpawnStack();
         }
