@@ -9,8 +9,8 @@ namespace Solitaire
     {
         private Card m_topCard;
         private Card[] m_cards;
-        private SnapManager m_prevParent;
-        private SnapManager m_nextParent;
+        private Transform m_prevParent;
+        private Transform m_nextParent;
 
         public void SetCards(Card[] cards)
         {
@@ -18,12 +18,12 @@ namespace Solitaire
             m_topCard = m_cards[0];
         }
 
-        public void SetPreviousParent(SnapManager prevParent)
+        public void SetPreviousParent(Transform prevParent)
         {
             m_prevParent = prevParent;
         }
 
-        public void SetNextParent(SnapManager nextParent)
+        public void SetNextParent(Transform nextParent)
         {
             m_nextParent = nextParent;
         }
@@ -38,12 +38,12 @@ namespace Solitaire
             return m_cards;
         }
 
-        public SnapManager GetPreviousParent()
+        public Transform GetPreviousParent()
         {
             return m_prevParent;
         }
 
-        public SnapManager GetNextParent()
+        public Transform GetNextParent()
         {
             return m_nextParent;
         }
@@ -106,6 +106,13 @@ namespace Solitaire
             STOCK,
             TALON,
             FOUNDATIONS
+        };
+
+        public enum MoveTypes
+        {
+            UNDO,
+            REDO,
+            NORMAL
         };
 
         [Header("Set Up")]
@@ -237,10 +244,7 @@ namespace Solitaire
             Move move = m_moves.Pop();
 
             // Perform the move; don't want to track changes so that undone moves are managed through here
-            move.GetTopCard().MoveTo(move.GetPreviousParent().transform, move.GetCards(), false);
-
-            // Add the undone move to the list of undone moves (for redo capability)
-            m_undoneMoves.Push(move);
+            move.GetTopCard().MoveTo(move.GetPreviousParent(), move.GetCards(), MoveTypes.UNDO);
         }
 
         /**
@@ -252,10 +256,7 @@ namespace Solitaire
             Move move = m_undoneMoves.Pop();
 
             // Perform the move; don't want to track changes so that redone moves are managed through here
-            move.GetTopCard().MoveTo(move.GetPreviousParent().transform, move.GetCards(), false);
-
-            // Add the redone move back to the list/stack of moves
-            m_moves.Push(move);
+            move.GetTopCard().MoveTo(move.GetNextParent(), move.GetCards(), MoveTypes.REDO);
         }
 
         public void Reset()
@@ -266,9 +267,18 @@ namespace Solitaire
             SceneManager.LoadScene(HOME_SCENE);
         }
 
-        public void AddMove(Move move)
+        public void AddMove(Move move, MoveTypes moveType)
         {
-            m_moves.Push(move);
+            switch (moveType)
+            {
+                case MoveTypes.NORMAL:
+                case MoveTypes.REDO:
+                    m_moves.Push(move);
+                    break;
+                case MoveTypes.UNDO:
+                    m_undoneMoves.Push(move);
+                    break;
+            }
         }
 
         /**

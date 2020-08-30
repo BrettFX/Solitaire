@@ -116,9 +116,9 @@ namespace Solitaire
          *                       with respect to this card instance. Defaults to null if a card set is not provided.
          *                       If the card set has only one card in it then it's assumed that the one card is
          *                       this card instance and will be processed as such.
-         * @param bool trackChanges whether the move should be tracked and added to the list of moves.
+         * @param MoveTypes moveType the type of move that determines how the move should be tracked in the GameManager.
          */
-        public void MoveTo(Transform snap, Card[] cardSet = null, bool trackChanges = true)
+        public void MoveTo(Transform snap, Card[] cardSet = null, MoveTypes moveType = MoveTypes.NORMAL)
         {
             // Prepare the move object
             Move move = new Move();
@@ -128,14 +128,14 @@ namespace Solitaire
             move.SetCards(cardSet ?? (new Card[] { this }));
 
             // We know that the card has/had a parent
-            move.SetPreviousParent(m_startParent.GetComponent<SnapManager>());
+            move.SetPreviousParent(m_startParent);
 
             // Need to get what the snap belongs to so that the card is placed in the correct location
             SnapManager snapManager = snap.GetComponent<SnapManager>();
             Sections targetSection = snapManager.belongsTo;
 
             // Set the next parent in the move
-            move.SetNextParent(snapManager);
+            move.SetNextParent(snapManager.transform);
 
             // Need to target the top card in the respective tableau pile and offset the y and z positions
             Transform tableauHasCardTarget = targetSection.Equals(Sections.TABLEAU) && snapManager.HasCard() ?
@@ -206,11 +206,11 @@ namespace Solitaire
                 );
             }
 
-            // Only add move if tracking changes
-            if (trackChanges)
-                GameManager.Instance.AddMove(move);     // Add the move to the game manager instance
+            // Add the move to the game manager instance
+            GameManager.Instance.AddMove(move, moveType);
 
-            m_translating = true;                       // Begin the translating animation
+            // Begin the translating animation
+            m_translating = true;                           
         }
 
         public void SetTargetTranslatePosition(Vector3 targetPos)
