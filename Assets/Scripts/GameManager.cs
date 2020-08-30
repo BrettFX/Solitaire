@@ -7,6 +7,7 @@ namespace Solitaire
 {
     public class Move
     {
+        private Card m_topCard;
         private Card[] m_cards;
         private SnapManager m_prevParent;
         private SnapManager m_nextParent;
@@ -14,6 +15,7 @@ namespace Solitaire
         public void SetCards(Card[] cards)
         {
             m_cards = cards;
+            m_topCard = m_cards[0];
         }
 
         public void SetPreviousParent(SnapManager prevParent)
@@ -24,6 +26,11 @@ namespace Solitaire
         public void SetNextParent(SnapManager nextParent)
         {
             m_nextParent = nextParent;
+        }
+
+        public Card GetTopCard()
+        {
+            return m_topCard;
         }
 
         public Card[] GetCards()
@@ -111,6 +118,10 @@ namespace Solitaire
         public GameObject cardPrefab;
         public Text lblTimer;
 
+        [Header("Action Buttons")]
+        public Button btnUndo;
+        public Button btnRedo;
+
         private Sprite[] m_cardSprites;
         private Dictionary<CardSuit, Sprite[]> m_cardSpritesMap;
 
@@ -126,8 +137,10 @@ namespace Solitaire
         // Used to reset the timer
         private float m_timeBuffer = 0.0f;
 
-        // Keep track of moves to allow for undoing and redoing
-        private List<Move> m_moves;
+        private Stack<Move> m_moves;        // Keep track of moves to allow for undoing
+        private Stack<Move> m_undoneMoves;  // Keep track of moves that have been undone for redo capability
+
+        Stack<Move> test;
 
         /**
          * Ensure this class remains a singleton instance
@@ -160,7 +173,8 @@ namespace Solitaire
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
             m_foundationSnapManagers = foundations.GetComponentsInChildren<SnapManager>();
             m_tableauSnapManagers = tableau.GetComponentsInChildren<SnapManager>();
-            m_moves = new List<Move>();
+            m_moves = new Stack<Move>();
+            m_undoneMoves = new Stack<Move>();
             LoadCardSprites();
             SpawnStack();
         }
@@ -171,6 +185,17 @@ namespace Solitaire
             {
                 UpdateTimer();
             }
+            else
+            {
+                // Clear all moves from the moves lists once the game has been won
+                m_moves.Clear();
+                m_undoneMoves.Clear();
+            }
+
+            // Toggle interactability on undo and redo buttons based on size of respective moves list
+            btnUndo.interactable = m_moves.Count > 0;
+            btnRedo.interactable = m_undoneMoves.Count > 0;
+
         }
 
         private bool IsWinningState()
@@ -203,12 +228,47 @@ namespace Solitaire
             lblTimer.text = string.Format("{0}:{1}:{2}.{3}", hours.ToString("00"), minutes.ToString("00"), seconds.ToString("00"), milliseconds.ToString("00"));
         }
 
+        /**
+         * 
+         */
+        public void Undo()
+        {
+            // Pop the last move from the moves list/stack
+            Move move = m_moves.Pop();
+
+            // Perform the move; don't want to track changes so that undone moves are managed through here
+            move.GetTopCard().MoveTo(move.GetPreviousParent().transform, move.GetCards(), false);
+
+            // Add the undone move to the list of undone moves (for redo capability)
+            m_undoneMoves.Push(move);
+        }
+
+        /**
+         * 
+         */
+        public void Redo()
+        {
+            // Pop the last move from the undone list/stack
+            Move move = m_undoneMoves.Pop();
+
+            // Perform the move; don't want to track changes so that redone moves are managed through here
+            move.GetTopCard().MoveTo(move.GetPreviousParent().transform, move.GetCards(), false);
+
+            // Add the redone move back to the list/stack of moves
+            m_moves.Push(move);
+        }
+
         public void Reset()
         {
             // Set the time buffer to the time since level load so the timer starts back at zero
             // @see UpdateTimer
             m_timeBuffer = Time.timeSinceLevelLoad;
             SceneManager.LoadScene(HOME_SCENE);
+        }
+
+        public void AddMove(Move move)
+        {
+            m_moves.Push(move);
         }
 
         /**

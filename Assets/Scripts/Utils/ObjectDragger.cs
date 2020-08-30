@@ -113,7 +113,8 @@ namespace Solitaire
                 foreach (Card card in m_draggedCards)
                 {
                     // Need to temporarily remove the game object from its stack so that snap manager can update cards in each stack
-                    card.transform.parent = null;
+                    if (card.transform.parent)
+                        card.transform.parent = null;
 
                     Vector3 cardPosition = card.transform.position;
                     Vector3 newCardPos = new Vector3(curPosition.x, curPosition.y - (yOffset * i), curPosition.z - i);
