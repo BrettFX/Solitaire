@@ -15,7 +15,6 @@ namespace Solitaire
         // Keep track of the cards that are currently being dragged (can be 1 or many at a time)
         private Card[] m_draggedCards;
 
-        private int m_clickCount = 0;
         private float m_timeSinceLastClick = -1.0f;
         bool m_isStockCard = false;
 
@@ -171,9 +170,6 @@ namespace Solitaire
                             // Don't apply double-click logic to stock
                             if (cardParentSetTag.Equals("Stock"))
                             {
-                                m_clickCount++;
-                                if (GameManager.DEBUG_MODE) Debug.Log("Click count: " + m_clickCount);
-
                                 // Move the card to the talon pile once it has been clicked on the stock
                                 cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
                             }

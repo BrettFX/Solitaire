@@ -6,7 +6,7 @@ namespace Solitaire
     public struct CardTpl
     {
         public int value;
-        public GameManager.CardSuit suit;
+        public CardSuit suit;
     }
 
     public class Card : MonoBehaviour
@@ -31,6 +31,9 @@ namespace Solitaire
         private Card[] m_draggedCards;
 
         private float m_totalTime = 0.0f;
+
+        private Move m_move;
+        private MoveTypes m_moveType = MoveTypes.NORMAL;
 
         // Only used for dynamic card translation animations
         private void Update()
@@ -89,11 +92,17 @@ namespace Solitaire
                     }
                     else
                     {
-                        // Only flip card if it's face down
-                        if (currentState.Equals(CardState.FACE_DOWN))
+                        // Only flip card if it's face down and processing normal move
+                        if (currentState.Equals(CardState.FACE_DOWN) && m_moveType.Equals(MoveTypes.NORMAL))
                         {
                             // Flip the card without an animation
-                            Flip(false);
+                            Flip();
+
+                            // Stage the event
+                            Event evt = new Event();
+                            evt.SetType(Event.EventType.FLIP);
+                            evt.SetCard(this);
+                            GameManager.Instance.AddEventToLastMove(evt);
                         }
 
                         // Place the card in the respective snap parent
@@ -121,21 +130,22 @@ namespace Solitaire
         public void MoveTo(Transform snap, Card[] cardSet = null, MoveTypes moveType = MoveTypes.NORMAL)
         {
             // Prepare the move object
-            Move move = new Move();
+            m_move = new Move();
+            m_moveType = moveType;
 
             // Set the target card based on value of card set
             // (if card set is null then create a new card set with this card as the only element)
-            move.SetCards(cardSet ?? (new Card[] { this }));
+            m_move.SetCards(cardSet ?? (new Card[] { this }));
 
             // We know that the card has/had a parent
-            move.SetPreviousParent(m_startParent);
+            m_move.SetPreviousParent(m_startParent);
 
             // Need to get what the snap belongs to so that the card is placed in the correct location
             SnapManager snapManager = snap.GetComponent<SnapManager>();
             Sections targetSection = snapManager.belongsTo;
 
             // Set the next parent in the move
-            move.SetNextParent(snapManager.transform);
+            m_move.SetNextParent(snapManager.transform);
 
             // Need to target the top card in the respective tableau pile and offset the y and z positions
             Transform tableauHasCardTarget = targetSection.Equals(Sections.TABLEAU) && snapManager.HasCard() ?
@@ -207,7 +217,7 @@ namespace Solitaire
             }
 
             // Add the move to the game manager instance
-            GameManager.Instance.AddMove(move, moveType);
+            GameManager.Instance.AddMove(m_move, moveType);
 
             // Begin the translating animation
             m_translating = true;                           
@@ -258,7 +268,7 @@ namespace Solitaire
             return currentState.Equals(CardState.FACE_DOWN);
         }
 
-        public CardState Flip(bool animate)
+        public CardState Flip()
         {
             m_flipped = !m_flipped;
             currentState = m_flipped ? CardState.FACE_UP : CardState.FACE_DOWN;
@@ -267,7 +277,7 @@ namespace Solitaire
             Transform originalParent = transform.parent;
             transform.parent = null; // Temporarily detach from parent
 
-            if (animate)
+            if (ANIMATIONS_ENABLED)
             {
                 // TODO implement flip animation
 

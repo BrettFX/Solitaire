@@ -47,7 +47,13 @@ namespace Solitaire
                         // Only flip it face up if it's face down and the previous card move was valid
                         if (card.currentState.Equals(CardState.FACE_DOWN))
                         {
-                            card.Flip(false);
+                            card.Flip();
+
+                            // Stage the event
+                            Event evt = new Event();
+                            evt.SetType(Event.EventType.FLIP);
+                            evt.SetCard(card);
+                            GameManager.Instance.AddEventToLastMove(evt);
                         }
                     }
 

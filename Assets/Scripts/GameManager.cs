@@ -5,49 +5,7 @@ using UnityEngine.UI;
 
 namespace Solitaire
 {
-    public class Move
-    {
-        private Card m_topCard;
-        private Card[] m_cards;
-        private Transform m_prevParent;
-        private Transform m_nextParent;
-
-        public void SetCards(Card[] cards)
-        {
-            m_cards = cards;
-            m_topCard = m_cards[0];
-        }
-
-        public void SetPreviousParent(Transform prevParent)
-        {
-            m_prevParent = prevParent;
-        }
-
-        public void SetNextParent(Transform nextParent)
-        {
-            m_nextParent = nextParent;
-        }
-
-        public Card GetTopCard()
-        {
-            return m_topCard;
-        }
-
-        public Card[] GetCards()
-        {
-            return m_cards;
-        }
-
-        public Transform GetPreviousParent()
-        {
-            return m_prevParent;
-        }
-
-        public Transform GetNextParent()
-        {
-            return m_nextParent;
-        }
-    }
+    
 
     public class GameManager : MonoBehaviour
     {
@@ -60,6 +18,7 @@ namespace Solitaire
         }
 
         public static bool DEBUG_MODE = false;
+        public static bool ANIMATIONS_ENABLED = false;
 
         public const int HOME_SCENE = 0;
 
@@ -146,8 +105,6 @@ namespace Solitaire
 
         private Stack<Move> m_moves;        // Keep track of moves to allow for undoing
         private Stack<Move> m_undoneMoves;  // Keep track of moves that have been undone for redo capability
-
-        Stack<Move> test;
 
         /**
          * Ensure this class remains a singleton instance
@@ -243,6 +200,24 @@ namespace Solitaire
             // Pop the last move from the moves list/stack
             Move move = m_moves.Pop();
 
+            // TODO Take precedence over events in the move (execute them first)
+            Stack<Event> events = move.GetEvents();
+
+            // Preliminary check to ensure there are events to process
+            if (events.Count > 0)
+            {
+
+                // Iterate the stack of events and reverse them before undoing the actual move
+                do
+                {
+                    Event evt = events.Pop();  // Get the next event in the stack
+                    Debug.Log("Processing event: " + evt);
+                    evt.Reverse();             // Reverse the event
+
+                }
+                while (events.Count > 0);
+            }
+
             // Perform the move; don't want to track changes so that undone moves are managed through here
             move.GetTopCard().MoveTo(move.GetPreviousParent(), move.GetCards(), MoveTypes.UNDO);
         }
@@ -279,6 +254,20 @@ namespace Solitaire
                     m_undoneMoves.Push(move);
                     break;
             }
+        }
+
+        /**
+         * Dispatch events to the main set of moves, specifically the most recent move added to the list of
+         * moves.
+         */
+        public void AddEventToLastMove(Event e)
+        {
+            // Add the event to the global list of events (assuming the first move in the list of moves is the target)
+            // TODO if a move doesn't exist then create a new move based on the respective move
+            if (m_moves.Count > 0)
+            {
+                m_moves.Peek().AddEvent(e);
+            } 
         }
 
         /**
@@ -412,7 +401,7 @@ namespace Solitaire
                 );
 
                 // Rotate the card to be face down again
-                CardState cardState = card.Flip(false);
+                CardState cardState = card.Flip();
                 if (DEBUG_MODE)
                 {
                     Debug.Log(card.value + " of " + card.suit + " is " + cardState);
@@ -572,7 +561,7 @@ namespace Solitaire
                     // Only make the last card flip face up
                     if (j + 1 == i + 1)
                     {
-                        spawnedCard.GetComponent<Card>().Flip(false);
+                        spawnedCard.GetComponent<Card>().Flip();
                     }
 
                     zOffset++;
