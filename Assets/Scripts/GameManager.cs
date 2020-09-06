@@ -27,6 +27,7 @@ namespace Solitaire
 
         public const float Z_OFFSET_DRAGGING = 70.0f;
         public const float FOUNDATION_Y_OFFSET = 37.5f;
+        public const float FACE_DOWN_Y_OFFSET = FOUNDATION_Y_OFFSET / 3; // Face down cards will have a smaller y-offset
 
         public static readonly string[] VALUE_REF =
         {
@@ -200,7 +201,7 @@ namespace Solitaire
             // Pop the last move from the moves list/stack
             Move move = m_moves.Pop();
 
-            // TODO Take precedence over events in the move (execute them first)
+            // Take precedence over events in the move (execute them first)
             Stack<Event> events = move.GetEvents();
 
             // Preliminary check to ensure there are events to process
@@ -530,7 +531,6 @@ namespace Solitaire
             // Iterate through the tableau snaps and spawn cards from deck to them
             SnapManager[] tableauSnapManagers = tableau.GetComponentsInChildren<SnapManager>();
             int zOffset = 1;
-            float yOffset = 10.0f; // Face down cards will have a smaller y-offset
             for (int i = 0; i < tableauSnapManagers.Length; i++)
             {
                 Transform stackTarget = tableauSnapManagers[i].transform;
@@ -549,7 +549,7 @@ namespace Solitaire
 
                     Vector3 posOffset = new Vector3(
                        stackTarget.position.x,
-                       stackTarget.position.y - (yOffset * j),
+                       stackTarget.position.y - (FACE_DOWN_Y_OFFSET * j),
                        stackTarget.position.z - zOffset
                     );
 

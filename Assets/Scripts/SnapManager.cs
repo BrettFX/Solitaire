@@ -47,12 +47,16 @@ namespace Solitaire
                         // Only flip it face up if it's face down and the previous card move was valid
                         if (card.currentState.Equals(CardState.FACE_DOWN))
                         {
+                            Debug.Log("Flipping last card in snap: " + card + " (because waiting flag is " + m_waiting + ")");
                             card.Flip();
 
                             // Stage the event
                             Event evt = new Event();
                             evt.SetType(Event.EventType.FLIP);
                             evt.SetCard(card);
+
+                            // Setting relative snap manager to this instance for locking when reversing event
+                            evt.SetRelativeSnapManager(this); 
                             GameManager.Instance.AddEventToLastMove(evt);
                         }
                     }

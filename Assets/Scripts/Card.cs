@@ -112,6 +112,9 @@ namespace Solitaire
                         GetComponent<MeshCollider>().enabled = true;
                     }
 
+                    // Need to remove any locks on parent snap manager caused by events
+                    m_targetTranslateSnap.GetComponent<SnapManager>().SetWaiting(false);
+
                     // Reset the total time for correct linear interpolation (lerp)
                     m_totalTime = 0.0f;
                 }

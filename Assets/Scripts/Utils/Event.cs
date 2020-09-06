@@ -16,6 +16,7 @@ namespace Solitaire
         private Card[] m_cards;
         private Vector3 m_startPos = Vector3.zero;
         private Vector3 m_endPos = Vector3.zero;
+        private SnapManager m_relativeSnapManager;
         private Transform m_prevParent;
         private Transform m_nextParent;
 
@@ -26,6 +27,9 @@ namespace Solitaire
             {
                 case EventType.FLIP:
                     Debug.Log("Reversing flip for " + m_cards[0]);
+
+                    // Need to temporarily lock snap manager so that the card isn't flipped back after reverse
+                    m_relativeSnapManager.SetWaiting(true);
                     m_cards[0].Flip();
                     break;
                 case EventType.TRANSLATE:
@@ -35,6 +39,11 @@ namespace Solitaire
                 default:
                     break;
             }
+        }
+
+        public void SetRelativeSnapManager(SnapManager snapManager)
+        {
+            m_relativeSnapManager = snapManager;
         }
 
         public void SetType(EventType eventType)
@@ -70,6 +79,11 @@ namespace Solitaire
         public void SetNextParent(Transform nextParent)
         {
             m_nextParent = nextParent;
+        }
+
+        public SnapManager GetRelativeSnapManager()
+        {
+            return m_relativeSnapManager;
         }
 
         public EventType GetEventType()
