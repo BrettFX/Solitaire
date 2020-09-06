@@ -76,6 +76,8 @@ namespace Solitaire
                 // Perform final steps after translation is complete
                 if (!m_translating)
                 {
+                    SnapManager targetSnapManager = m_targetTranslateSnap.GetComponent<SnapManager>();
+
                     if (m_draggedCards != null && m_draggedCards.Length > 1)
                     {
                         // Don't need to check current state when dragging more than one card
@@ -102,6 +104,8 @@ namespace Solitaire
                             Event evt = new Event();
                             evt.SetType(Event.EventType.FLIP);
                             evt.SetCard(this);
+                            // Setting relative snap manager to this instance for locking when reversing event
+                            evt.SetRelativeSnapManager(targetSnapManager);
                             GameManager.Instance.AddEventToLastMove(evt);
                         }
 
@@ -113,7 +117,7 @@ namespace Solitaire
                     }
 
                     // Need to remove any locks on parent snap manager caused by events
-                    m_targetTranslateSnap.GetComponent<SnapManager>().SetWaiting(false);
+                    targetSnapManager.SetWaiting(false);
 
                     // Reset the total time for correct linear interpolation (lerp)
                     m_totalTime = 0.0f;
@@ -145,6 +149,8 @@ namespace Solitaire
 
             // Need to get what the snap belongs to so that the card is placed in the correct location
             SnapManager snapManager = snap.GetComponent<SnapManager>();
+            bool faceDownTarget = snapManager.HasCard() && snapManager.GetTopCard().IsFaceDown();
+
             Sections targetSection = snapManager.belongsTo;
 
             // Set the next parent in the move
@@ -163,6 +169,8 @@ namespace Solitaire
 
             m_draggedCards = cardSet;
 
+            float yOffset = FOUNDATION_Y_OFFSET;
+
             // Process a bit differently if a card set has been provided
             if (m_draggedCards != null && m_draggedCards.Length > 1)
             {
@@ -177,9 +185,29 @@ namespace Solitaire
                     draggedCard.SetStartPos(draggedCard.transform.position);
 
                     // Apply y-offset when dragging multiple cards (start without y-offset if there isn't a card on the snap)
+                    // Handle case when action was an undo and the top card in the target snap is facedown
+                    // (only the first card in the the set of dragged cards should have the face down y-offset applied in this case).
+                    if (faceDownTarget && i == 0)
+                    {
+                        yOffset = FACE_DOWN_Y_OFFSET;
+                    }
+                    else
+                    {
+                        if (faceDownTarget)
+                        {
+                            // Need to compensate for the fact that the first card applied face down y-offset
+                            yOffset = (FOUNDATION_Y_OFFSET  * i) + FACE_DOWN_Y_OFFSET;
+                        }
+                        else
+                        {
+                            // Process normally (e.g., not undoing a flip event)
+                            yOffset = FOUNDATION_Y_OFFSET * (snapManager.HasCard() ? i + 1 : i);
+                        }
+                    }
+
                     Vector3 newTargetPos = new Vector3(
                        tableauHasCardTarget.position.x,
-                       tableauHasCardTarget.position.y - (FOUNDATION_Y_OFFSET * (snapManager.HasCard() ? i + 1 : i)),
+                       tableauHasCardTarget.position.y - yOffset,
                        tableauHasCardTarget.position.z - (i + 1)
                     );
 
@@ -199,9 +227,10 @@ namespace Solitaire
                 // transform position is a special case for the Tableau cards due to y-offset in addition to z-offset
                 if (targetSection.Equals(Sections.TABLEAU) && snapManager.HasCard())
                 {
+                    
                     Vector3 newTargetPos = new Vector3(
                        tableauHasCardTarget.position.x,
-                       tableauHasCardTarget.position.y - FOUNDATION_Y_OFFSET,
+                       tableauHasCardTarget.position.y - (faceDownTarget ? FACE_DOWN_Y_OFFSET : FOUNDATION_Y_OFFSET),
                        tableauHasCardTarget.position.z - 1
                     );
 

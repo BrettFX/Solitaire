@@ -26,8 +26,6 @@ namespace Solitaire
             switch (m_eventType)
             {
                 case EventType.FLIP:
-                    Debug.Log("Reversing flip for " + m_cards[0]);
-
                     // Need to temporarily lock snap manager so that the card isn't flipped back after reverse
                     m_relativeSnapManager.SetWaiting(true);
                     m_cards[0].Flip();
