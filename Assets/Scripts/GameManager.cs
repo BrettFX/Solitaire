@@ -193,33 +193,36 @@ namespace Solitaire
             lblTimer.text = string.Format("{0}:{1}:{2}.{3}", hours.ToString("00"), minutes.ToString("00"), seconds.ToString("00"), milliseconds.ToString("00"));
         }
 
+        private void ProcessMoveAction(MoveTypes moveType)
+        {
+            bool undoAction = moveType.Equals(MoveTypes.UNDO);
+            Stack<Move> targetMoves = undoAction ? m_moves : m_undoneMoves;
+            Stack<Move> altMoves = undoAction ? m_undoneMoves : m_moves;
+
+            // Pop the last move from the moves list/stack
+            Move move = targetMoves.Pop();
+
+            // Take precedence over events in the move (execute them first)
+            List<Event> events = move.GetEvents();
+            foreach (Event evt in events)
+            {
+                // Reverse the event
+                evt.Reverse();
+            }
+
+            // Perform the move; don't want to track changes so that undone moves are managed through here
+            move.GetTopCard().MoveTo(undoAction ? move.GetPreviousParent() : move.GetNextParent(), move.GetCards(), moveType);
+
+            // Add the move to the redo stack
+            altMoves.Push(move);
+        }
+
         /**
          * 
          */
         public void Undo()
         {
-            // Pop the last move from the moves list/stack
-            Move move = m_moves.Pop();
-
-            // Take precedence over events in the move (execute them first)
-            Stack<Event> events = move.GetEvents();
-
-            // Preliminary check to ensure there are events to process
-            if (events.Count > 0)
-            {
-
-                // Iterate the stack of events and reverse them before undoing the actual move
-                do
-                {
-                    Event evt = events.Pop();  // Get the next event in the stack
-                    evt.Reverse();             // Reverse the event
-
-                }
-                while (events.Count > 0);
-            }
-
-            // Perform the move; don't want to track changes so that undone moves are managed through here
-            move.GetTopCard().MoveTo(move.GetPreviousParent(), move.GetCards(), MoveTypes.UNDO);
+            ProcessMoveAction(MoveTypes.UNDO);
         }
 
         /**
@@ -227,11 +230,7 @@ namespace Solitaire
          */
         public void Redo()
         {
-            // Pop the last move from the undone list/stack
-            Move move = m_undoneMoves.Pop();
-
-            // Perform the move; don't want to track changes so that redone moves are managed through here
-            move.GetTopCard().MoveTo(move.GetNextParent(), move.GetCards(), MoveTypes.REDO);
+            ProcessMoveAction(MoveTypes.REDO);
         }
 
         public void Reset()

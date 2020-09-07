@@ -247,8 +247,9 @@ namespace Solitaire
                 );
             }
 
-            // Add the move to the game manager instance
-            GameManager.Instance.AddMove(m_move, moveType);
+            // Add the move to the game manager instance (only if normal move and not undone or redone)
+            if (moveType == MoveTypes.NORMAL)
+                GameManager.Instance.AddMove(m_move, moveType);
 
             // Begin the translating animation
             m_translating = true;                           

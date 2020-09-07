@@ -7,13 +7,13 @@ namespace Solitaire
     {
         private Card m_topCard;
         private Card[] m_cards;
-        private Stack<Event> m_events;
+        private List<Event> m_events;
         private Transform m_prevParent;
         private Transform m_nextParent;
 
         public Move()
         {
-            m_events = new Stack<Event>();
+            m_events = new List<Event>();
         }
 
         public void SetCards(Card[] cards)
@@ -24,10 +24,10 @@ namespace Solitaire
 
         public void AddEvent(Event e)
         {
-            m_events.Push(e);
+            m_events.Add(e);
         }
 
-        public Stack<Event> GetEvents()
+        public List<Event> GetEvents()
         {
             return m_events;
         }
