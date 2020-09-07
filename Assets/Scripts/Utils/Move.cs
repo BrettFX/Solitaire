@@ -5,9 +5,16 @@ namespace Solitaire
 {
     public class Move
     {
+        public enum MoveTypes
+        {
+            UNDO,
+            REDO,
+            NORMAL
+        };
+
         private Card m_topCard;
         private Card[] m_cards;
-        private List<Event> m_events;
+        private readonly List<Event> m_events;
         private Transform m_prevParent;
         private Transform m_nextParent;
 

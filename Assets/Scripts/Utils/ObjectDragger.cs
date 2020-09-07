@@ -403,7 +403,7 @@ namespace Solitaire
                     move.SetCards(m_draggedCards);
                     move.SetPreviousParent(m_originSnapManager.transform);
                     move.SetNextParent(m_draggedCards[0].transform.parent);
-                    GameManager.Instance.AddMove(move, GameManager.MoveTypes.NORMAL);
+                    GameManager.Instance.AddMove(move, Move.MoveTypes.NORMAL);
                 }
 
                 // Can stop waiting now that the move is complete

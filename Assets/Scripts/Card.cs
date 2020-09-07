@@ -1,16 +1,36 @@
 ﻿using UnityEngine;
-using static Solitaire.GameManager;
 
 namespace Solitaire
 {
     public struct CardTpl
     {
         public int value;
-        public CardSuit suit;
+        public Card.CardSuit suit;
     }
 
     public class Card : MonoBehaviour
     {
+        public enum CardState
+        {
+            FACE_UP, FACE_DOWN
+        };
+
+        public enum CardSuit
+        {
+            HEARTS,
+            DIAMONDS,
+            CLUBS,
+            SPADES,
+            NONE
+        };
+
+        public enum CardSuitColor
+        {
+            RED,
+            BLACK,
+            NONE
+        }
+
         [Header("Card Settings")]
         public CardState currentState;
         public int value;
@@ -33,7 +53,7 @@ namespace Solitaire
         private float m_totalTime = 0.0f;
 
         private Move m_move;
-        private MoveTypes m_moveType = MoveTypes.NORMAL;
+        private Move.MoveTypes m_moveType = Move.MoveTypes.NORMAL;
 
         // Only used for dynamic card translation animations
         private void Update()
@@ -71,7 +91,7 @@ namespace Solitaire
                 }
 
                 // Accumulate total time with respect to the card translation speed
-                m_totalTime += Time.deltaTime / CARD_TRANSLATION_SPEED;
+                m_totalTime += Time.deltaTime / GameManager.CARD_TRANSLATION_SPEED;
 
                 // Perform final steps after translation is complete
                 if (!m_translating)
@@ -95,7 +115,7 @@ namespace Solitaire
                     else
                     {
                         // Only flip card if it's face down and processing normal move
-                        if (currentState.Equals(CardState.FACE_DOWN) && m_moveType.Equals(MoveTypes.NORMAL))
+                        if (currentState.Equals(CardState.FACE_DOWN) && m_moveType.Equals(Move.MoveTypes.NORMAL))
                         {
                             // Flip the card without an animation
                             Flip();
@@ -134,7 +154,7 @@ namespace Solitaire
          *                       this card instance and will be processed as such.
          * @param MoveTypes moveType the type of move that determines how the move should be tracked in the GameManager.
          */
-        public void MoveTo(Transform snap, Card[] cardSet = null, MoveTypes moveType = MoveTypes.NORMAL)
+        public void MoveTo(Transform snap, Card[] cardSet = null, Move.MoveTypes moveType = Move.MoveTypes.NORMAL)
         {
             // Prepare the move object
             m_move = new Move();
@@ -151,13 +171,13 @@ namespace Solitaire
             SnapManager snapManager = snap.GetComponent<SnapManager>();
             bool faceDownTarget = snapManager.HasCard() && snapManager.GetTopCard().IsFaceDown();
 
-            Sections targetSection = snapManager.belongsTo;
+            GameManager.Sections targetSection = snapManager.belongsTo;
 
             // Set the next parent in the move
             m_move.SetNextParent(snapManager.transform);
 
             // Need to target the top card in the respective tableau pile and offset the y and z positions
-            Transform tableauHasCardTarget = targetSection.Equals(Sections.TABLEAU) && snapManager.HasCard() ?
+            Transform tableauHasCardTarget = targetSection.Equals(GameManager.Sections.TABLEAU) && snapManager.HasCard() ?
                                                                      snapManager.GetTopCard().transform : snap;
 
             // Setting for reference to new parent snap
@@ -188,19 +208,19 @@ namespace Solitaire
                     // (only the first card in the the set of dragged cards should have the face down y-offset applied in this case).
                     if (faceDownTarget && i == 0)
                     {
-                        yOffset = FACE_DOWN_Y_OFFSET;
+                        yOffset = GameManager.FACE_DOWN_Y_OFFSET;
                     }
                     else
                     {
                         if (faceDownTarget)
                         {
                             // Need to compensate for the fact that the first card applied face down y-offset
-                            yOffset = (FOUNDATION_Y_OFFSET * i) + FACE_DOWN_Y_OFFSET;
+                            yOffset = (GameManager.FOUNDATION_Y_OFFSET * i) + GameManager.FACE_DOWN_Y_OFFSET;
                         }
                         else
                         {
                             // Process normally (e.g., not undoing a flip event)
-                            yOffset = FOUNDATION_Y_OFFSET * (snapManager.HasCard() ? i + 1 : i);
+                            yOffset = GameManager.FOUNDATION_Y_OFFSET * (snapManager.HasCard() ? i + 1 : i);
                         }
                     }
 
@@ -217,19 +237,19 @@ namespace Solitaire
                     draggedCard.transform.position = new Vector3(
                         draggedCard.transform.position.x,
                         draggedCard.transform.position.y,
-                        -Z_OFFSET_DRAGGING - i
+                        -GameManager.Z_OFFSET_DRAGGING - i
                     );
                 }
             }
             else // Otherwise, process on one card
             {
                 // transform position is a special case for the Tableau cards due to y-offset in addition to z-offset
-                if (targetSection.Equals(Sections.TABLEAU) && snapManager.HasCard())
+                if (targetSection.Equals(GameManager.Sections.TABLEAU) && snapManager.HasCard())
                 {
 
                     Vector3 newTargetPos = new Vector3(
                        tableauHasCardTarget.position.x,
-                       tableauHasCardTarget.position.y - (faceDownTarget ? FACE_DOWN_Y_OFFSET : FOUNDATION_Y_OFFSET),
+                       tableauHasCardTarget.position.y - (faceDownTarget ? GameManager.FACE_DOWN_Y_OFFSET : GameManager.FOUNDATION_Y_OFFSET),
                        tableauHasCardTarget.position.z - 1
                     );
 
@@ -243,12 +263,12 @@ namespace Solitaire
                 transform.position = new Vector3(
                     transform.position.x,
                     transform.position.y,
-                    -Z_OFFSET_DRAGGING
+                    -GameManager.Z_OFFSET_DRAGGING
                 );
             }
 
             // Add the move to the game manager instance (only if normal move and not undone or redone)
-            if (moveType == MoveTypes.NORMAL)
+            if (moveType == Move.MoveTypes.NORMAL)
                 GameManager.Instance.AddMove(m_move, moveType);
 
             // Begin the translating animation
@@ -309,7 +329,7 @@ namespace Solitaire
             Transform originalParent = transform.parent;
             transform.parent = null; // Temporarily detach from parent
 
-            if (ANIMATIONS_ENABLED)
+            if (GameManager.ANIMATIONS_ENABLED)
             {
                 // TODO implement flip animation
 

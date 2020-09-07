@@ -2,6 +2,8 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static Solitaire.Card;
+using static Solitaire.Move;
 
 namespace Solitaire
 {
@@ -39,40 +41,12 @@ namespace Solitaire
             "Stock", "Talon"
         };
 
-        public enum CardState
-        {
-            FACE_UP, FACE_DOWN
-        };
-
-        public enum CardSuit
-        {
-            HEARTS,
-            DIAMONDS,
-            CLUBS,
-            SPADES,
-            NONE
-        };
-
-        public enum CardSuitColor
-        {
-            RED,
-            BLACK,
-            NONE
-        }
-
         public enum Sections
         {
             TABLEAU,
             STOCK,
             TALON,
             FOUNDATIONS
-        };
-
-        public enum MoveTypes
-        {
-            UNDO,
-            REDO,
-            NORMAL
         };
 
         [Header("Set Up")]

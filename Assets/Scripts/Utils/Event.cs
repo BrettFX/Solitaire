@@ -1,24 +1,16 @@
-﻿using UnityEngine;
-
-namespace Solitaire
+﻿namespace Solitaire
 {
     public class Event
     {
         public enum EventType
         {
-            DRAW,
-            TRANSLATE,
             FLIP,
             NONE
         };
 
         private EventType m_eventType = EventType.NONE;
         private Card[] m_cards;
-        private Vector3 m_startPos = Vector3.zero;
-        private Vector3 m_endPos = Vector3.zero;
         private SnapManager m_relativeSnapManager;
-        private Transform m_prevParent;
-        private Transform m_nextParent;
 
         public void Reverse()
         {
@@ -29,10 +21,6 @@ namespace Solitaire
                     // Need to temporarily lock snap manager so that the card isn't flipped back after reverse
                     m_relativeSnapManager.SetWaiting(true);
                     m_cards[0].Flip();
-                    break;
-                case EventType.TRANSLATE:
-                    break;
-                case EventType.DRAW:
                     break;
                 default:
                     break;
@@ -59,26 +47,6 @@ namespace Solitaire
             m_cards = cards;
         }
 
-        public void SetStartPos(Vector3 startPos)
-        {
-            m_startPos = startPos;
-        }
-
-        public void SetEndPos(Vector3 endPos)
-        {
-            m_endPos = endPos;
-        }
-
-        public void SetPreviousParent(Transform prevParent)
-        {
-            m_prevParent = prevParent;
-        }
-
-        public void SetNextParent(Transform nextParent)
-        {
-            m_nextParent = nextParent;
-        }
-
         public SnapManager GetRelativeSnapManager()
         {
             return m_relativeSnapManager;
@@ -92,26 +60,6 @@ namespace Solitaire
         public Card[] GetCards()
         {
             return m_cards;
-        }
-
-        public Vector3 GetStartPos()
-        {
-            return m_startPos;
-        }
-
-        public Vector3 GetEndPos()
-        {
-            return m_endPos;
-        }
-
-        public Transform GetPreviousParent()
-        {
-            return m_prevParent;
-        }
-
-        public Transform GetNextParent()
-        {
-            return m_nextParent;
         }
     }
 }
