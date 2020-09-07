@@ -212,7 +212,6 @@ namespace Solitaire
                 do
                 {
                     Event evt = events.Pop();  // Get the next event in the stack
-                    Debug.Log("Processing event: " + evt);
                     evt.Reverse();             // Reverse the event
 
                 }

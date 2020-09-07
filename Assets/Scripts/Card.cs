@@ -169,8 +169,6 @@ namespace Solitaire
 
             m_draggedCards = cardSet;
 
-            float yOffset = FOUNDATION_Y_OFFSET;
-
             // Process a bit differently if a card set has been provided
             if (m_draggedCards != null && m_draggedCards.Length > 1)
             {
@@ -184,6 +182,7 @@ namespace Solitaire
                     // Keep track of each card's starting position
                     draggedCard.SetStartPos(draggedCard.transform.position);
 
+                    float yOffset;
                     // Apply y-offset when dragging multiple cards (start without y-offset if there isn't a card on the snap)
                     // Handle case when action was an undo and the top card in the target snap is facedown
                     // (only the first card in the the set of dragged cards should have the face down y-offset applied in this case).
@@ -196,7 +195,7 @@ namespace Solitaire
                         if (faceDownTarget)
                         {
                             // Need to compensate for the fact that the first card applied face down y-offset
-                            yOffset = (FOUNDATION_Y_OFFSET  * i) + FACE_DOWN_Y_OFFSET;
+                            yOffset = (FOUNDATION_Y_OFFSET * i) + FACE_DOWN_Y_OFFSET;
                         }
                         else
                         {
@@ -227,7 +226,7 @@ namespace Solitaire
                 // transform position is a special case for the Tableau cards due to y-offset in addition to z-offset
                 if (targetSection.Equals(Sections.TABLEAU) && snapManager.HasCard())
                 {
-                    
+
                     Vector3 newTargetPos = new Vector3(
                        tableauHasCardTarget.position.x,
                        tableauHasCardTarget.position.y - (faceDownTarget ? FACE_DOWN_Y_OFFSET : FOUNDATION_Y_OFFSET),

@@ -153,6 +153,9 @@ namespace Solitaire
                                 // Only way to get to this point is if the stock was clicked and there are no cards on it
                                 // Transfer all cards attached to talon back to stock
                                 GameManager.Instance.ReplinishStock();
+
+                                // TODO add event for replinishing stock
+
                             }
                         }
                         else
@@ -392,6 +395,15 @@ namespace Solitaire
                         // Re-enable the mesh colliders on the cards
                         card.GetComponent<MeshCollider>().enabled = true;
                     }
+                }
+                else
+                {
+                    // Register the manual move if it was valid
+                    Move move = new Move();
+                    move.SetCards(m_draggedCards);
+                    move.SetPreviousParent(m_originSnapManager.transform);
+                    move.SetNextParent(m_draggedCards[0].transform.parent);
+                    GameManager.Instance.AddMove(move, GameManager.MoveTypes.NORMAL);
                 }
 
                 // Can stop waiting now that the move is complete
