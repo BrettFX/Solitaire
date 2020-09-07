@@ -17,6 +17,7 @@ namespace Solitaire
 
         private float m_timeSinceLastClick = -1.0f;
         bool m_isStockCard = false;
+        bool m_dragged = false;
 
         private SnapManager m_originSnapManager;
 
@@ -91,6 +92,12 @@ namespace Solitaire
                 return;
             }
 
+            // Prevent dragging if there is an active GameManager block on actions/events
+            //if (GameManager.Instance.IsBlocked())
+            //{
+            //    return;
+            //}
+
             // Only allow dragging cards
             if (gameObject.CompareTag("Card"))
             {
@@ -98,6 +105,13 @@ namespace Solitaire
                 {
                     // Don't allow dragging stock cards or face-down cards
                     return;
+                }
+
+                // Set temporary block on actions and events while dragging cards(s)
+                if (!GameManager.Instance.IsBlocked())
+                {
+                    GameManager.Instance.SetBlocked(true);
+                    m_dragged = true; // Denote that there was a valid dragging action
                 }
 
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
@@ -174,6 +188,7 @@ namespace Solitaire
                             if (cardParentSetTag.Equals("Stock"))
                             {
                                 // Move the card to the talon pile once it has been clicked on the stock
+                                GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events
                                 cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
                             }
                             else if (doubleClick)
@@ -192,6 +207,7 @@ namespace Solitaire
                                 if (nextMove)
                                 {
                                     // Move all cards in set of dragged cards (can be 1)
+                                    GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events
                                     cardOfInterest.MoveTo(nextMove, m_draggedCards);
 
                                     // Have to notify that waiting is complete for destination snap manager
@@ -409,6 +425,14 @@ namespace Solitaire
                 // Can stop waiting now that the move is complete
                 m_originSnapManager.SetWaiting(false);
                 GameManager.Instance.UnregisterObjectDragger(this); // Unregister this object dragger (only works if this was active)
+
+                // Remove temporary locks set during dragging
+                if (m_dragged)
+                {
+                    GameManager.Instance.SetBlocked(false);
+                    m_dragged = false;
+                }
+                    
             }
         }
     }

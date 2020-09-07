@@ -136,8 +136,9 @@ namespace Solitaire
                         GetComponent<MeshCollider>().enabled = true;
                     }
 
-                    // Need to remove any locks on parent snap manager caused by events
+                    // Need to remove any locks and blocks on parent snap manager and game manager instance caused by events
                     targetSnapManager.SetWaiting(false);
+                    GameManager.Instance.SetBlocked(false);
 
                     // Reset the total time for correct linear interpolation (lerp)
                     m_totalTime = 0.0f;

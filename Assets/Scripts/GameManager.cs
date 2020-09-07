@@ -81,6 +81,8 @@ namespace Solitaire
         private Stack<Move> m_moves;        // Keep track of moves to allow for undoing
         private Stack<Move> m_undoneMoves;  // Keep track of moves that have been undone for redo capability
 
+        private bool m_blocked = false;
+
         /**
          * Ensure this class remains a singleton instance
          * */
@@ -132,8 +134,8 @@ namespace Solitaire
             }
 
             // Toggle interactability on undo and redo buttons based on size of respective moves list
-            btnUndo.interactable = m_moves.Count > 0;
-            btnRedo.interactable = m_undoneMoves.Count > 0;
+            btnUndo.interactable = m_moves.Count > 0 && !m_blocked;
+            btnRedo.interactable = m_undoneMoves.Count > 0 && !m_blocked;
 
         }
 
@@ -196,6 +198,8 @@ namespace Solitaire
          */
         public void Undo()
         {
+            // Block additional actions and events until undo is complete.
+            m_blocked = true;
             ProcessMoveAction(MoveTypes.UNDO);
         }
 
@@ -204,6 +208,8 @@ namespace Solitaire
          */
         public void Redo()
         {
+            // Block additional actions and events until undo is complete.
+            m_blocked = true;
             ProcessMoveAction(MoveTypes.REDO);
         }
 
@@ -240,7 +246,23 @@ namespace Solitaire
             if (m_moves.Count > 0)
             {
                 m_moves.Peek().AddEvent(e);
-            } 
+            }
+        }
+
+        /**
+         * Set blocking flag on actions and events to prevent action/event spamming.
+         */
+        public void SetBlocked(bool blocked)
+        {
+            m_blocked = blocked;
+        }
+
+        /**
+         * Whether or not actions and events are actively being blocked.
+         */
+        public bool IsBlocked()
+        {
+            return m_blocked;
         }
 
         /**
