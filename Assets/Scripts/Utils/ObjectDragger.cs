@@ -205,8 +205,8 @@ namespace Solitaire
                                 }
 
                                 // If double click and there is a valid next move
-                                // Then, automatically move the double clicked card to the most appropriate location. 
-                                if (nextMove && !GameManager.Instance.IsBlocked())
+                                // Then, automatically move the double clicked card to the most appropriate location.
+                                if (nextMove)
                                 {
                                     // Move all cards in set of dragged cards (can be 1)
                                     GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events

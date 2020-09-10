@@ -345,7 +345,6 @@ namespace Solitaire
          */
         public Transform GetNextAvailableMove(Card card, int cardCount = 1)
         {
-
             Transform nextMove = null;
 
             // Handle face-down card corner case (only process if the card is face up)
@@ -374,6 +373,12 @@ namespace Solitaire
                 // in the foundations
                 if (!nextMove)
                 {
+                    Dictionary<int, Transform> possibleMoves = new Dictionary<int, Transform>();
+
+                    int currentCardLoc = -1;
+                    int i = 0;
+
+                    // Do first pass through snap managers to get set of possible moves
                     foreach (SnapManager snapManager in m_tableauSnapManagers)
                     {
                         if (snapManager.IsValidMove(card))
@@ -381,10 +386,31 @@ namespace Solitaire
                             // Skip if the next move is the current card location
                             if (!snapManager.transform.Equals(card.GetStartParent()))
                             {
-                                nextMove = snapManager.transform;
-                                break;
+                                possibleMoves.Add(i, snapManager.transform);
                             }
                         }
+
+                        if (snapManager.transform.Equals(card.GetStartParent()))
+                        {
+                            currentCardLoc = i;
+                        }
+
+                        i++;
+                    }
+
+                    // Only proceed if there is at least one possible move
+                    if (possibleMoves.Count > 0)
+                    {
+                        // Prioritize the move that is closest to the current card
+                        int closestIndex = 999;
+                        foreach (KeyValuePair<int, Transform> possibleMove in possibleMoves)
+                        {
+                            if (Mathf.Abs(currentCardLoc - possibleMove.Key) < closestIndex)
+                                closestIndex = possibleMove.Key;
+                        }
+
+                        // Assign the next move to be the closest to the current card
+                        nextMove = possibleMoves[closestIndex];
                     }
                 }
             }
