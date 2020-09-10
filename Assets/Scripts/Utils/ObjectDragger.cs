@@ -55,7 +55,7 @@ namespace Solitaire
             GameManager.Instance.RegisterObjectDragger(this);
 
             // If card, we need to get a list of the cards that are to be dragged (through the use of the Snap Manager)
-            if (gameObject.CompareTag("Card"))
+            if (gameObject.CompareTag("Card") && transform.parent != null)
             {
                 // Initialize the dragged cards list by referencing the set of cards that are attached to the
                 // respective snap that one or many cards are to be dragged from.
@@ -166,6 +166,7 @@ namespace Solitaire
                             {
                                 // Only way to get to this point is if the stock was clicked and there are no cards on it
                                 // Transfer all cards attached to talon back to stock
+                                GameManager.Instance.SetBlocked(true);
                                 GameManager.Instance.ReplinishStock();
 
                                 // TODO add event for replinishing stock
@@ -185,9 +186,10 @@ namespace Solitaire
                             Transform nextMove = null;
 
                             // Don't apply double-click logic to stock
-                            if (cardParentSetTag.Equals("Stock"))
+                            // Also don't permit click spamming for drawing cards (use game manager action/event block)
+                            if (cardParentSetTag.Equals("Stock") && !GameManager.Instance.IsBlocked())
                             {
-                                // Move the card to the talon pile once it has been clicked on the stock
+                                // Move the card to the talon pile once it has been clicked on the stock (draw card)
                                 GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events
                                 cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
                             }
@@ -204,7 +206,7 @@ namespace Solitaire
 
                                 // If double click and there is a valid next move
                                 // Then, automatically move the double clicked card to the most appropriate location. 
-                                if (nextMove)
+                                if (nextMove && !GameManager.Instance.IsBlocked())
                                 {
                                     // Move all cards in set of dragged cards (can be 1)
                                     GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events
@@ -406,13 +408,16 @@ namespace Solitaire
                     // If the drag location is deemed invalid then we should snap back to starting position
                     // Need to iterate the list of dragged cards and set each card back to their respective 
                     // starting position and starting parent
-                    foreach(Card card in m_draggedCards)
+                    if (m_draggedCards != null)
                     {
-                        card.transform.position = card.GetStartPos();
-                        card.transform.parent = card.GetStartParent();
+                        foreach (Card card in m_draggedCards)
+                        {
+                            card.transform.position = card.GetStartPos();
+                            card.transform.parent = card.GetStartParent();
 
-                        // Re-enable the mesh colliders on the cards
-                        card.GetComponent<MeshCollider>().enabled = true;
+                            // Re-enable the mesh colliders on the cards
+                            card.GetComponent<MeshCollider>().enabled = true;
+                        }
                     }
                 }
                 else
@@ -426,8 +431,12 @@ namespace Solitaire
                 }
 
                 // Can stop waiting now that the move is complete
-                m_originSnapManager.SetWaiting(false);
-                GameManager.Instance.UnregisterObjectDragger(this); // Unregister this object dragger (only works if this was active)
+                // Evaluate only if origin snap manager isn't null
+                if (m_originSnapManager != null)
+                    m_originSnapManager.SetWaiting(false);
+
+                // Unregister this object dragger (only works if this was active)
+                GameManager.Instance.UnregisterObjectDragger(this); 
 
                 // Remove temporary locks set during dragging
                 if (m_dragged)

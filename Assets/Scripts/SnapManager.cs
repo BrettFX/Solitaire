@@ -133,7 +133,7 @@ namespace Solitaire
             {
                 // Get the top card and validate
                 Card currentCard = m_attachedCards[m_attachedCards.Length - 1];
-                valid = (nextCard.value == currentCard.value + 1) && (nextCard.suit.Equals(currentCard.suit));
+                valid = (nextCard.value == currentCard.value + 1) && nextCard.suit.Equals(currentCard.suit);
             }
 
             return valid;

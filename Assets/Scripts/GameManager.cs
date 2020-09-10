@@ -81,7 +81,7 @@ namespace Solitaire
         private Stack<Move> m_moves;        // Keep track of moves to allow for undoing
         private Stack<Move> m_undoneMoves;  // Keep track of moves that have been undone for redo capability
 
-        private bool m_blocked = false;
+        private volatile bool m_blocked = false;
 
         /**
          * Ensure this class remains a singleton instance
@@ -134,8 +134,8 @@ namespace Solitaire
             }
 
             // Toggle interactability on undo and redo buttons based on size of respective moves list
-            btnUndo.interactable = m_moves.Count > 0 && !m_blocked;
-            btnRedo.interactable = m_undoneMoves.Count > 0 && !m_blocked;
+            btnUndo.interactable = m_moves.Count > 0;
+            btnRedo.interactable = m_undoneMoves.Count > 0;
 
         }
 
@@ -169,6 +169,9 @@ namespace Solitaire
             lblTimer.text = string.Format("{0}:{1}:{2}.{3}", hours.ToString("00"), minutes.ToString("00"), seconds.ToString("00"), milliseconds.ToString("00"));
         }
 
+        /**
+         * Process undo and redo move actions
+         */
         private void ProcessMoveAction(MoveTypes moveType)
         {
             bool undoAction = moveType.Equals(MoveTypes.UNDO);
@@ -198,9 +201,13 @@ namespace Solitaire
          */
         public void Undo()
         {
-            // Block additional actions and events until undo is complete.
-            m_blocked = true;
-            ProcessMoveAction(MoveTypes.UNDO);
+            // Don't proceed if already blocked
+            if (!m_blocked)
+            {
+                // Block additional actions and events until undo is complete.
+                m_blocked = true;
+                ProcessMoveAction(MoveTypes.UNDO);
+            }
         }
 
         /**
@@ -208,11 +215,18 @@ namespace Solitaire
          */
         public void Redo()
         {
-            // Block additional actions and events until undo is complete.
-            m_blocked = true;
-            ProcessMoveAction(MoveTypes.REDO);
+            // Don't proceed if already blocked
+            if (!m_blocked)
+            {
+                // Block additional actions and events until undo is complete.
+                m_blocked = true;
+                ProcessMoveAction(MoveTypes.REDO);
+            }
         }
 
+        /**
+         * 
+         */
         public void Reset()
         {
             // Set the time buffer to the time since level load so the timer starts back at zero
@@ -221,11 +235,19 @@ namespace Solitaire
             SceneManager.LoadScene(HOME_SCENE);
         }
 
+        /**
+         * 
+         */
         public void AddMove(Move move, MoveTypes moveType)
         {
             switch (moveType)
             {
                 case MoveTypes.NORMAL:
+                    m_moves.Push(move);
+
+                    // Clear the redo stack if there are moves in it.
+                    m_undoneMoves.Clear();
+                    break;
                 case MoveTypes.REDO:
                     m_moves.Push(move);
                     break;
