@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using static Solitaire.GameManager;
+using static Solitaire.Card;
 
 namespace Solitaire
 {
     public class SnapManager : MonoBehaviour
     {
-        public Sections belongsTo;
+        public GameManager.Sections belongsTo;
         private Card[] m_attachedCards;
         private MeshCollider m_snapCollider;
         private bool m_waiting = false;
@@ -42,12 +42,21 @@ namespace Solitaire
                     card.SetStackable(i == m_attachedCards.Length - 1);
 
                     // Need to flip the last card in the stack face up if it's face down (only applies to Tableau)
-                    if (i == m_attachedCards.Length - 1 && belongsTo.Equals(Sections.TABLEAU) && !m_waiting)
+                    if (i == m_attachedCards.Length - 1 && belongsTo.Equals(GameManager.Sections.TABLEAU) && !m_waiting)
                     {
                         // Only flip it face up if it's face down and the previous card move was valid
                         if (card.currentState.Equals(CardState.FACE_DOWN))
                         {
-                            card.Flip(false);
+                            card.Flip();
+
+                            // Stage the event
+                            Event evt = new Event();
+                            evt.SetType(Event.EventType.FLIP);
+                            evt.SetCard(card);
+
+                            // Setting relative snap manager to this instance for locking when reversing event
+                            evt.SetRelativeSnapManager(this);
+                            GameManager.Instance.AddEventToLastMove(evt);
                         }
                     }
 
@@ -82,13 +91,17 @@ namespace Solitaire
         public bool IsValidMove(Card card)
         {
             bool valid = false;
-            switch(belongsTo)
+            switch (belongsTo)
             {
-                case Sections.FOUNDATIONS:
+                case GameManager.Sections.FOUNDATIONS:
                     valid = IsValidNextFoundationCard(card);
                     break;
-                case Sections.TABLEAU:
+                case GameManager.Sections.TABLEAU:
                     valid = IsValidNextTableauCard(card);
+                    break;
+                case GameManager.Sections.STOCK:
+                    break;
+                case GameManager.Sections.TALON:
                     break;
                 default:
                     break;
@@ -120,7 +133,7 @@ namespace Solitaire
             {
                 // Get the top card and validate
                 Card currentCard = m_attachedCards[m_attachedCards.Length - 1];
-                valid = (nextCard.value == currentCard.value + 1) && (nextCard.suit.Equals(currentCard.suit));
+                valid = (nextCard.value == currentCard.value + 1) && nextCard.suit.Equals(currentCard.suit);
             }
 
             return valid;

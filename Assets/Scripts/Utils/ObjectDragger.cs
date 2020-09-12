@@ -15,9 +15,9 @@ namespace Solitaire
         // Keep track of the cards that are currently being dragged (can be 1 or many at a time)
         private Card[] m_draggedCards;
 
-        private int m_clickCount = 0;
         private float m_timeSinceLastClick = -1.0f;
         bool m_isStockCard = false;
+        bool m_dragged = false;
 
         private SnapManager m_originSnapManager;
 
@@ -55,7 +55,7 @@ namespace Solitaire
             GameManager.Instance.RegisterObjectDragger(this);
 
             // If card, we need to get a list of the cards that are to be dragged (through the use of the Snap Manager)
-            if (gameObject.CompareTag("Card"))
+            if (gameObject.CompareTag("Card") && transform.parent != null)
             {
                 // Initialize the dragged cards list by referencing the set of cards that are attached to the
                 // respective snap that one or many cards are to be dragged from.
@@ -92,6 +92,12 @@ namespace Solitaire
                 return;
             }
 
+            // Prevent dragging if there is an active GameManager block on actions/events
+            //if (GameManager.Instance.IsBlocked())
+            //{
+            //    return;
+            //}
+
             // Only allow dragging cards
             if (gameObject.CompareTag("Card"))
             {
@@ -99,6 +105,13 @@ namespace Solitaire
                 {
                     // Don't allow dragging stock cards or face-down cards
                     return;
+                }
+
+                // Set temporary block on actions and events while dragging cards(s)
+                if (!GameManager.Instance.IsBlocked())
+                {
+                    GameManager.Instance.SetBlocked(true);
+                    m_dragged = true; // Denote that there was a valid dragging action
                 }
 
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
@@ -113,7 +126,8 @@ namespace Solitaire
                 foreach (Card card in m_draggedCards)
                 {
                     // Need to temporarily remove the game object from its stack so that snap manager can update cards in each stack
-                    card.transform.parent = null;
+                    if (card.transform.parent)
+                        card.transform.parent = null;
 
                     Vector3 cardPosition = card.transform.position;
                     Vector3 newCardPos = new Vector3(curPosition.x, curPosition.y - (yOffset * i), curPosition.z - i);
@@ -152,7 +166,11 @@ namespace Solitaire
                             {
                                 // Only way to get to this point is if the stock was clicked and there are no cards on it
                                 // Transfer all cards attached to talon back to stock
+                                GameManager.Instance.SetBlocked(true);
                                 GameManager.Instance.ReplinishStock();
+
+                                // TODO add event for replinishing stock
+
                             }
                         }
                         else
@@ -168,12 +186,11 @@ namespace Solitaire
                             Transform nextMove = null;
 
                             // Don't apply double-click logic to stock
-                            if (cardParentSetTag.Equals("Stock"))
+                            // Also don't permit click spamming for drawing cards (use game manager action/event block)
+                            if (cardParentSetTag.Equals("Stock") && !GameManager.Instance.IsBlocked())
                             {
-                                m_clickCount++;
-                                if (GameManager.DEBUG_MODE) Debug.Log("Click count: " + m_clickCount);
-
-                                // Move the card to the talon pile once it has been clicked on the stock
+                                // Move the card to the talon pile once it has been clicked on the stock (draw card)
+                                GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events
                                 cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
                             }
                             else if (doubleClick)
@@ -188,10 +205,11 @@ namespace Solitaire
                                 }
 
                                 // If double click and there is a valid next move
-                                // Then, automatically move the double clicked card to the most appropriate location. 
+                                // Then, automatically move the double clicked card to the most appropriate location.
                                 if (nextMove)
                                 {
                                     // Move all cards in set of dragged cards (can be 1)
+                                    GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events
                                     cardOfInterest.MoveTo(nextMove, m_draggedCards);
 
                                     // Have to notify that waiting is complete for destination snap manager
@@ -214,6 +232,9 @@ namespace Solitaire
                                     // Ensure all mesh colliders are re-enabled (corner case when double clicking a face down card)
                                     card.GetComponent<MeshCollider>().enabled = true;
                                 }
+
+                                // Unblock actions/events since invalid click
+                                GameManager.Instance.SetBlocked(false);
                             }
                         }
 
@@ -387,19 +408,43 @@ namespace Solitaire
                     // If the drag location is deemed invalid then we should snap back to starting position
                     // Need to iterate the list of dragged cards and set each card back to their respective 
                     // starting position and starting parent
-                    foreach(Card card in m_draggedCards)
+                    if (m_draggedCards != null)
                     {
-                        card.transform.position = card.GetStartPos();
-                        card.transform.parent = card.GetStartParent();
+                        foreach (Card card in m_draggedCards)
+                        {
+                            card.transform.position = card.GetStartPos();
+                            card.transform.parent = card.GetStartParent();
 
-                        // Re-enable the mesh colliders on the cards
-                        card.GetComponent<MeshCollider>().enabled = true;
+                            // Re-enable the mesh colliders on the cards
+                            card.GetComponent<MeshCollider>().enabled = true;
+                        }
                     }
+                }
+                else
+                {
+                    // Register the manual move if it was valid
+                    Move move = new Move();
+                    move.SetCards(m_draggedCards);
+                    move.SetPreviousParent(m_originSnapManager.transform);
+                    move.SetNextParent(m_draggedCards[0].transform.parent);
+                    GameManager.Instance.AddMove(move, Move.MoveTypes.NORMAL);
                 }
 
                 // Can stop waiting now that the move is complete
-                m_originSnapManager.SetWaiting(false);
-                GameManager.Instance.UnregisterObjectDragger(this); // Unregister this object dragger (only works if this was active)
+                // Evaluate only if origin snap manager isn't null
+                if (m_originSnapManager != null)
+                    m_originSnapManager.SetWaiting(false);
+
+                // Unregister this object dragger (only works if this was active)
+                GameManager.Instance.UnregisterObjectDragger(this); 
+
+                // Remove temporary locks set during dragging
+                if (m_dragged)
+                {
+                    GameManager.Instance.SetBlocked(false);
+                    m_dragged = false;
+                }
+                    
             }
         }
     }

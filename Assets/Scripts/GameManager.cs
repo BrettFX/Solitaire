@@ -2,9 +2,13 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static Solitaire.Card;
+using static Solitaire.Move;
 
 namespace Solitaire
 {
+    
+
     public class GameManager : MonoBehaviour
     {
         private static GameManager instance;
@@ -16,6 +20,7 @@ namespace Solitaire
         }
 
         public static bool DEBUG_MODE = false;
+        public static bool ANIMATIONS_ENABLED = false;
 
         public const int HOME_SCENE = 0;
 
@@ -24,6 +29,7 @@ namespace Solitaire
 
         public const float Z_OFFSET_DRAGGING = 70.0f;
         public const float FOUNDATION_Y_OFFSET = 37.5f;
+        public const float FACE_DOWN_Y_OFFSET = FOUNDATION_Y_OFFSET / 3; // Face down cards will have a smaller y-offset
 
         public static readonly string[] VALUE_REF =
         {
@@ -34,27 +40,6 @@ namespace Solitaire
         {
             "Stock", "Talon"
         };
-
-        public enum CardState
-        {
-            FACE_UP, FACE_DOWN
-        };
-
-        public enum CardSuit
-        {
-            HEARTS,
-            DIAMONDS,
-            CLUBS,
-            SPADES,
-            NONE
-        };
-
-        public enum CardSuitColor
-        {
-            RED,
-            BLACK,
-            NONE
-        }
 
         public enum Sections
         {
@@ -74,6 +59,10 @@ namespace Solitaire
         public GameObject cardPrefab;
         public Text lblTimer;
 
+        [Header("Action Buttons")]
+        public Button btnUndo;
+        public Button btnRedo;
+
         private Sprite[] m_cardSprites;
         private Dictionary<CardSuit, Sprite[]> m_cardSpritesMap;
 
@@ -88,6 +77,11 @@ namespace Solitaire
 
         // Used to reset the timer
         private float m_timeBuffer = 0.0f;
+
+        private Stack<Move> m_moves;        // Keep track of moves to allow for undoing
+        private Stack<Move> m_undoneMoves;  // Keep track of moves that have been undone for redo capability
+
+        private volatile bool m_blocked = false;
 
         /**
          * Ensure this class remains a singleton instance
@@ -120,6 +114,8 @@ namespace Solitaire
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
             m_foundationSnapManagers = foundations.GetComponentsInChildren<SnapManager>();
             m_tableauSnapManagers = tableau.GetComponentsInChildren<SnapManager>();
+            m_moves = new Stack<Move>();
+            m_undoneMoves = new Stack<Move>();
             LoadCardSprites();
             SpawnStack();
         }
@@ -130,6 +126,17 @@ namespace Solitaire
             {
                 UpdateTimer();
             }
+            else
+            {
+                // Clear all moves from the moves lists once the game has been won
+                m_moves.Clear();
+                m_undoneMoves.Clear();
+            }
+
+            // Toggle interactability on undo and redo buttons based on size of respective moves list
+            btnUndo.interactable = m_moves.Count > 0;
+            btnRedo.interactable = m_undoneMoves.Count > 0;
+
         }
 
         private bool IsWinningState()
@@ -162,12 +169,122 @@ namespace Solitaire
             lblTimer.text = string.Format("{0}:{1}:{2}.{3}", hours.ToString("00"), minutes.ToString("00"), seconds.ToString("00"), milliseconds.ToString("00"));
         }
 
+        /**
+         * Process undo and redo move actions
+         */
+        private void ProcessMoveAction(MoveTypes moveType)
+        {
+            bool undoAction = moveType.Equals(MoveTypes.UNDO);
+            Stack<Move> targetMoves = undoAction ? m_moves : m_undoneMoves;
+            Stack<Move> altMoves = undoAction ? m_undoneMoves : m_moves;
+
+            // Pop the last move from the moves list/stack
+            Move move = targetMoves.Pop();
+
+            // Take precedence over events in the move (execute them first)
+            List<Event> events = move.GetEvents();
+            foreach (Event evt in events)
+            {
+                // Reverse the event
+                evt.Reverse();
+            }
+
+            // Perform the move; don't want to track changes so that undone moves are managed through here
+            move.GetTopCard().MoveTo(undoAction ? move.GetPreviousParent() : move.GetNextParent(), move.GetCards(), moveType);
+
+            // Add the move to the redo stack
+            altMoves.Push(move);
+        }
+
+        /**
+         * 
+         */
+        public void Undo()
+        {
+            // Don't proceed if already blocked
+            if (!m_blocked)
+            {
+                // Block additional actions and events until undo is complete.
+                m_blocked = true;
+                ProcessMoveAction(MoveTypes.UNDO);
+            }
+        }
+
+        /**
+         * 
+         */
+        public void Redo()
+        {
+            // Don't proceed if already blocked
+            if (!m_blocked)
+            {
+                // Block additional actions and events until undo is complete.
+                m_blocked = true;
+                ProcessMoveAction(MoveTypes.REDO);
+            }
+        }
+
+        /**
+         * 
+         */
         public void Reset()
         {
             // Set the time buffer to the time since level load so the timer starts back at zero
             // @see UpdateTimer
             m_timeBuffer = Time.timeSinceLevelLoad;
             SceneManager.LoadScene(HOME_SCENE);
+        }
+
+        /**
+         * 
+         */
+        public void AddMove(Move move, MoveTypes moveType)
+        {
+            switch (moveType)
+            {
+                case MoveTypes.NORMAL:
+                    m_moves.Push(move);
+
+                    // Clear the redo stack if there are moves in it.
+                    m_undoneMoves.Clear();
+                    break;
+                case MoveTypes.REDO:
+                    m_moves.Push(move);
+                    break;
+                case MoveTypes.UNDO:
+                    m_undoneMoves.Push(move);
+                    break;
+            }
+        }
+
+        /**
+         * Dispatch events to the main set of moves, specifically the most recent move added to the list of
+         * moves.
+         */
+        public void AddEventToLastMove(Event e)
+        {
+            // Add the event to the global list of events (assuming the first move in the list of moves is the target)
+            // TODO if a move doesn't exist then create a new move based on the respective move
+            if (m_moves.Count > 0)
+            {
+                m_moves.Peek().AddEvent(e);
+            }
+        }
+
+        /**
+         * Set blocking flag on actions and events to prevent action/event spamming.
+         */
+        public void SetBlocked(bool blocked)
+        {
+            m_blocked = blocked;
+        }
+
+        /**
+         * Whether or not actions and events are actively being blocked.
+         */
+        public bool IsBlocked()
+        {
+            return m_blocked;
         }
 
         /**
@@ -228,7 +345,6 @@ namespace Solitaire
          */
         public Transform GetNextAvailableMove(Card card, int cardCount = 1)
         {
-
             Transform nextMove = null;
 
             // Handle face-down card corner case (only process if the card is face up)
@@ -257,6 +373,12 @@ namespace Solitaire
                 // in the foundations
                 if (!nextMove)
                 {
+                    Dictionary<int, Transform> possibleMoves = new Dictionary<int, Transform>();
+
+                    int currentCardLoc = -1;
+                    int i = 0;
+
+                    // Do first pass through snap managers to get set of possible moves
                     foreach (SnapManager snapManager in m_tableauSnapManagers)
                     {
                         if (snapManager.IsValidMove(card))
@@ -264,10 +386,31 @@ namespace Solitaire
                             // Skip if the next move is the current card location
                             if (!snapManager.transform.Equals(card.GetStartParent()))
                             {
-                                nextMove = snapManager.transform;
-                                break;
+                                possibleMoves.Add(i, snapManager.transform);
                             }
                         }
+
+                        if (snapManager.transform.Equals(card.GetStartParent()))
+                        {
+                            currentCardLoc = i;
+                        }
+
+                        i++;
+                    }
+
+                    // Only proceed if there is at least one possible move
+                    if (possibleMoves.Count > 0)
+                    {
+                        // Prioritize the move that is closest to the current card
+                        int closestIndex = 999;
+                        foreach (KeyValuePair<int, Transform> possibleMove in possibleMoves)
+                        {
+                            if (Mathf.Abs(currentCardLoc - possibleMove.Key) < closestIndex)
+                                closestIndex = possibleMove.Key;
+                        }
+
+                        // Assign the next move to be the closest to the current card
+                        nextMove = possibleMoves[closestIndex];
                     }
                 }
             }
@@ -301,7 +444,7 @@ namespace Solitaire
                 );
 
                 // Rotate the card to be face down again
-                CardState cardState = card.Flip(false);
+                CardState cardState = card.Flip();
                 if (DEBUG_MODE)
                 {
                     Debug.Log(card.value + " of " + card.suit + " is " + cardState);
@@ -430,7 +573,6 @@ namespace Solitaire
             // Iterate through the tableau snaps and spawn cards from deck to them
             SnapManager[] tableauSnapManagers = tableau.GetComponentsInChildren<SnapManager>();
             int zOffset = 1;
-            float yOffset = 10.0f; // Face down cards will have a smaller y-offset
             for (int i = 0; i < tableauSnapManagers.Length; i++)
             {
                 Transform stackTarget = tableauSnapManagers[i].transform;
@@ -449,7 +591,7 @@ namespace Solitaire
 
                     Vector3 posOffset = new Vector3(
                        stackTarget.position.x,
-                       stackTarget.position.y - (yOffset * j),
+                       stackTarget.position.y - (FACE_DOWN_Y_OFFSET * j),
                        stackTarget.position.z - zOffset
                     );
 
@@ -461,7 +603,7 @@ namespace Solitaire
                     // Only make the last card flip face up
                     if (j + 1 == i + 1)
                     {
-                        spawnedCard.GetComponent<Card>().Flip(false);
+                        spawnedCard.GetComponent<Card>().Flip();
                     }
 
                     zOffset++;
