@@ -244,7 +244,8 @@ namespace Solitaire
                     }
 
                     // Don't allow dropping stock cards or face-down cards
-                    valid = !m_isStockCard && !GetComponent<Card>().IsFaceDown();
+                    Card cardCheck = GetComponent<Card>();
+                    valid = !m_isStockCard && cardCheck != null && !cardCheck.IsFaceDown();
 
                     // Validate the dragged location to determine if the card should be snapped back to original location
                     // or snapped to the respective target (e.g., attempted drag location)
