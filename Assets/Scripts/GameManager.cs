@@ -373,10 +373,7 @@ namespace Solitaire
                 // in the foundations
                 if (!nextMove)
                 {
-                    Dictionary<int, Transform> possibleMoves = new Dictionary<int, Transform>();
-
-                    int currentCardLoc = -1;
-                    int i = 0;
+                    List<Transform> possibleMoves = new List<Transform>();
 
                     // Do first pass through snap managers to get set of possible moves
                     foreach (SnapManager snapManager in m_tableauSnapManagers)
@@ -386,27 +383,33 @@ namespace Solitaire
                             // Skip if the next move is the current card location
                             if (!snapManager.transform.Equals(card.GetStartParent()))
                             {
-                                possibleMoves.Add(i, snapManager.transform);
+                                possibleMoves.Add(snapManager.transform);
                             }
                         }
-
-                        if (snapManager.transform.Equals(card.GetStartParent()))
-                        {
-                            currentCardLoc = i;
-                        }
-
-                        i++;
                     }
 
                     // Only proceed if there is at least one possible move
                     if (possibleMoves.Count > 0)
                     {
                         // Prioritize the move that is closest to the current card
-                        int closestIndex = 999;
-                        foreach (KeyValuePair<int, Transform> possibleMove in possibleMoves)
+                        int closestIndex = 0;
+
+                        // Use square magnitude to calculate least distance between relative card
+                        // and possible moves
+                        float sqrMagnitude = Vector3.SqrMagnitude(card.transform.position - possibleMoves[0].position);
+                        float minDistance = sqrMagnitude;
+                        for (int i = 0; i < possibleMoves.Count; i++)
                         {
-                            if (Mathf.Abs(currentCardLoc - possibleMove.Key) < closestIndex)
-                                closestIndex = possibleMove.Key;
+                            // Determine if there is a closer move to the card in question (after the first calculation).
+                            if (i != 0)
+                            {
+                                sqrMagnitude = Vector3.SqrMagnitude(card.transform.position - possibleMoves[i].position);
+                                if (sqrMagnitude < minDistance)
+                                {
+                                    minDistance = sqrMagnitude;
+                                    closestIndex = i;
+                                }
+                            }
                         }
 
                         // Assign the next move to be the closest to the current card
