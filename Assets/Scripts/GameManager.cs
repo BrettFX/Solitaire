@@ -61,6 +61,7 @@ namespace Solitaire
         [Header("Action Buttons")]
         public Button btnUndo;
         public Button btnRedo;
+        public GameObject btnAutoWin;
 
         private Sprite[] m_cardSprites;
         private Dictionary<CardSuit, Sprite[]> m_cardSpritesMap;
@@ -126,6 +127,17 @@ namespace Solitaire
         {
             if (!IsWinningState())
             {
+                // Check if the game is in a winnable state.
+                // Set the auto-win button to be active accordingly
+                if (IsWinnableState())
+                {
+                    if (!btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(true);
+                }
+                else
+                {
+                    if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
+                }
+
                 // Pause the timer if the game is paused
                 if (!m_paused)
                 {
@@ -137,6 +149,8 @@ namespace Solitaire
                 // Clear all moves from the moves lists once the game has been won
                 m_moves.Clear();
                 m_undoneMoves.Clear();
+
+                if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
             }
 
             // Toggle interactability on undo and redo buttons based on size of respective moves list
@@ -155,6 +169,35 @@ namespace Solitaire
 
             // Game is won if the sum of all cards in the foundations is 52
             return cardCountSum == 52;
+        }
+
+        /**
+         * Determine if the game is in a winnable state.
+         * Game is in a winnable state when the following conditions have been met:
+         * 1) Total count of all face down cards in Tableau is equal to 0.
+         * 2) Total count of cards in Stock and Talon is equal to 0.
+         */
+        private bool IsWinnableState()
+        {
+            int totalFaceDownTableauCards = 0;
+            foreach (SnapManager snapManager in tableau.GetComponentsInChildren<SnapManager>())
+            {
+                totalFaceDownTableauCards += snapManager.GetFaceDownCardCount();
+            }
+
+            int totalCardsInStockAndTalon = 0;
+            totalCardsInStockAndTalon += m_stockPile.GetComponent<SnapManager>().GetCardCount();
+            totalCardsInStockAndTalon += m_talonPile.GetComponent<SnapManager>().GetCardCount();
+
+            return totalFaceDownTableauCards == 0 && totalCardsInStockAndTalon == 0;
+        }
+
+        /**
+         * 
+         */
+        public void AutoWin()
+        {
+            Debug.Log("Auto win invoked.");
         }
 
         /**
@@ -609,7 +652,7 @@ namespace Solitaire
             for (int i = array.Count; i > 1; i--)
             {
                 // Pick random element to swap.
-                int j = UnityEngine.Random.Range(0, array.Count - 1); // 0 <= j <= i-1
+                int j = Random.Range(0, array.Count - 1); // 0 <= j <= i-1
                                         // Swap.
                 T tmp = array[j];
                 array[j] = array[i - 1];

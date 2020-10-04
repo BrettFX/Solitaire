@@ -197,6 +197,23 @@ namespace Solitaire
             return m_attachedCards.Length;
         }
 
+        public int GetFaceDownCardCount()
+        {
+            int faceDownCardCount = 0;
+            if (m_attachedCards != null)
+            {
+                foreach (Card card in m_attachedCards)
+                {
+                    if (card.IsFaceDown())
+                    {
+                        faceDownCardCount++;
+                    }
+                }
+            }
+
+            return faceDownCardCount;
+        }
+
         /**
          * Get the top card on the respective snap.
          * @return the top card. Returns null if there are no cards on the snap.
