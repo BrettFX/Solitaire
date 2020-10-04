@@ -7,8 +7,6 @@ using static Solitaire.Move;
 
 namespace Solitaire
 {
-    
-
     public class GameManager : MonoBehaviour
     {
         private static GameManager instance;
@@ -58,6 +56,7 @@ namespace Solitaire
         [Header("Utils")]
         public GameObject cardPrefab;
         public Text lblTimer;
+        public GameObject resetModalOverlay;
 
         [Header("Action Buttons")]
         public Button btnUndo;
@@ -222,6 +221,18 @@ namespace Solitaire
                 m_blocked = true;
                 ProcessMoveAction(MoveTypes.REDO);
             }
+        }
+
+        /**
+         * Toggle the visability of the reset modal overlay to get confirmation
+         * from the user on whether to reset the game.
+         */
+        public void ToggleResetModal()
+        {
+            // Display the modal overlay prompt to confirm Reset
+            resetModalOverlay.SetActive(!resetModalOverlay.activeInHierarchy);
+
+            // TODO disable ObjectDraggers while the modal is active
         }
 
         /**
