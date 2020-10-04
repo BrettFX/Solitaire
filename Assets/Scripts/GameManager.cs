@@ -81,6 +81,7 @@ namespace Solitaire
         private Stack<Move> m_undoneMoves;  // Keep track of moves that have been undone for redo capability
 
         private volatile bool m_blocked = false;
+        private bool m_paused = false;
 
         /**
          * Ensure this class remains a singleton instance
@@ -123,7 +124,11 @@ namespace Solitaire
         {
             if (!IsWinningState())
             {
-                UpdateTimer();
+                // Pause the timer if the game is paused
+                if (!m_paused)
+                {
+                    UpdateTimer();
+                }
             }
             else
             {
@@ -229,11 +234,25 @@ namespace Solitaire
          */
         public void ToggleResetModal()
         {
+            m_paused = !m_paused;
+
+            // If paused then we need to keep track of the total amount of time in paused
+            // state so that we can start the timer where it left off by subtracting the
+            // total paused time from the time since the level was loaded.
+            if (m_paused)
+            {
+                m_timeBuffer = Time.timeSinceLevelLoad;
+            }
+
             // Display the modal overlay prompt to confirm Reset
             resetModalOverlay.SetActive(!resetModalOverlay.activeInHierarchy);
 
-            // TODO disable ObjectDraggers while the modal is active
-        }
+            // Toggle visibility of all components of the game so that the user cannot interact in paused state
+            tableau.SetActive(!tableau.activeInHierarchy);
+            stock.SetActive(!stock.activeInHierarchy);
+            talon.SetActive(!talon.activeInHierarchy);
+            foundations.SetActive(!foundations.activeInHierarchy);
+    }
 
         /**
          * 
