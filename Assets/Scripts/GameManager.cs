@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -74,8 +75,9 @@ namespace Solitaire
         // Globally track if cards are being dragged to prevent multi-touch scenarios
         private ObjectDragger m_activeDragger = null;
 
-        // Used to reset the timer
+        // Used to reset the timer and keep track of pause time to maintain an accurate time accumulation
         private float m_timeBuffer = 0.0f;
+        private System.Diagnostics.Stopwatch m_stopWatch;
 
         private Stack<Move> m_moves;        // Keep track of moves to allow for undoing
         private Stack<Move> m_undoneMoves;  // Keep track of moves that have been undone for redo capability
@@ -116,6 +118,7 @@ namespace Solitaire
             m_tableauSnapManagers = tableau.GetComponentsInChildren<SnapManager>();
             m_moves = new Stack<Move>();
             m_undoneMoves = new Stack<Move>();
+            m_stopWatch = new System.Diagnostics.Stopwatch();
             LoadCardSprites();
             SpawnStack();
         }
@@ -241,7 +244,21 @@ namespace Solitaire
             // total paused time from the time since the level was loaded.
             if (m_paused)
             {
-                m_timeBuffer = Time.timeSinceLevelLoad;
+                // Keep track of the time of initial pause state
+                m_stopWatch.Start();
+            }
+            else
+            {
+                m_stopWatch.Stop();
+                m_timeBuffer += m_stopWatch.ElapsedMilliseconds / 1000.0f; // Get the elapsed pause time in seconds
+
+                if (DEBUG_MODE)
+                {
+                    Debug.Log(string.Format("Paused for {0} ms", m_stopWatch.ElapsedMilliseconds));
+                    Debug.Log("Time buffer is now: " + m_timeBuffer);
+                }
+
+                m_stopWatch.Reset();
             }
 
             // Display the modal overlay prompt to confirm Reset
@@ -593,7 +610,7 @@ namespace Solitaire
             for (int i = array.Count; i > 1; i--)
             {
                 // Pick random element to swap.
-                int j = Random.Range(0, array.Count - 1); // 0 <= j <= i-1
+                int j = UnityEngine.Random.Range(0, array.Count - 1); // 0 <= j <= i-1
                                         // Swap.
                 T tmp = array[j];
                 array[j] = array[i - 1];
