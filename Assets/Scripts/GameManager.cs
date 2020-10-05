@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -209,9 +210,35 @@ namespace Solitaire
         public void AutoWin()
         {
             btnAutoWin.GetComponent<Button>().interactable = false;
+            StartCoroutine(AutoWinCoroutine());
+        }
 
-            // Iterate through each of the Tableau piles to find the next available moves
+        /**
+         * 
+         */
+        private IEnumerator AutoWinCoroutine()
+        {
+            yield return new WaitForEndOfFrame();
 
+            while (!IsWinningState())
+            {
+                foreach (SnapManager snapManager in tableau.GetComponentsInChildren<SnapManager>())
+                {
+                    Card topCard = snapManager.GetTopCard();
+                    Transform nextMove = GetNextAvailableMove(topCard);
+
+                    if (nextMove)
+                    {
+                        SetBlocked(true);
+                        topCard.MoveTo(nextMove);
+
+                        // Block and wait for card to finish translating until continuing to next iteration
+                        yield return new WaitUntil(() => !topCard.IsTranslating());
+
+                        snapManager.SetWaiting(false);
+                    }
+                }
+            }
         }
 
         /**
@@ -451,7 +478,7 @@ namespace Solitaire
             Transform nextMove = null;
 
             // Handle face-down card corner case (only process if the card is face up)
-            if (!card.IsFaceDown())
+            if (card != null && !card.IsFaceDown())
             {
                 // First priority is the Foundations since the primary objective of the game is
                 // to get all cards to the Foundations.
