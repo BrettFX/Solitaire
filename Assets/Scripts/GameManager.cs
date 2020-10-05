@@ -119,8 +119,10 @@ namespace Solitaire
             m_moves = new Stack<Move>();
             m_undoneMoves = new Stack<Move>();
             m_stopWatch = new System.Diagnostics.Stopwatch();
-            LoadCardSprites();
-            SpawnStack();
+
+            // TODO uncomment after unit testing is complete with auto-win feature implementation
+            //LoadCardSprites();
+            //SpawnStack();
         }
 
         private void Update()
@@ -129,13 +131,19 @@ namespace Solitaire
             {
                 // Check if the game is in a winnable state.
                 // Set the auto-win button to be active accordingly
-                if (IsWinnableState())
+                if (IsWinnableState() && !m_blocked)
                 {
-                    if (!btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(true);
+                    if (!btnAutoWin.activeInHierarchy) {
+                        btnAutoWin.SetActive(true);
+                        btnAutoWin.GetComponent<Button>().interactable = true;
+                    }
                 }
                 else
                 {
-                    if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
+                    if (btnAutoWin.activeInHierarchy) {
+                        btnAutoWin.SetActive(false);
+                        btnAutoWin.GetComponent<Button>().interactable = false;
+                    }
                 }
 
                 // Pause the timer if the game is paused
@@ -150,7 +158,10 @@ namespace Solitaire
                 m_moves.Clear();
                 m_undoneMoves.Clear();
 
-                if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
+                if (btnAutoWin.activeInHierarchy) {
+                    btnAutoWin.SetActive(false);
+                    btnAutoWin.GetComponent<Button>().interactable = false;
+                }
             }
 
             // Toggle interactability on undo and redo buttons based on size of respective moves list
@@ -197,7 +208,10 @@ namespace Solitaire
          */
         public void AutoWin()
         {
-            Debug.Log("Auto win invoked.");
+            btnAutoWin.GetComponent<Button>().interactable = false;
+
+            // Iterate through each of the Tableau piles to find the next available moves
+
         }
 
         /**
