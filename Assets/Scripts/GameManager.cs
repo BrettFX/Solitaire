@@ -85,6 +85,7 @@ namespace Solitaire
 
         private volatile bool m_blocked = false;
         private bool m_paused = false;
+        private volatile bool m_doingAutoWin = false;
 
         /**
          * Ensure this class remains a singleton instance
@@ -132,20 +133,17 @@ namespace Solitaire
             {
                 // Check if the game is in a winnable state.
                 // Set the auto-win button to be active accordingly
-                if (IsWinnableState() && !m_blocked)
+                if (!m_doingAutoWin)
                 {
-                    if (!btnAutoWin.activeInHierarchy) {
-                        btnAutoWin.SetActive(true);
-                        btnAutoWin.GetComponent<Button>().interactable = true;
+                    if (IsWinnableState())
+                    {
+                        if (!btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(true);
                     }
-                }
-                else
-                {
-                    if (btnAutoWin.activeInHierarchy) {
-                        btnAutoWin.SetActive(false);
-                        btnAutoWin.GetComponent<Button>().interactable = false;
+                    else
+                    {
+                        if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
                     }
-                }
+                } 
 
                 // Pause the timer if the game is paused
                 if (!m_paused)
@@ -159,10 +157,7 @@ namespace Solitaire
                 m_moves.Clear();
                 m_undoneMoves.Clear();
 
-                if (btnAutoWin.activeInHierarchy) {
-                    btnAutoWin.SetActive(false);
-                    btnAutoWin.GetComponent<Button>().interactable = false;
-                }
+                if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
             }
 
             // Toggle interactability on undo and redo buttons based on size of respective moves list
@@ -171,7 +166,7 @@ namespace Solitaire
 
         }
 
-        private bool IsWinningState()
+        private int GetFoundationSum()
         {
             int cardCountSum = 0;
             foreach (SnapManager snapManager in m_foundationSnapManagers)
@@ -179,29 +174,37 @@ namespace Solitaire
                 cardCountSum += snapManager.GetCardCount();
             }
 
+            return cardCountSum;
+        }
+
+        private bool IsWinningState()
+        {
             // Game is won if the sum of all cards in the foundations is 52
-            return cardCountSum == 52;
+            return GetFoundationSum() == 52;
         }
 
         /**
          * Determine if the game is in a winnable state.
          * Game is in a winnable state when the following conditions have been met:
          * 1) Total count of all face down cards in Tableau is equal to 0.
-         * 2) Total count of cards in Stock and Talon is equal to 0.
+         * 2) Total count of cards in tableau and foundation is equal to 52.
          */
         private bool IsWinnableState()
         {
             int totalFaceDownTableauCards = 0;
-            foreach (SnapManager snapManager in tableau.GetComponentsInChildren<SnapManager>())
+            int tableauFoundationCardCountSum = 0;
+            foreach (SnapManager tableauSnapManager in tableau.GetComponentsInChildren<SnapManager>())
             {
-                totalFaceDownTableauCards += snapManager.GetFaceDownCardCount();
+                totalFaceDownTableauCards += tableauSnapManager.GetFaceDownCardCount();
+                tableauFoundationCardCountSum += tableauSnapManager.GetCardCount();
             }
 
-            int totalCardsInStockAndTalon = 0;
-            totalCardsInStockAndTalon += m_stockPile.GetComponent<SnapManager>().GetCardCount();
-            totalCardsInStockAndTalon += m_talonPile.GetComponent<SnapManager>().GetCardCount();
+            foreach (SnapManager foundationSnapManager in foundations.GetComponentsInChildren<SnapManager>())
+            {
+                tableauFoundationCardCountSum += foundationSnapManager.GetCardCount();
+            }
 
-            return totalFaceDownTableauCards == 0 && totalCardsInStockAndTalon == 0;
+            return totalFaceDownTableauCards == 0 && tableauFoundationCardCountSum == 52;
         }
 
         /**
@@ -209,36 +212,8 @@ namespace Solitaire
          */
         public void AutoWin()
         {
-            btnAutoWin.GetComponent<Button>().interactable = false;
+            btnAutoWin.SetActive(false);
             StartCoroutine(AutoWinCoroutine());
-        }
-
-        /**
-         * 
-         */
-        private IEnumerator AutoWinCoroutine()
-        {
-            yield return new WaitForEndOfFrame();
-
-            while (!IsWinningState())
-            {
-                foreach (SnapManager snapManager in tableau.GetComponentsInChildren<SnapManager>())
-                {
-                    Card topCard = snapManager.GetTopCard();
-                    Transform nextMove = GetNextAvailableMove(topCard);
-
-                    if (nextMove)
-                    {
-                        SetBlocked(true);
-                        topCard.MoveTo(nextMove);
-
-                        // Block and wait for card to finish translating until continuing to next iteration
-                        yield return new WaitUntil(() => !topCard.IsTranslating());
-
-                        snapManager.SetWaiting(false);
-                    }
-                }
-            }
         }
 
         /**
@@ -394,7 +369,6 @@ namespace Solitaire
         public void AddEventToLastMove(Event e)
         {
             // Add the event to the global list of events (assuming the first move in the list of moves is the target)
-            // TODO if a move doesn't exist then create a new move based on the respective move
             if (m_moves.Count > 0)
             {
                 m_moves.Peek().AddEvent(e);
@@ -784,7 +758,56 @@ namespace Solitaire
                 deck.RemoveAt(0);
             }
         }
+
+        /**
+         * 
+         */
+        private IEnumerator AutoWinCoroutine()
+        {
+            m_doingAutoWin = true;
+            yield return new WaitForEndOfFrame();
+
+            while (!IsWinningState())
+            {
+                foreach (SnapManager snapManager in tableau.GetComponentsInChildren<SnapManager>())
+                {
+                    Card topCard = snapManager.GetTopCard();
+                    Transform nextMove = GetNextAvailableMove(topCard);
+
+                    // Only process move if one existed and if it is to a foundation
+                    if (nextMove)
+                    {
+                        if (nextMove.GetComponent<SnapManager>().belongsTo.Equals(Sections.FOUNDATIONS))
+                        {
+                            SetBlocked(true);
+                            snapManager.SetWaiting(true);
+                            topCard.MoveTo(nextMove);
+
+                            // Block and wait for card to finish translating until continuing to next iteration
+                            // for every card except the last one (translating flag isn't reliable on last card)
+                            // TODO fix bug with wait function freezing due to translating flag never becomming true.
+                            // TODO looks like a glitch is happening when the last card is translated to invoke a winning state
+                            // TODO might need to store winning state in boolean variable and check it here and then add base case at end
+                            yield return new WaitUntil(() => topCard.transform.parent != null);
+                            //int foundationSum = GetFoundationSum();
+                            //if (foundationSum < 51)
+                            //{
+                            //    Debug.Log("Foundation Sum: " + foundationSum);
+                            //    Debug.Log("Waiting for " + topCard.value + " of " + topCard.suit + " to finish translating...");
+                            //    yield return new WaitForSeconds(0.5f);
+                            //    yield return new WaitUntil(() => !topCard.IsTranslating());
+
+                            //    Debug.Log(topCard.value + " of " + topCard.suit + " finished translating.");
+                            //}
+
+                            snapManager.SetWaiting(false);
+                        }
+                    }
+                }
+            }
+
+            m_doingAutoWin = false;
+        }
     }
 }
-
 
