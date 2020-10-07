@@ -124,7 +124,6 @@ namespace Solitaire
             m_undoneMoves = new Stack<Move>();
             m_stopWatch = new System.Diagnostics.Stopwatch();
 
-            // TODO uncomment after unit testing is complete with auto-win feature implementation
             LoadCardSprites();
             SpawnStack();
         }
