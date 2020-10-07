@@ -63,6 +63,7 @@ namespace Solitaire
         public Button btnUndo;
         public Button btnRedo;
         public GameObject btnAutoWin;
+        public Button btnConfirmReset;
 
         private Sprite[] m_cardSprites;
         private Dictionary<CardSuit, Sprite[]> m_cardSpritesMap;
@@ -86,6 +87,7 @@ namespace Solitaire
         private volatile bool m_blocked = false;
         private bool m_paused = false;
         private volatile bool m_doingAutoWin = false;
+        private bool m_enteredWinnableState = false;
 
         /**
          * Ensure this class remains a singleton instance
@@ -123,8 +125,8 @@ namespace Solitaire
             m_stopWatch = new System.Diagnostics.Stopwatch();
 
             // TODO uncomment after unit testing is complete with auto-win feature implementation
-            //LoadCardSprites();
-            //SpawnStack();
+            LoadCardSprites();
+            SpawnStack();
         }
 
         private void Update()
@@ -161,8 +163,11 @@ namespace Solitaire
             }
 
             // Toggle interactability on undo and redo buttons based on size of respective moves list
-            btnUndo.interactable = m_moves.Count > 0;
-            btnRedo.interactable = m_undoneMoves.Count > 0;
+            btnUndo.interactable = m_moves.Count > 0 && !m_doingAutoWin;
+            btnRedo.interactable = m_undoneMoves.Count > 0 && !m_doingAutoWin;
+
+            // Toggle interactability of reset button based on auto win state
+            btnConfirmReset.interactable = !m_doingAutoWin;
 
         }
 
@@ -204,7 +209,26 @@ namespace Solitaire
                 tableauFoundationCardCountSum += foundationSnapManager.GetCardCount();
             }
 
-            return totalFaceDownTableauCards == 0 && tableauFoundationCardCountSum == 52;
+            // Keep the auto-win button active by allowing a threshold of 13 cards to be dragged at any point
+            // after the initial winnable state was triggered.
+            bool winnableState;
+            if (m_enteredWinnableState)
+            {
+                winnableState = totalFaceDownTableauCards == 0 &&
+                                tableauFoundationCardCountSum >= 52 - 13 &&
+                                stock.GetComponentInChildren<SnapManager>().GetCardCount() == 0 &&
+                                talon.GetComponentInChildren<SnapManager>().GetCardCount() == 0;
+
+                if (!winnableState)
+                    m_enteredWinnableState = false;
+            }
+            else
+            {
+                m_enteredWinnableState = totalFaceDownTableauCards == 0 && tableauFoundationCardCountSum == 52;
+                winnableState = m_enteredWinnableState;
+            }
+
+            return winnableState;
         }
 
         /**
@@ -212,6 +236,10 @@ namespace Solitaire
          */
         public void AutoWin()
         {
+            // Handle base case when auto win button is clicked when not in a winnable state
+            if (!IsWinnableState())
+                return;
+
             btnAutoWin.SetActive(false);
             StartCoroutine(AutoWinCoroutine());
         }
@@ -767,7 +795,7 @@ namespace Solitaire
             m_doingAutoWin = true;
             yield return new WaitForEndOfFrame();
 
-            while (!IsWinningState())
+            while (true)
             {
                 foreach (SnapManager snapManager in tableau.GetComponentsInChildren<SnapManager>())
                 {
@@ -782,27 +810,17 @@ namespace Solitaire
                             SetBlocked(true);
                             snapManager.SetWaiting(true);
                             topCard.MoveTo(nextMove);
-
-                            // Block and wait for card to finish translating until continuing to next iteration
-                            // for every card except the last one (translating flag isn't reliable on last card)
-                            // TODO fix bug with wait function freezing due to translating flag never becomming true.
-                            // TODO looks like a glitch is happening when the last card is translated to invoke a winning state
-                            // TODO might need to store winning state in boolean variable and check it here and then add base case at end
-                            yield return new WaitUntil(() => topCard.transform.parent != null);
-                            //int foundationSum = GetFoundationSum();
-                            //if (foundationSum < 51)
-                            //{
-                            //    Debug.Log("Foundation Sum: " + foundationSum);
-                            //    Debug.Log("Waiting for " + topCard.value + " of " + topCard.suit + " to finish translating...");
-                            //    yield return new WaitForSeconds(0.5f);
-                            //    yield return new WaitUntil(() => !topCard.IsTranslating());
-
-                            //    Debug.Log(topCard.value + " of " + topCard.suit + " finished translating.");
-                            //}
-
+                            yield return new WaitUntil(() => topCard.transform.parent != null || !topCard.IsTranslating());
                             snapManager.SetWaiting(false);
+                            SetBlocked(false);
                         }
                     }
+                }
+
+                // Stop if last card (prevents freezing on last card translation
+                if (GetFoundationSum() >= 51)
+                {
+                    break;
                 }
             }
 

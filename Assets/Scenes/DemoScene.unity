@@ -8271,6 +8271,7 @@ MonoBehaviour:
   btnUndo: {fileID: 401675030}
   btnRedo: {fileID: 1415462881}
   btnAutoWin: {fileID: 121608447}
+  btnConfirmReset: {fileID: 1948228758}
 --- !u!4 &2113728848
 Transform:
   m_ObjectHideFlags: 0
