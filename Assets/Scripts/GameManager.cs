@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -56,7 +57,7 @@ namespace Solitaire
 
         [Header("Utils")]
         public GameObject cardPrefab;
-        public Text lblTimer;
+        public TextMeshProUGUI lblTimer;
         public GameObject resetModalOverlay;
 
         [Header("Action Buttons")]
