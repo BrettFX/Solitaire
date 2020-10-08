@@ -126,9 +126,17 @@ namespace Solitaire
             m_undoneMoves = new Stack<Move>();
             m_stopWatch = new System.Diagnostics.Stopwatch();
 
-            // TODO debugging
-            //LoadCardSprites();
-            //SpawnStack();
+            // Only load card sprites and spawn stack if not using the demo scene (for unit testing support)
+            if (!SceneManager.GetActiveScene().name.Equals("DemoScene"))
+            {
+                LoadCardSprites();
+                SpawnStack();
+            }
+            else
+            {
+                Debug.Log("Using demo scene.");
+                Debug.Log("Steps for loading card sprites and spawning stack have been skipped.");
+            }
         }
 
         private void Update()
