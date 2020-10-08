@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -125,8 +126,9 @@ namespace Solitaire
             m_undoneMoves = new Stack<Move>();
             m_stopWatch = new System.Diagnostics.Stopwatch();
 
-            LoadCardSprites();
-            SpawnStack();
+            // TODO debugging
+            //LoadCardSprites();
+            //SpawnStack();
         }
 
         private void Update()
@@ -793,9 +795,12 @@ namespace Solitaire
         private IEnumerator AutoWinCoroutine()
         {
             m_doingAutoWin = true;
+            SetBlocked(true);
             yield return new WaitForEndOfFrame();
 
-            while (true)
+            int attempts = 0; // Loop counter to prevent infinite loop and game crash
+            int bounds = 10000;
+            while (attempts < bounds)
             {
                 foreach (SnapManager snapManager in tableau.GetComponentsInChildren<SnapManager>())
                 {
@@ -807,12 +812,11 @@ namespace Solitaire
                     {
                         if (nextMove.GetComponent<SnapManager>().belongsTo.Equals(Sections.FOUNDATIONS))
                         {
-                            SetBlocked(true);
                             snapManager.SetWaiting(true);
                             topCard.MoveTo(nextMove);
                             yield return new WaitUntil(() => topCard.transform.parent != null || !topCard.IsTranslating());
                             snapManager.SetWaiting(false);
-                            SetBlocked(false);
+
                         }
                     }
                 }
@@ -822,8 +826,11 @@ namespace Solitaire
                 {
                     break;
                 }
+
+                attempts++;
             }
 
+            SetBlocked(false);
             m_doingAutoWin = false;
         }
     }
