@@ -194,7 +194,7 @@ namespace Solitaire
 
         public int GetCardCount()
         {
-            return m_attachedCards.Length;
+            return m_attachedCards != null ? m_attachedCards.Length : 0;
         }
 
         public int GetFaceDownCardCount()
@@ -228,7 +228,7 @@ namespace Solitaire
          * @param int startIndex the starting point in the list of cards to base the subset on.
          * @return Card[] the subset of cards in the attached cards list
          * */
-        public Card[] GetCardSet(int startIndex)
+        public Card[] GetCardSet(int startIndex = 0)
         {
             // Default to returning the entire set of attached card if the start index is out of lower bounds
             if (startIndex <= 0)

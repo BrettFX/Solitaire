@@ -9,7 +9,8 @@ namespace Solitaire
         {
             UNDO,
             REDO,
-            NORMAL
+            NORMAL,
+            INCOGNITO
         };
 
         private Card m_topCard;
@@ -17,10 +18,21 @@ namespace Solitaire
         private readonly List<Event> m_events;
         private Transform m_prevParent;
         private Transform m_nextParent;
+        private bool m_special = false;
 
         public Move()
         {
             m_events = new List<Event>();
+        }
+
+        public void SetSpecial(bool special)
+        {
+            m_special = special;
+        }
+
+        public bool IsSpecial()
+        {
+            return m_special;
         }
 
         public void SetCards(Card[] cards)

@@ -284,16 +284,41 @@ namespace Solitaire
             // Pop the last move from the moves list/stack
             Move move = targetMoves.Pop();
 
-            // Take precedence over events in the move (execute them first)
-            List<Event> events = move.GetEvents();
-            foreach (Event evt in events)
+            if (move.IsSpecial())
             {
-                // Reverse the event
-                evt.Reverse();
-            }
+                // Special moves should only have one event
+                Event ev = move.GetEvents()[0];
+                ev.Reverse();
 
-            // Perform the move; don't want to track changes so that undone moves are managed through here
-            move.GetTopCard().MoveTo(undoAction ? move.GetPreviousParent() : move.GetNextParent(), move.GetCards(), moveType);
+                // Swap the event type for proper redo
+                Event.EventType evType = ev.GetEventType();
+                Event.EventType newEvType = Event.EventType.NONE;
+                switch (evType)
+                {
+                    case Event.EventType.REPLINISH:
+                        newEvType = Event.EventType.DEPLINISH;
+                        break;
+                    case Event.EventType.DEPLINISH:
+                        newEvType = Event.EventType.REPLINISH;
+                        break;
+                }
+
+                ev.SetType(newEvType);
+                m_blocked = false;
+            }
+            else
+            {
+                // Take precedence over events in the move (execute them first)
+                List<Event> events = move.GetEvents();
+                foreach (Event evt in events)
+                {
+                    // Reverse the event
+                    evt.Reverse();
+                }
+
+                // Perform the move; don't want to track changes so that undone moves are managed through here
+                move.GetTopCard().MoveTo(undoAction ? move.GetPreviousParent() : move.GetNextParent(), move.GetCards(), moveType);
+            }
 
             // Add the move to the redo stack
             altMoves.Push(move);
@@ -566,11 +591,11 @@ namespace Solitaire
         /**
          * Take all cards from talon and put them back in the stock
          */
-        public void ReplinishStock()
+        public void ReplinishStock(MoveTypes moveType = MoveTypes.NORMAL)
         {
             SnapManager talonSnapManager = talon.GetComponentInChildren<SnapManager>();
 
-            Card[] talonCards = talonSnapManager.GetCardSet(0);
+            Card[] talonCards = talonSnapManager.GetCardSet();
             if (DEBUG_MODE) Debug.Log("Cards in talon:");
             
             // Need to iterate in reverse order so that the cards are drawn from the stock in the same order as before
@@ -589,11 +614,7 @@ namespace Solitaire
                 );
 
                 // Rotate the card to be face down again
-                CardState cardState = card.Flip();
-                if (DEBUG_MODE)
-                {
-                    Debug.Log(card.value + " of " + card.suit + " is " + cardState);
-                }
+                card.Flip();
 
                 // Add the card to the stock
                 card.transform.parent = m_stockPile;
@@ -601,8 +622,67 @@ namespace Solitaire
                 // Flip the first card from the stock pile over to the talon automatically
                 if (i == 0)
                 {
-                    card.MoveTo(m_talonPile);
+                    // Don't track this move
+                    card.MoveTo(m_talonPile, null, MoveTypes.INCOGNITO);
+
+                    // Need to manually flip card because of not tracking
+                    if (card.IsFaceDown())
+                        card.Flip();
                 }
+            }
+
+            // TODO track replinish event
+            if (moveType.Equals(MoveTypes.NORMAL))
+            {
+                Move move = new Move();
+                move.SetSpecial(true);
+                Event ev = new Event();
+                ev.SetType(Event.EventType.REPLINISH);
+                move.AddEvent(ev);
+                AddMove(move, MoveTypes.NORMAL);
+            }
+        }
+
+        /**
+         * Used for reversing a replinishing event
+         */
+        public void DeplinishStock(MoveTypes moveType = MoveTypes.NORMAL)
+        {
+            SnapManager stockSnapManager = stock.GetComponentInChildren<SnapManager>();
+
+            Card[] stockCards = stockSnapManager.GetCardSet();
+
+            for (int i = stockCards.Length - 1; i >= 0; i--)
+            {
+                Card card = stockCards[i];
+
+                // Remove from stock
+                card.transform.parent = null;
+
+                // Move the card position from the stock to the talon
+                card.transform.position = new Vector3(
+                    m_talonPile.position.x,
+                    m_talonPile.position.y,
+                    card.transform.position.z
+                );
+
+                // Rotate the card to be face up
+                if (card.IsFaceDown())
+                    card.Flip();
+
+                // Add the card to the talon
+                card.transform.parent = m_talonPile;
+            }
+
+            // TODO track deplinish event
+            if (moveType.Equals(MoveTypes.NORMAL))
+            {
+                Move move = new Move();
+                move.SetSpecial(true);
+                Event ev = new Event();
+                ev.SetType(Event.EventType.DEPLINISH);
+                move.AddEvent(ev);
+                AddMove(move, MoveTypes.NORMAL);
             }
         }
 
