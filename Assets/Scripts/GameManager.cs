@@ -192,7 +192,7 @@ namespace Solitaire
             return cardCountSum;
         }
 
-        private bool IsWinningState()
+        public bool IsWinningState()
         {
             // Game is won if the sum of all cards in the foundations is 52
             return GetFoundationSum() == 52;
@@ -241,6 +241,16 @@ namespace Solitaire
             return winnableState;
         }
 
+        public void SetDoingAutoWin(bool doAutoWin)
+        {
+            m_doingAutoWin = doAutoWin;
+        }
+
+        public bool IsDoingAutoWin()
+        {
+            return m_doingAutoWin;
+        }
+
         /**
          * 
          */
@@ -250,8 +260,8 @@ namespace Solitaire
             if (!IsWinnableState())
                 return;
 
-            btnAutoWin.SetActive(false);
-            StartCoroutine(AutoWinCoroutine());
+            btnAutoWin.SetActive(false);            // Hide the auto-win button while processing
+            StartCoroutine(AutoWinCoroutine());     // Win the game
         }
 
         /**
@@ -631,7 +641,7 @@ namespace Solitaire
                 }
             }
 
-            // TODO track replinish event
+            // Track replinish event
             if (moveType.Equals(MoveTypes.NORMAL))
             {
                 Move move = new Move();
@@ -674,7 +684,7 @@ namespace Solitaire
                 card.transform.parent = m_talonPile;
             }
 
-            // TODO track deplinish event
+            // Track deplinish event
             if (moveType.Equals(MoveTypes.NORMAL))
             {
                 Move move = new Move();
@@ -882,7 +892,7 @@ namespace Solitaire
          */
         private IEnumerator AutoWinCoroutine()
         {
-            m_doingAutoWin = true;
+            SetDoingAutoWin(true);
             SetBlocked(true);
             yield return new WaitForEndOfFrame();
 
@@ -919,7 +929,7 @@ namespace Solitaire
             }
 
             SetBlocked(false);
-            m_doingAutoWin = false;
+            SetDoingAutoWin(false);
         }
     }
 }

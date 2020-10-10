@@ -40,8 +40,20 @@ namespace Solitaire
             return sqrMagnitude <= CLICK_PROXIMITY_THRESHOLD;
         }
 
+        private bool DraggingIsAllowed()
+        {
+            // Don't allow dragging if doing auto win or if already in a winning state
+            return !GameManager.Instance.IsDoingAutoWin() && !GameManager.Instance.IsWinningState();
+        }
+
         void OnMouseDown()
         {
+            // Don't process if dragging isn't currently allowed
+            if (!DraggingIsAllowed())
+            {
+                return;
+            }
+
             if (GameManager.DEBUG_MODE) { Debug.Log("Clicked on " + gameObject.name); }
 
             screenPoint = Camera.main.WorldToScreenPoint(gameObject.transform.position);
@@ -86,6 +98,12 @@ namespace Solitaire
 
         void OnMouseDrag()
         {
+            // Don't process if dragging isn't currently allowed
+            if (!DraggingIsAllowed())
+            {
+                return;
+            }
+
             // Don't allow dragging if there is another instance of an object dragger that is already dragging
             if (!GameManager.Instance.GetRegisteredObjectDragger() == this)
             {
@@ -140,6 +158,12 @@ namespace Solitaire
 
         private void OnMouseUp()
         {
+            // Don't process if dragging isn't currently allowed
+            if (!DraggingIsAllowed())
+            {
+                return;
+            }
+
             // Only process if it was a card being dragged
             if (gameObject.CompareTag("Card") || gameObject.CompareTag("Snap"))
             {
