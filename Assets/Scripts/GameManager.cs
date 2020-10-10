@@ -218,22 +218,26 @@ namespace Solitaire
          * Determine if the game is in a winnable state.
          * Game is in a winnable state when the following conditions have been met:
          * 1) Total count of all face down cards in Tableau is equal to 0.
-         * 2) Total count of cards in tableau and foundation is equal to 52.
+         * 2) Total count of cards in talon, tableau, and foundation is equal to 52.
          */
         private bool IsWinnableState()
         {
             int totalFaceDownTableauCards = 0;
-            int tableauFoundationCardCountSum = 0;
+            int cardsOfInterestCount = 0;
+            
             foreach (SnapManager tableauSnapManager in tableau.GetComponentsInChildren<SnapManager>())
             {
                 totalFaceDownTableauCards += tableauSnapManager.GetFaceDownCardCount();
-                tableauFoundationCardCountSum += tableauSnapManager.GetCardCount();
+                cardsOfInterestCount += tableauSnapManager.GetCardCount();
             }
 
             foreach (SnapManager foundationSnapManager in foundations.GetComponentsInChildren<SnapManager>())
             {
-                tableauFoundationCardCountSum += foundationSnapManager.GetCardCount();
+                cardsOfInterestCount += foundationSnapManager.GetCardCount();
             }
+
+            // Add the total count of cards in talon to the cards of interest count as well
+            cardsOfInterestCount += m_talonPile.GetComponent<SnapManager>().GetCardCount();
 
             // Keep the auto-win button active by allowing a threshold of 13 cards to be dragged at any point
             // after the initial winnable state was triggered.
@@ -241,16 +245,15 @@ namespace Solitaire
             if (m_enteredWinnableState)
             {
                 winnableState = totalFaceDownTableauCards == 0 &&
-                                tableauFoundationCardCountSum >= 52 - 13 &&
-                                stock.GetComponentInChildren<SnapManager>().GetCardCount() == 0 &&
-                                talon.GetComponentInChildren<SnapManager>().GetCardCount() == 0;
+                                cardsOfInterestCount >= 52 - 13 &&
+                                stock.GetComponentInChildren<SnapManager>().GetCardCount() == 0;
 
                 if (!winnableState)
                     m_enteredWinnableState = false;
             }
             else
             {
-                m_enteredWinnableState = totalFaceDownTableauCards == 0 && tableauFoundationCardCountSum == 52;
+                m_enteredWinnableState = totalFaceDownTableauCards == 0 && cardsOfInterestCount == 52;
                 winnableState = m_enteredWinnableState;
             }
 
@@ -914,9 +917,14 @@ namespace Solitaire
 
             int attempts = 0; // Loop counter to prevent infinite loop and game crash
             int bounds = 10000;
+            List<SnapManager> targetSnapManagers = new List<SnapManager>(tableau.GetComponentsInChildren<SnapManager>())
+            {
+                m_talonPile.GetComponent<SnapManager>()
+            };
+
             while (attempts < bounds)
             {
-                foreach (SnapManager snapManager in tableau.GetComponentsInChildren<SnapManager>())
+                foreach (SnapManager snapManager in targetSnapManagers)
                 {
                     Card topCard = snapManager.GetTopCard();
                     Transform nextMove = GetNextAvailableMove(topCard);
