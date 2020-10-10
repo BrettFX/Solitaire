@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -90,6 +89,7 @@ namespace Solitaire
         private bool m_paused = false;
         private volatile bool m_doingAutoWin = false;
         private bool m_enteredWinnableState = false;
+        private bool m_playingResetBtnPulse = false;
 
         /**
          * Ensure this class remains a singleton instance
@@ -143,6 +143,14 @@ namespace Solitaire
         {
             if (!IsWinningState())
             {
+                // Turn off the button pulse animation for the reset button if it is playing
+                if (m_playingResetBtnPulse)
+                {
+                    Animator animator = btnConfirmReset.GetComponent<Animator>();
+                    animator.SetBool("WinningState", false);
+                    m_playingResetBtnPulse = false;
+                }
+
                 // Check if the game is in a winnable state.
                 // Set the auto-win button to be active accordingly
                 if (!m_doingAutoWin)
@@ -170,6 +178,14 @@ namespace Solitaire
                 m_undoneMoves.Clear();
 
                 if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
+
+                // Trigger the button pulse animation for the reset button if it isn't already playing
+                if (!m_playingResetBtnPulse)
+                {
+                    Animator animator = btnConfirmReset.GetComponent<Animator>();
+                    animator.SetBool("WinningState", true);
+                    m_playingResetBtnPulse = true;
+                }
             }
 
             // Toggle interactability on undo and redo buttons based on size of respective moves list
