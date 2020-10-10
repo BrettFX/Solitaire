@@ -5,6 +5,8 @@
         public enum EventType
         {
             FLIP,
+            REPLINISH,
+            DEPLINISH,
             NONE
         };
 
@@ -21,6 +23,12 @@
                     // Need to temporarily lock snap manager so that the card isn't flipped back after reverse
                     m_relativeSnapManager.SetWaiting(true);
                     m_cards[0].Flip();
+                    break;
+                case EventType.REPLINISH:
+                    GameManager.Instance.DeplinishStock(Move.MoveTypes.INCOGNITO);
+                    break;
+                case EventType.DEPLINISH:
+                    GameManager.Instance.ReplinishStock(Move.MoveTypes.INCOGNITO);
                     break;
                 default:
                     break;

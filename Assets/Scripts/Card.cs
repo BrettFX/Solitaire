@@ -43,7 +43,7 @@ namespace Solitaire
         private Vector3 m_startPos;
         private Transform m_startParent;
 
-        private bool m_translating = false;
+        private volatile bool m_translating = false;
 
         private Transform m_targetTranslateSnap;
         private Vector3 m_targetTranslatePos;
@@ -294,6 +294,11 @@ namespace Solitaire
         public bool IsStackable()
         {
             return m_stackable;
+        }
+
+        public bool IsTranslating()
+        {
+            return m_translating;
         }
 
         public void SetStartPos(Vector3 pos)
