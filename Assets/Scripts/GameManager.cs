@@ -197,6 +197,12 @@ namespace Solitaire
 
         }
 
+        /**
+         * Get the total count of cards for each pile in the foundation and 
+         * sum them together.
+         * 
+         * @return the sum of the total amount of cards in the foundations.
+         */
         private int GetFoundationSum()
         {
             int cardCountSum = 0;
