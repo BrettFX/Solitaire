@@ -192,9 +192,6 @@ namespace Solitaire
                                 // Transfer all cards attached to talon back to stock
                                 GameManager.Instance.SetBlocked(true);
                                 GameManager.Instance.ReplinishStock();
-
-                                // TODO add event for replinishing stock
-
                             }
                         }
                         else
@@ -238,10 +235,6 @@ namespace Solitaire
 
                                     // Have to notify that waiting is complete for destination snap manager
                                     m_originSnapManager.GetComponent<SnapManager>().SetWaiting(false);
-                                }
-                                else // Otherwise, normalize card position to prevent from card position becomming malformed.
-                                {
-                                    // TODO normalize card positions
                                 }
                             }
 

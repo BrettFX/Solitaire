@@ -32,6 +32,8 @@ namespace Solitaire
                     m_snapCollider.enabled = false;
                 }
 
+                float yOffsetSum = 0.0f;
+
                 // If there are then we need to iterate them to perform some preprocesing steps
                 for (int i = 0; i < m_attachedCards.Length; i++)
                 {
@@ -45,7 +47,7 @@ namespace Solitaire
                     if (i == m_attachedCards.Length - 1 && belongsTo.Equals(GameManager.Sections.TABLEAU) && !m_waiting)
                     {
                         // Only flip it face up if it's face down and the previous card move was valid
-                        if (card.currentState.Equals(CardState.FACE_DOWN))
+                        if (card.IsFaceDown())
                         {
                             card.Flip();
 
@@ -60,16 +62,25 @@ namespace Solitaire
                         }
                     }
 
-                    // Normalize z-pos to ensure that z-values are consistent for each card in the stack
-                    if (card.transform.position.z != -i)
+                    bool belongsToTableau = belongsTo.Equals(GameManager.Sections.TABLEAU);
+                    float targetX = transform.position.x;
+                    float targetY = transform.position.y - (belongsToTableau ? yOffsetSum : 0);
+                    float targetZ = -i;
+
+                    // Normalize x-pos, y-pos, and z-pos to ensure that all cards remain in the proper location
+                    if (card.transform.position.x != targetX ||
+                        card.transform.position.y != targetY ||
+                        card.transform.position.z != targetZ)
                     {
                         card.transform.position = new Vector3(
-                            card.transform.position.x,
-                            card.transform.position.y,
-                            -i
+                            targetX,
+                            targetY,
+                            targetZ
                         );
                     }
 
+                    // Track the sum of y offset so that the proper y offset can be applied to the next card 
+                    yOffsetSum += card.IsFaceDown() ? GameManager.FACE_DOWN_Y_OFFSET : GameManager.FOUNDATION_Y_OFFSET;
                     card.SetStartPos(card.transform.position);
                 }
             }
