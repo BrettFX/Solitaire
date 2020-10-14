@@ -88,6 +88,7 @@ namespace Solitaire
         private volatile bool m_blocked = false;
         private bool m_paused = false;
         private volatile bool m_doingAutoWin = false;
+        private bool m_autoWinComplete = false;
         private bool m_enteredWinnableState = false;
         private bool m_playingResetBtnPulse = false;
 
@@ -157,7 +158,9 @@ namespace Solitaire
                 {
                     if (IsWinnableState())
                     {
-                        if (!btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(true);
+                        // Need various checks to make sure the auto-win button doesn't inadvertently reappear 
+                        if (!btnAutoWin.activeInHierarchy && !m_blocked && !m_autoWinComplete)
+                            btnAutoWin.SetActive(true);
                     }
                     else
                     {
@@ -435,7 +438,9 @@ namespace Solitaire
             // Set the time buffer to the time since level load so the timer starts back at zero
             // @see UpdateTimer
             m_timeBuffer = Time.timeSinceLevelLoad;
-            SceneManager.LoadScene(HOME_SCENE);
+
+            // Load the active scene to support interchanging between play and demo scenes
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
 
         /**
@@ -918,11 +923,11 @@ namespace Solitaire
         private IEnumerator AutoWinCoroutine()
         {
             SetDoingAutoWin(true);
-            SetBlocked(true);
+            
             yield return new WaitForEndOfFrame();
 
             int attempts = 0; // Loop counter to prevent infinite loop and game crash
-            int bounds = 10000;
+            int bounds = 5000;
             List<SnapManager> targetSnapManagers = new List<SnapManager>(tableau.GetComponentsInChildren<SnapManager>())
             {
                 m_talonPile.GetComponent<SnapManager>()
@@ -938,13 +943,15 @@ namespace Solitaire
                     // Only process move if one existed and if it is to a foundation
                     if (nextMove)
                     {
-                        if (nextMove.GetComponent<SnapManager>().belongsTo.Equals(Sections.FOUNDATIONS))
+                        SnapManager nextSnapManager = nextMove.GetComponent<SnapManager>();
+                        bool validMove = nextSnapManager.belongsTo.Equals(Sections.FOUNDATIONS);
+                        if (validMove)
                         {
                             snapManager.SetWaiting(true);
+                            SetBlocked(true); // Card will set blocked to false after the translation completes
                             topCard.MoveTo(nextMove);
                             yield return new WaitUntil(() => topCard.transform.parent != null || !topCard.IsTranslating());
                             snapManager.SetWaiting(false);
-
                         }
                     }
                 }
@@ -958,8 +965,8 @@ namespace Solitaire
                 attempts++;
             }
 
-            SetBlocked(false);
             SetDoingAutoWin(false);
+            m_autoWinComplete = true;
         }
     }
 }
