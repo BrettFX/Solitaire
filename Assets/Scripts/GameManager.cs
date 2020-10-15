@@ -24,6 +24,9 @@ namespace Solitaire
 
         public const int HOME_SCENE = 0;
 
+        // Control the total amount of moves that can be stored in memory (prevents stack overflow)
+        private const int MAX_MOVES_STACK_SIZE = 1000;
+
         // Control the speed that cards are moved from one point to the next (lower = faster where 0.0 is instantaneous)
         public const float CARD_TRANSLATION_SPEED = 0.25f; 
 
@@ -81,8 +84,8 @@ namespace Solitaire
         // Used to update displayed time (maintains an accurate time accumulation)
         private System.Diagnostics.Stopwatch m_stopWatch;
 
-        private Stack<Move> m_moves;        // Keep track of moves to allow for undoing
-        private Stack<Move> m_undoneMoves;  // Keep track of moves that have been undone for redo capability
+        private CustomStack<Move> m_moves;        // Keep track of moves to allow for undoing
+        private CustomStack<Move> m_undoneMoves;  // Keep track of moves that have been undone for redo capability
 
         private volatile bool m_blocked = false;
         private bool m_paused = false;
@@ -122,8 +125,8 @@ namespace Solitaire
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
             m_foundationSnapManagers = foundations.GetComponentsInChildren<SnapManager>();
             m_tableauSnapManagers = tableau.GetComponentsInChildren<SnapManager>();
-            m_moves = new Stack<Move>();
-            m_undoneMoves = new Stack<Move>();
+            m_moves = new CustomStack<Move>();
+            m_undoneMoves = new CustomStack<Move>();
 
             // Only load card sprites and spawn stack if not using the demo scene (for unit testing support)
             if (!SceneManager.GetActiveScene().name.Equals("DemoScene"))
@@ -198,6 +201,18 @@ namespace Solitaire
 
             // Toggle interactability of reset button based on auto win state
             btnConfirmReset.interactable = !m_doingAutoWin && !m_paused;
+
+            if (m_moves.Count >= MAX_MOVES_STACK_SIZE)
+            {
+                // Remove the oldest move
+                m_moves.RemoveOldest();
+            }
+
+            if (m_undoneMoves.Count >= MAX_MOVES_STACK_SIZE)
+            {
+                // Remove the oldest undone move
+                m_undoneMoves.RemoveOldest();
+            }
 
         }
 
@@ -316,8 +331,8 @@ namespace Solitaire
         private void ProcessMoveAction(MoveTypes moveType)
         {
             bool undoAction = moveType.Equals(MoveTypes.UNDO);
-            Stack<Move> targetMoves = undoAction ? m_moves : m_undoneMoves;
-            Stack<Move> altMoves = undoAction ? m_undoneMoves : m_moves;
+            CustomStack<Move> targetMoves = undoAction ? m_moves : m_undoneMoves;
+            CustomStack<Move> altMoves = undoAction ? m_undoneMoves : m_moves;
 
             // Pop the last move from the moves list/stack
             Move move = targetMoves.Pop();
