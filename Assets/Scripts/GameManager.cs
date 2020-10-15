@@ -78,8 +78,7 @@ namespace Solitaire
         // Globally track if cards are being dragged to prevent multi-touch scenarios
         private ObjectDragger m_activeDragger = null;
 
-        // Used to reset the timer and keep track of pause time to maintain an accurate time accumulation
-        private float m_timeBuffer = 0.0f;
+        // Used to update displayed time (maintains an accurate time accumulation)
         private System.Diagnostics.Stopwatch m_stopWatch;
 
         private Stack<Move> m_moves;        // Keep track of moves to allow for undoing
@@ -125,7 +124,6 @@ namespace Solitaire
             m_tableauSnapManagers = tableau.GetComponentsInChildren<SnapManager>();
             m_moves = new Stack<Move>();
             m_undoneMoves = new Stack<Move>();
-            m_stopWatch = new System.Diagnostics.Stopwatch();
 
             // Only load card sprites and spawn stack if not using the demo scene (for unit testing support)
             if (!SceneManager.GetActiveScene().name.Equals("DemoScene"))
@@ -138,6 +136,9 @@ namespace Solitaire
                 Debug.Log("Using demo scene.");
                 Debug.Log("Steps for loading card sprites and spawning stack have been skipped.");
             }
+
+            m_stopWatch = new System.Diagnostics.Stopwatch();
+            m_stopWatch.Start();
         }
 
         private void Update()
@@ -192,11 +193,11 @@ namespace Solitaire
             }
 
             // Toggle interactability on undo and redo buttons based on size of respective moves list
-            btnUndo.interactable = m_moves.Count > 0 && !m_doingAutoWin;
-            btnRedo.interactable = m_undoneMoves.Count > 0 && !m_doingAutoWin;
+            btnUndo.interactable = m_moves.Count > 0 && !m_doingAutoWin && !m_paused;
+            btnRedo.interactable = m_undoneMoves.Count > 0 && !m_doingAutoWin && !m_paused;
 
             // Toggle interactability of reset button based on auto win state
-            btnConfirmReset.interactable = !m_doingAutoWin;
+            btnConfirmReset.interactable = !m_doingAutoWin && !m_paused;
 
         }
 
@@ -297,8 +298,7 @@ namespace Solitaire
         **/
         private void UpdateTimer()
         {
-            float t = Time.timeSinceLevelLoad - m_timeBuffer; // time since scene loaded
-
+            float t = m_stopWatch.ElapsedMilliseconds / 1000.0f;
             float milliseconds = (Mathf.Floor(t * 100) % 100); // calculate the milliseconds for the timer
 
             int seconds = (int)(t % 60); // return the remainder of the seconds divide by 60 as an int
@@ -398,36 +398,18 @@ namespace Solitaire
         {
             m_paused = !m_paused;
 
-            // If paused then we need to keep track of the total amount of time in paused
-            // state so that we can start the timer where it left off by subtracting the
-            // total paused time from the time since the level was loaded.
-            if (m_paused)
-            {
-                // Keep track of the time of initial pause state
-                m_stopWatch.Start();
-            }
-            else
-            {
-                m_stopWatch.Stop();
-                m_timeBuffer += m_stopWatch.ElapsedMilliseconds / 1000.0f; // Get the elapsed pause time in seconds
-
-                if (DEBUG_MODE)
-                {
-                    Debug.Log(string.Format("Paused for {0} ms", m_stopWatch.ElapsedMilliseconds));
-                    Debug.Log("Time buffer is now: " + m_timeBuffer);
-                }
-
-                m_stopWatch.Reset();
-            }
+            // Stop the stop watch when paused so that the displayed time stops.
+            // Start the stop watch if not paused
+            if (m_paused) m_stopWatch.Stop(); else m_stopWatch.Start();
 
             // Display the modal overlay prompt to confirm Reset
             resetModalOverlay.SetActive(!resetModalOverlay.activeInHierarchy);
 
             // Toggle visibility of all components of the game so that the user cannot interact in paused state
-            tableau.SetActive(!tableau.activeInHierarchy);
-            stock.SetActive(!stock.activeInHierarchy);
-            talon.SetActive(!talon.activeInHierarchy);
-            foundations.SetActive(!foundations.activeInHierarchy);
+            //tableau.SetActive(!tableau.activeInHierarchy);
+            //stock.SetActive(!stock.activeInHierarchy);
+            //talon.SetActive(!talon.activeInHierarchy);
+            //foundations.SetActive(!foundations.activeInHierarchy);
     }
 
         /**
@@ -435,9 +417,8 @@ namespace Solitaire
          */
         public void Reset()
         {
-            // Set the time buffer to the time since level load so the timer starts back at zero
-            // @see UpdateTimer
-            m_timeBuffer = Time.timeSinceLevelLoad;
+            // Reset the stop watch time
+            m_stopWatch.Reset();
 
             // Load the active scene to support interchanging between play and demo scenes
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -492,6 +473,14 @@ namespace Solitaire
         public bool IsBlocked()
         {
             return m_blocked;
+        }
+
+        /**
+         * Whether or not the game is paused.
+         */
+        public bool IsPaused()
+        {
+            return m_paused;
         }
 
         /**

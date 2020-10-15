@@ -43,7 +43,7 @@ namespace Solitaire
         private bool DraggingIsAllowed()
         {
             // Don't allow dragging if doing auto win or if already in a winning state
-            return !GameManager.Instance.IsDoingAutoWin() && !GameManager.Instance.IsWinningState();
+            return !GameManager.Instance.IsDoingAutoWin() && !GameManager.Instance.IsWinningState() && !GameManager.Instance.IsPaused();
         }
 
         void OnMouseDown()
