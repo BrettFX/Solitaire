@@ -149,7 +149,7 @@ namespace Solitaire
             if (!IsWinningState())
             {
                 // Turn off the button pulse animation for the reset button if it is playing
-                if (m_playingResetBtnPulse)
+                if (m_playingResetBtnPulse || m_paused)
                 {
                     Animator animator = btnConfirmReset.GetComponent<Animator>();
                     animator.SetBool("WinningState", false);
@@ -187,11 +187,17 @@ namespace Solitaire
                 if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
 
                 // Trigger the button pulse animation for the reset button if it isn't already playing
-                if (!m_playingResetBtnPulse)
+                if (!m_playingResetBtnPulse && !m_paused)
                 {
                     Animator animator = btnConfirmReset.GetComponent<Animator>();
                     animator.SetBool("WinningState", true);
                     m_playingResetBtnPulse = true;
+                }
+                else if (m_playingResetBtnPulse && m_paused)
+                {
+                    Animator animator = btnConfirmReset.GetComponent<Animator>();
+                    animator.SetBool("WinningState", false);
+                    m_playingResetBtnPulse = false;
                 }
             }
 
@@ -214,6 +220,22 @@ namespace Solitaire
                 m_undoneMoves.RemoveOldest();
             }
 
+        }
+
+        /**
+         * Detect when the application loses and gains focus to control
+         * the pause state of the game.
+         * 
+         * @param bool hasFocus whether the game has focus or not.
+         */
+        void OnApplicationFocus(bool hasFocus)
+        {
+            m_paused = !hasFocus;
+
+            // Stop the stop watch when paused so that the displayed time stops.
+            // Start the stop watch if not paused
+            if (m_stopWatch != null)
+                if (m_paused) m_stopWatch.Stop(); else m_stopWatch.Start();
         }
 
         /**
@@ -261,8 +283,10 @@ namespace Solitaire
                 cardsOfInterestCount += foundationSnapManager.GetCardCount();
             }
 
-            // Add the total count of cards in talon to the cards of interest count as well
-            cardsOfInterestCount += m_talonPile.GetComponent<SnapManager>().GetCardCount();
+            // Add the total count of cards in talon to the cards of interest count as well (VOLATILE BUG)
+            // TODO only way to make this work would be to implement logic for checking that there isn't a depending card
+            //      somewhere in the talon that would cause a failed auto-win process.
+            //cardsOfInterestCount += m_talonPile.GetComponent<SnapManager>().GetCardCount();
 
             // Keep the auto-win button active by allowing a threshold of 13 cards to be dragged at any point
             // after the initial winnable state was triggered.
