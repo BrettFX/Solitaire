@@ -66,6 +66,7 @@ namespace Solitaire
         public GameObject cardPrefab;
         public TextMeshProUGUI lblTimer;
         public GameObject resetModalOverlay;
+        public GameObject settingsModalOverlay;
 
         [Header("Action Buttons")]
         public Button btnUndo;
@@ -327,9 +328,23 @@ namespace Solitaire
 
         public void OpenSettings()
         {
-            Debug.Log("Opening settings...");
             Animator spinAnimator = btnSettings.GetComponent<Animator>();
             spinAnimator.SetTrigger("DoSpin");
+
+            m_paused = true;
+            m_stopWatch.Stop();
+
+            // Display the modal overlay for settings
+            settingsModalOverlay.SetActive(true);
+        }
+
+        public void CloseSettings()
+        {
+            m_paused = false;
+            m_stopWatch.Start();
+
+            // Close the modal overlay for settings
+            settingsModalOverlay.SetActive(false);
         }
 
         /**
@@ -456,13 +471,7 @@ namespace Solitaire
 
             // Display the modal overlay prompt to confirm Reset
             resetModalOverlay.SetActive(!resetModalOverlay.activeInHierarchy);
-
-            // Toggle visibility of all components of the game so that the user cannot interact in paused state
-            //tableau.SetActive(!tableau.activeInHierarchy);
-            //stock.SetActive(!stock.activeInHierarchy);
-            //talon.SetActive(!talon.activeInHierarchy);
-            //foundations.SetActive(!foundations.activeInHierarchy);
-    }
+        }
 
         /**
          * 
