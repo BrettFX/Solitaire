@@ -58,6 +58,10 @@ namespace Solitaire
         public GameObject talon;
         public GameObject foundations;
 
+        [Header("Audio")]
+        public AudioSource cardSetSound;
+        public AudioSource music;
+
         [Header("Utils")]
         public GameObject cardPrefab;
         public TextMeshProUGUI lblTimer;

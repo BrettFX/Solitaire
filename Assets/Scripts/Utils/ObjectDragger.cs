@@ -446,6 +446,9 @@ namespace Solitaire
                     move.SetPreviousParent(m_originSnapManager.transform);
                     move.SetNextParent(m_draggedCards[0].transform.parent);
                     GameManager.Instance.AddMove(move, Move.MoveTypes.NORMAL);
+
+                    // Play the card set sound
+                    GameManager.Instance.cardSetSound.Play();
                 }
 
                 // Can stop waiting now that the move is complete

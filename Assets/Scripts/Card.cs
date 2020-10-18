@@ -142,6 +142,9 @@ namespace Solitaire
 
                     // Reset the total time for correct linear interpolation (lerp)
                     m_totalTime = 0.0f;
+
+                    // Play the card set sound
+                    GameManager.Instance.cardSetSound.Play();
                 }
             }
         }
