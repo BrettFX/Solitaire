@@ -72,6 +72,7 @@ namespace Solitaire
         public Button btnRedo;
         public GameObject btnAutoWin;
         public Button btnConfirmReset;
+        public Button btnSettings;
 
         private Sprite[] m_cardSprites;
         private Dictionary<CardSuit, Sprite[]> m_cardSpritesMap;
@@ -211,6 +212,7 @@ namespace Solitaire
 
             // Toggle interactability of reset button based on auto win state
             btnConfirmReset.interactable = !m_doingAutoWin && !m_paused;
+            btnSettings.interactable = !m_doingAutoWin && !m_paused;
 
             if (m_moves.Count >= MAX_MOVES_STACK_SIZE)
             {
@@ -321,6 +323,13 @@ namespace Solitaire
         public bool IsDoingAutoWin()
         {
             return m_doingAutoWin;
+        }
+
+        public void OpenSettings()
+        {
+            Debug.Log("Opening settings...");
+            Animator spinAnimator = btnSettings.GetComponent<Animator>();
+            spinAnimator.SetTrigger("DoSpin");
         }
 
         /**
