@@ -12,6 +12,9 @@ TagManager:
   - Card
   - Front
   - Back
+  - MasterVolume
+  - MusicVolume
+  - SFXVolume
   layers:
   - Default
   - TransparentFX

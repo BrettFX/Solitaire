@@ -27,6 +27,10 @@ namespace Solitaire
         public GameObject audioPage;
         public GameObject statsPage;
 
+        [Header("Audio Assets")]
+        public AudioSource cardSetSound;
+        public AudioSource music;
+
         [Header("Audio Sliders")]
         public Slider sldMasterVol;
         public Slider sldMusicVol;
@@ -41,10 +45,6 @@ namespace Solitaire
         private Dictionary<Button, SettingsPage> m_settingsPagesLookup;
 
         private Slider[] m_settingsSliders;
-
-        private float m_masterVol;
-        private float m_musicVol;
-        private float m_sfxVol;
 
         private void Awake()
         {
@@ -99,12 +99,6 @@ namespace Solitaire
 
         }
 
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
-
         private void SetSliderPercentLabel(Slider slider)
         {
             TextMeshProUGUI txtPercent = slider.GetComponentInChildren<TextMeshProUGUI>();
@@ -131,6 +125,22 @@ namespace Solitaire
         public void OnAudioSliderChange(Slider slider)
         {
             SetSliderPercentLabel(slider);
+
+            // Need to normalize to value between 0 and 1
+            float newValue = slider.value > 1.0 ? slider.value / 100.0f : slider.value;
+            
+            if (slider.CompareTag("MasterVolume"))
+            {
+                AudioListener.volume = newValue;
+            }
+            else if (slider.CompareTag("MusicVolume"))
+            {
+                music.volume = newValue;
+            }
+            else if (slider.CompareTag("SFXVolume"))
+            {
+                cardSetSound.volume = newValue;
+            }
         }
 
         /**

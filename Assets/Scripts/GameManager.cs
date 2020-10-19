@@ -58,10 +58,6 @@ namespace Solitaire
         public GameObject talon;
         public GameObject foundations;
 
-        [Header("Audio")]
-        public AudioSource cardSetSound;
-        public AudioSource music;
-
         [Header("Utils")]
         public GameObject cardPrefab;
         public TextMeshProUGUI lblTimer;
@@ -226,7 +222,6 @@ namespace Solitaire
                 // Remove the oldest undone move
                 m_undoneMoves.RemoveOldest();
             }
-
         }
 
         /**
