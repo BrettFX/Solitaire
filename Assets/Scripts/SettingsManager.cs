@@ -22,6 +22,10 @@ namespace Solitaire
             public GameObject nextPage;
         }
 
+        public const string MASTER_VOL_KEY = "MasterVolume";
+        public const string MUSIC_VOL_KEY = "MusicVolume";
+        public const string SFX_VOL_KEY = "SFXVolume";
+
         [Header("Settings Pages")]
         public GameObject mainSettingsPage;
         public GameObject audioPage;
@@ -45,6 +49,10 @@ namespace Solitaire
         private Dictionary<Button, SettingsPage> m_settingsPagesLookup;
 
         private Slider[] m_settingsSliders;
+
+        private float m_masterVol;
+        private float m_musicVol;
+        private float m_sfxVol;
 
         private void Awake()
         {
@@ -70,6 +78,9 @@ namespace Solitaire
         // Start is called before the first frame update
         void Start()
         {
+            // Load saved settings if they exist
+            LoadSettings();
+
             m_settingsSliders = new Slider[]
             {
                 sldMasterVol,
@@ -99,6 +110,23 @@ namespace Solitaire
 
         }
 
+        /**
+         * Load previously saves settings from player prefs. If any settings
+         * do not exist from player prefs for the slider values then the default
+         * value is 1.0f.
+         */
+        private void LoadSettings()
+        {
+            sldMasterVol.value = PlayerPrefs.GetFloat(MASTER_VOL_KEY, 1.0f) * 100.0f;
+            OnAudioSliderChange(sldMasterVol);
+
+            sldMusicVol.value = PlayerPrefs.GetFloat(MUSIC_VOL_KEY, 1.0f) * 100.0f;
+            OnAudioSliderChange(sldMusicVol);
+
+            sldSfxVol.value = PlayerPrefs.GetFloat(SFX_VOL_KEY, 1.0f) * 100.0f;
+            OnAudioSliderChange(sldSfxVol);
+        }
+
         private void SetSliderPercentLabel(Slider slider)
         {
             TextMeshProUGUI txtPercent = slider.GetComponentInChildren<TextMeshProUGUI>();
@@ -109,7 +137,10 @@ namespace Solitaire
         {
             if (save)
             {
-                // TODO save to player prefs
+                // Save to player prefs
+                PlayerPrefs.SetFloat(MASTER_VOL_KEY, m_masterVol);
+                PlayerPrefs.SetFloat(MUSIC_VOL_KEY, m_musicVol);
+                PlayerPrefs.SetFloat(SFX_VOL_KEY, m_sfxVol);
             }
 
             audioPage.SetActive(false);
@@ -131,15 +162,18 @@ namespace Solitaire
             
             if (slider.CompareTag("MasterVolume"))
             {
-                AudioListener.volume = newValue;
+                m_masterVol = newValue;
+                AudioListener.volume = m_masterVol;
             }
             else if (slider.CompareTag("MusicVolume"))
             {
-                music.volume = newValue;
+                m_musicVol = newValue;
+                music.volume = m_musicVol;
             }
             else if (slider.CompareTag("SFXVolume"))
             {
-                cardSetSound.volume = newValue;
+                m_sfxVol = newValue;
+                cardSetSound.volume = m_sfxVol;
             }
         }
 
