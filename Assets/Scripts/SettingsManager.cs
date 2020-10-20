@@ -32,8 +32,9 @@ namespace Solitaire
         public GameObject statsPage;
 
         [Header("Audio Assets")]
-        public AudioSource cardSetSound;
         public AudioSource music;
+        public AudioSource sfxTestSource; // Used for playing sound effect while adjusting sfx volume
+        public AudioSource[] sfxSources;
 
         [Header("Audio Sliders")]
         public Slider sldMasterVol;
@@ -53,6 +54,8 @@ namespace Solitaire
         private float m_masterVol;
         private float m_musicVol;
         private float m_sfxVol;
+
+        private bool m_loadingSettings = false;
 
         private void Awake()
         {
@@ -89,7 +92,6 @@ namespace Solitaire
             };
 
             // Iterate through settings sliders and set the percent label accordingly
-            // TODO implement player prefs to get initial values
             foreach (Slider slider in m_settingsSliders)
             {
                 SetSliderPercentLabel(slider);
@@ -117,6 +119,7 @@ namespace Solitaire
          */
         private void LoadSettings()
         {
+            m_loadingSettings = true;
             sldMasterVol.value = PlayerPrefs.GetFloat(MASTER_VOL_KEY, 1.0f) * 100.0f;
             OnAudioSliderChange(sldMasterVol);
 
@@ -125,6 +128,7 @@ namespace Solitaire
 
             sldSfxVol.value = PlayerPrefs.GetFloat(SFX_VOL_KEY, 1.0f) * 100.0f;
             OnAudioSliderChange(sldSfxVol);
+            m_loadingSettings = false;
         }
 
         private void SetSliderPercentLabel(Slider slider)
@@ -173,7 +177,17 @@ namespace Solitaire
             else if (slider.CompareTag("SFXVolume"))
             {
                 m_sfxVol = newValue;
-                cardSetSound.volume = m_sfxVol;
+
+                foreach (AudioSource sfxSource in sfxSources)
+                {
+                    sfxSource.volume = m_sfxVol;
+                }
+
+                // Play test sound so the user knows how loud the sound effects are
+                if (!m_loadingSettings && !sfxTestSource.isPlaying)
+                {
+                    sfxTestSource.Play();
+                }
             }
         }
 

@@ -7459,6 +7459,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3532238972538092681, guid: 89b66039693f5470c83f57688f6d2fa8,
         type: 3}
+      propertyPath: sfxSources.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3532238972538092681, guid: 89b66039693f5470c83f57688f6d2fa8,
+        type: 3}
       propertyPath: sldMasterVol
       value: 
       objectReference: {fileID: 1715856599}
@@ -7555,6 +7560,26 @@ PrefabInstance:
     - target: {fileID: 3532238972538092681, guid: 89b66039693f5470c83f57688f6d2fa8,
         type: 3}
       propertyPath: cardSetSound
+      value: 
+      objectReference: {fileID: 2118382128}
+    - target: {fileID: 3532238972538092681, guid: 89b66039693f5470c83f57688f6d2fa8,
+        type: 3}
+      propertyPath: sfxSources.Array.data[0]
+      value: 
+      objectReference: {fileID: 1248732207}
+    - target: {fileID: 3532238972538092681, guid: 89b66039693f5470c83f57688f6d2fa8,
+        type: 3}
+      propertyPath: sfxSources.Array.data[1]
+      value: 
+      objectReference: {fileID: 2118382128}
+    - target: {fileID: 3532238972538092681, guid: 89b66039693f5470c83f57688f6d2fa8,
+        type: 3}
+      propertyPath: sfxSources.Array.data[2]
+      value: 
+      objectReference: {fileID: 629462763}
+    - target: {fileID: 3532238972538092681, guid: 89b66039693f5470c83f57688f6d2fa8,
+        type: 3}
+      propertyPath: sfxTestSource
       value: 
       objectReference: {fileID: 2118382128}
     - target: {fileID: 7416346872393494684, guid: 89b66039693f5470c83f57688f6d2fa8,
