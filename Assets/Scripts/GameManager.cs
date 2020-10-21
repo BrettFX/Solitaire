@@ -96,6 +96,8 @@ namespace Solitaire
         private bool m_enteredWinnableState = false;
         private bool m_playingResetBtnPulse = false;
 
+        private bool m_firstTimeFocused = true;
+
         /**
          * Ensure this class remains a singleton instance
          * */
@@ -129,6 +131,7 @@ namespace Solitaire
             m_tableauSnapManagers = tableau.GetComponentsInChildren<SnapManager>();
             m_moves = new CustomStack<Move>();
             m_undoneMoves = new CustomStack<Move>();
+            m_firstTimeFocused = true;
 
             // Only load card sprites and spawn stack if not using the demo scene (for unit testing support)
             if (!SceneManager.GetActiveScene().name.Equals("DemoScene"))
@@ -237,7 +240,17 @@ namespace Solitaire
             // Stop the stop watch when paused so that the displayed time stops.
             // Start the stop watch if not paused
             if (m_stopWatch != null)
+            {
                 if (m_paused) m_stopWatch.Stop(); else m_stopWatch.Start();
+            }
+
+            // Re-load settings in case an audio source lost scope
+            if (!m_paused && !m_firstTimeFocused)
+            {
+                SettingsManager.Instance.LoadSettings();
+            }
+
+            m_firstTimeFocused = false;
         }
 
         /**

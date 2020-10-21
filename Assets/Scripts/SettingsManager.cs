@@ -117,7 +117,7 @@ namespace Solitaire
          * do not exist from player prefs for the slider values then the default
          * value is 1.0f.
          */
-        private void LoadSettings()
+        public void LoadSettings()
         {
             m_loadingSettings = true;
             sldMasterVol.value = PlayerPrefs.GetFloat(MASTER_VOL_KEY, 1.0f) * 100.0f;
@@ -134,7 +134,7 @@ namespace Solitaire
         private void SetSliderPercentLabel(Slider slider)
         {
             TextMeshProUGUI txtPercent = slider.GetComponentInChildren<TextMeshProUGUI>();
-            txtPercent.text = (slider.value <= 1.0 ? slider.value * 100 : slider.value) + "%";
+            txtPercent.text = (slider.value < 1.0 ? slider.value * 100 : slider.value) + "%";
         }
 
         public void CloseAudioSettings(bool save)
@@ -145,6 +145,11 @@ namespace Solitaire
                 PlayerPrefs.SetFloat(MASTER_VOL_KEY, m_masterVol);
                 PlayerPrefs.SetFloat(MUSIC_VOL_KEY, m_musicVol);
                 PlayerPrefs.SetFloat(SFX_VOL_KEY, m_sfxVol);
+            }
+            else
+            {
+                // Otherwise, reload the previously saved settings
+                LoadSettings();
             }
 
             audioPage.SetActive(false);
@@ -162,7 +167,7 @@ namespace Solitaire
             SetSliderPercentLabel(slider);
 
             // Need to normalize to value between 0 and 1
-            float newValue = slider.value > 1.0 ? slider.value / 100.0f : slider.value;
+            float newValue = slider.value >= 1.0 ? slider.value / 100.0f : slider.value;
             
             if (slider.CompareTag("MasterVolume"))
             {
