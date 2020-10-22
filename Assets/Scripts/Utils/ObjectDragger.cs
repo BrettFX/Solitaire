@@ -448,7 +448,7 @@ namespace Solitaire
                     GameManager.Instance.AddMove(move, Move.MoveTypes.NORMAL);
 
                     // Play the card set sound
-                    SettingsManager.Instance.sfxTestSource.Play();
+                    SettingsManager.Instance.cardSetSound.Play();
                 }
 
                 // Can stop waiting now that the move is complete

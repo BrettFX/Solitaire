@@ -144,7 +144,7 @@ namespace Solitaire
                     m_totalTime = 0.0f;
 
                     // Play the card set sound
-                    SettingsManager.Instance.sfxTestSource.Play();
+                    SettingsManager.Instance.cardSetSound.Play();
                 }
             }
         }

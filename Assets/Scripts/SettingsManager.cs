@@ -33,6 +33,9 @@ namespace Solitaire
 
         [Header("Audio Assets")]
         public AudioSource music;
+        public AudioSource gearSound;
+        public AudioSource cardSetSound;
+        public AudioSource clickSound;
         public AudioSource sfxTestSource; // Used for playing sound effect while adjusting sfx volume
         public AudioSource[] sfxSources;
 

@@ -339,6 +339,8 @@ namespace Solitaire
             Animator spinAnimator = btnSettings.GetComponent<Animator>();
             spinAnimator.SetTrigger("DoSpin");
 
+            SettingsManager.Instance.gearSound.Play();
+
             m_paused = true;
             m_stopWatch.Stop();
 
@@ -475,7 +477,15 @@ namespace Solitaire
 
             // Stop the stop watch when paused so that the displayed time stops.
             // Start the stop watch if not paused
-            if (m_paused) m_stopWatch.Stop(); else m_stopWatch.Start();
+            if (m_paused)
+            {
+                SettingsManager.Instance.clickSound.Play();
+                m_stopWatch.Stop();
+            }
+            else
+            {
+                m_stopWatch.Start();
+            }
 
             // Display the modal overlay prompt to confirm Reset
             resetModalOverlay.SetActive(!resetModalOverlay.activeInHierarchy);
