@@ -235,17 +235,15 @@ namespace Solitaire
          */
         void OnApplicationFocus(bool hasFocus)
         {
-            m_paused = !hasFocus;
-
             // Stop the stop watch when paused so that the displayed time stops.
             // Start the stop watch if not paused
             if (m_stopWatch != null)
             {
-                if (m_paused) m_stopWatch.Stop(); else m_stopWatch.Start();
+                if (!hasFocus) m_stopWatch.Stop(); else m_stopWatch.Start();
             }
 
             // Re-load settings in case an audio source lost scope
-            if (!m_paused && !m_firstTimeFocused)
+            if (hasFocus && !m_firstTimeFocused)
             {
                 SettingsManager.Instance.LoadSettings();
             }
