@@ -96,6 +96,9 @@ namespace Solitaire
                 // Perform final steps after translation is complete
                 if (!m_translating)
                 {
+                    // Play the card set sound
+                    SettingsManager.Instance.cardSetSound.Play();
+
                     SnapManager targetSnapManager = m_targetTranslateSnap.GetComponent<SnapManager>();
 
                     if (m_draggedCards != null && m_draggedCards.Length > 1)
@@ -142,9 +145,6 @@ namespace Solitaire
 
                     // Reset the total time for correct linear interpolation (lerp)
                     m_totalTime = 0.0f;
-
-                    // Play the card set sound
-                    SettingsManager.Instance.cardSetSound.Play();
                 }
             }
         }
@@ -338,19 +338,34 @@ namespace Solitaire
             Transform originalParent = transform.parent;
             transform.parent = null; // Temporarily detach from parent
 
-            if (GameManager.ANIMATIONS_ENABLED)
-            {
-                // TODO implement flip animation
-
-            }
-
             // Need to temporarily disable mesh collider and remove from parent when doing rotation
             MeshCollider meshCollider = gameObject.GetComponent<MeshCollider>();
             meshCollider.enabled = false;
 
-            int degrees = m_flipped ? 180 : 0;
-            transform.rotation = Quaternion.Euler(0, degrees, 0);   // Flip the card 180 degrees about the y axis
-            meshCollider.enabled = true;                            // Re-enable the mesh collider
+            if (GameManager.ANIMATIONS_ENABLED)
+            {
+                transform.position = new Vector3(
+                    transform.position.x,
+                    transform.position.y,
+                    -GameManager.Z_OFFSET_DRAGGING
+                );
+
+                // Implement flip animation
+                string trigger = m_flipped ? "FlipFaceUp" : "FlipFaceDown";
+                Animator animator = GetComponent<Animator>();
+                animator.Rebind();
+                animator.applyRootMotion = true;
+                animator.SetTrigger(trigger);
+            }
+            else
+            {
+                int degrees = m_flipped ? 180 : 0;
+                // Flip the card 180 degrees about the y axis
+                transform.rotation = Quaternion.Euler(0, degrees, 0);   
+            }
+
+            // Re-enable the mesh collider
+            meshCollider.enabled = true;                            
 
             // Re-attach to parent
             transform.parent = originalParent;

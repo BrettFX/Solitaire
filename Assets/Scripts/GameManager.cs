@@ -20,7 +20,7 @@ namespace Solitaire
         }
 
         public static bool DEBUG_MODE = false;
-        public static bool ANIMATIONS_ENABLED = false;
+        public static bool ANIMATIONS_ENABLED = true;
 
         public const int HOME_SCENE = 0;
 

@@ -19,6 +19,11 @@ namespace Solitaire
         {
             GameManager.Instance.SetDoingAutoWin(enabled);
         }
+
+        public void FlipCardTest(Card card)
+        {
+            card.Flip();
+        }
     }
 }
 

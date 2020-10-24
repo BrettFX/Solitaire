@@ -176,6 +176,16 @@ namespace Solitaire
             {
                 m_masterVol = newValue;
                 AudioListener.volume = m_masterVol;
+
+                // If music volume is less than 5% then play the sfx sound
+                if (music.volume < 0.05)
+                {
+                    // Play test sound so the user knows how loud the sound effects are
+                    if (!m_loadingSettings && !sfxTestSource.isPlaying)
+                    {
+                        sfxTestSource.Play();
+                    }
+                }
             }
             else if (slider.CompareTag("MusicVolume"))
             {
