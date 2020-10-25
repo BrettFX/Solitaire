@@ -497,6 +497,9 @@ namespace Solitaire
             // Reset the stop watch time
             m_stopWatch.Reset();
 
+            // Record the current music time so that the time can start off at the right place
+            SettingsManager.RecordMusicTime(SettingsManager.Instance.music);
+
             // Load the active scene to support interchanging between play and demo scenes
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }

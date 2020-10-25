@@ -15,6 +15,7 @@ TagManager:
   - MasterVolume
   - MusicVolume
   - SFXVolume
+  - Music
   layers:
   - Default
   - TransparentFX

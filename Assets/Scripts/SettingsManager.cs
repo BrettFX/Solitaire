@@ -60,6 +60,8 @@ namespace Solitaire
 
         private bool m_loadingSettings = false;
 
+        private static float m_musicTime = 0.0f;
+
         private void Awake()
         {
             // If the instance variable is already assigned...
@@ -84,6 +86,8 @@ namespace Solitaire
         // Start is called before the first frame update
         void Start()
         {
+            music.time = m_musicTime;
+
             // Load saved settings if they exist
             LoadSettings();
 
@@ -112,7 +116,16 @@ namespace Solitaire
 
                 m_settingsPagesLookup.Add(drivingButtons[i], settingsPage);
             }
+        }
 
+        public static float GetMusicTime()
+        {
+            return m_musicTime;
+        }
+
+        public static void RecordMusicTime(AudioSource musicSource)
+        {
+            m_musicTime = musicSource.time;
         }
 
         /**
