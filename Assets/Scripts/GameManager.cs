@@ -11,13 +11,7 @@ namespace Solitaire
 {
     public class GameManager : MonoBehaviour
     {
-        private static GameManager instance;
-        public static GameManager Instance {
-            get
-            {
-                return instance;
-            }
-        }
+        public static GameManager Instance { get; private set; }
 
         public static bool DEBUG_MODE = false;
         public static bool ANIMATIONS_ENABLED = true;
@@ -104,22 +98,22 @@ namespace Solitaire
         void Awake()
         {
             // If the instance variable is already assigned...
-            if (instance != null)
+            if (Instance != null)
             {
                 // If the instance is currently active...
-                if (instance.gameObject.activeInHierarchy == true)
+                if (Instance.gameObject.activeInHierarchy == true)
                 {
                     // Warn the user that there are multiple Game Managers within the scene and destroy the old manager.
                     Debug.LogWarning("There are multiple instances of the Game Manager script. Removing the old manager from the scene.");
-                    Destroy(instance.gameObject);
+                    Destroy(Instance.gameObject);
                 }
 
                 // Remove the old manager.
-                instance = null;
+                Instance = null;
             }
 
             // Assign the instance variable as the Game Manager script on this object.
-            instance = GetComponent<GameManager>();
+            Instance = GetComponent<GameManager>();
         }
 
         // Start is called before the first frame update
@@ -496,9 +490,6 @@ namespace Solitaire
         {
             // Reset the stop watch time
             m_stopWatch.Reset();
-
-            // Record the current music time so that the time can start off at the right place
-            SettingsManager.RecordMusicTime(SettingsManager.Instance.music);
 
             // Load the active scene to support interchanging between play and demo scenes
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);

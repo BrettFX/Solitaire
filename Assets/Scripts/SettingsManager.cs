@@ -32,12 +32,12 @@ namespace Solitaire
         public GameObject statsPage;
 
         [Header("Audio Assets")]
-        public AudioSource music;
         public AudioSource gearSound;
         public AudioSource cardSetSound;
         public AudioSource clickSound;
         public AudioSource sfxTestSource; // Used for playing sound effect while adjusting sfx volume
         public AudioSource[] sfxSources;
+        private AudioSource music; // Need to treat as singleton
 
         [Header("Audio Sliders")]
         public Slider sldMasterVol;
@@ -59,8 +59,6 @@ namespace Solitaire
         private float m_sfxVol;
 
         private bool m_loadingSettings = false;
-
-        private static float m_musicTime = 0.0f;
 
         private void Awake()
         {
@@ -86,7 +84,8 @@ namespace Solitaire
         // Start is called before the first frame update
         void Start()
         {
-            music.time = m_musicTime;
+            // Treat music audio source as singleton
+            music = GameObject.FindGameObjectWithTag("Music").GetComponent<AudioSource>();
 
             // Load saved settings if they exist
             LoadSettings();
@@ -116,16 +115,9 @@ namespace Solitaire
 
                 m_settingsPagesLookup.Add(drivingButtons[i], settingsPage);
             }
-        }
 
-        public static float GetMusicTime()
-        {
-            return m_musicTime;
-        }
-
-        public static void RecordMusicTime(AudioSource musicSource)
-        {
-            m_musicTime = musicSource.time;
+            //if (!music.isPlaying)
+            //    music.Play();
         }
 
         /**
