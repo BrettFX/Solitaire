@@ -28,6 +28,8 @@ namespace Solitaire
         public const float FOUNDATION_Y_OFFSET = 37.5f;
         public const float FACE_DOWN_Y_OFFSET = FOUNDATION_Y_OFFSET / 3; // Face down cards will have a smaller y-offset
 
+        public const string CARD_ANIMATOR_PATH = "Animations/Card";
+
         public static readonly string[] VALUE_REF =
         {
             "0", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "JACK", "QUEEN", "KING"
@@ -840,6 +842,24 @@ namespace Solitaire
             }
         }
 
+        /**
+         * Shuffle an array of values based on specified datatype.
+         * @param T[] array the template based array to shuffle.
+         * @return T[] the array representing the shuffled version of the input array.
+         */
+        public void Shuffle<T>(ref List<T> array)
+        {
+            for (int i = array.Count; i > 1; i--)
+            {
+                // Pick random element to swap.
+                int j = Random.Range(0, array.Count - 1); // 0 <= j <= i-1
+                                                          // Swap.
+                T tmp = array[j];
+                array[j] = array[i - 1];
+                array[i - 1] = tmp;
+            }
+        }
+
         private void SpawnStack()
         {
             // Generate the initial list of 52 cards first before shuffling
@@ -875,24 +895,6 @@ namespace Solitaire
             SpawnStockCards(ref deck);
         }
 
-        /**
-         * Shuffle an array of values based on specified datatype.
-         * @param T[] array the template based array to shuffle.
-         * @return T[] the array representing the shuffled version of the input array.
-         */
-        public void Shuffle<T>(ref List<T> array)
-        {
-            for (int i = array.Count; i > 1; i--)
-            {
-                // Pick random element to swap.
-                int j = Random.Range(0, array.Count - 1); // 0 <= j <= i-1
-                                        // Swap.
-                T tmp = array[j];
-                array[j] = array[i - 1];
-                array[i - 1] = tmp;
-            }
-        }
-
         private void SpawnTableauCards(ref List<CardTpl> deck)
         {
             // Iterate through the tableau snaps and spawn cards from deck to them
@@ -921,14 +923,20 @@ namespace Solitaire
                     );
 
                     // Spawn the card and add it to the respective tableau pile
-                    GameObject spawnedCard = Instantiate(cardPrefab, posOffset, Quaternion.identity);
-                    spawnedCard.name = VALUE_REF[card.value] + "_" + card.suit;
-                    spawnedCard.transform.parent = stackTarget;
+                    GameObject spawnedCardObj = Instantiate(cardPrefab, posOffset, Quaternion.identity);
+                    spawnedCardObj.name = VALUE_REF[card.value] + "_" + card.suit;
+                    spawnedCardObj.transform.parent = stackTarget;
+
+                    // Add the card animator to the card
+                    Card spawnedCard = spawnedCardObj.GetComponent<Card>();
+                    Animator animator = spawnedCard.gameObject.AddComponent<Animator>();
+                    animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(CARD_ANIMATOR_PATH);
+                    animator.applyRootMotion = true; // Do animation on root game object only
 
                     // Only make the last card flip face up
                     if (j + 1 == i + 1)
                     {
-                        spawnedCard.GetComponent<Card>().Flip();
+                        spawnedCard.Flip();
                     }
 
                     zOffset++;
@@ -967,9 +975,16 @@ namespace Solitaire
                 );
 
                 // Spawn the card and add it to the stock
-                GameObject spawnedCard = Instantiate(cardPrefab, posOffset, Quaternion.identity);
-                spawnedCard.name = VALUE_REF[card.value] + "_" + card.suit;
-                spawnedCard.transform.parent = stackTarget;
+                GameObject spawnedCardObj = Instantiate(cardPrefab, posOffset, Quaternion.identity);
+                spawnedCardObj.name = VALUE_REF[card.value] + "_" + card.suit;
+                spawnedCardObj.transform.parent = stackTarget;
+
+                // Add the card animator to the card
+                Card spawnedCard = spawnedCardObj.GetComponent<Card>();
+                Animator animator = spawnedCard.gameObject.AddComponent<Animator>();
+                animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(CARD_ANIMATOR_PATH);
+                animator.applyRootMotion = true; // Do animation on root game object only
+
                 zOffset++;
 
                 // Remove the card reference from the deck and move to the next card

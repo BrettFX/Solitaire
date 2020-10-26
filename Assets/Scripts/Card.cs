@@ -353,8 +353,6 @@ namespace Solitaire
                 // Implement flip animation
                 string trigger = m_flipped ? "FlipFaceUp" : "FlipFaceDown";
                 Animator animator = GetComponent<Animator>();
-                animator.Rebind();
-                animator.applyRootMotion = true;
                 animator.SetTrigger(trigger);
             }
             else

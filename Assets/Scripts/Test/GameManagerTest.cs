@@ -5,6 +5,20 @@ namespace Solitaire
 {
     public class GameManagerTest : MonoBehaviour
     {
+        [Header("Card Flip Animation Unit Test")]
+        public Card[] testCards;
+
+        public void Start()
+        {
+            foreach (Card card in testCards)
+            {
+                Animator animator = card.gameObject.AddComponent<Animator>();
+                animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>("Animations/Card");
+                animator.applyRootMotion = true; // Do animation on root game object only
+                animator.Rebind();
+            }
+        }
+
         public void SimulateAutoWin(Toggle toggle)
         {
             Debug.Log("Turning " + (toggle.isOn ? "on" : "off") + " auto win state...");
@@ -20,9 +34,12 @@ namespace Solitaire
             GameManager.Instance.SetDoingAutoWin(enabled);
         }
 
-        public void FlipCardTest(Card card)
+        public void FlipCardTest()
         {
-            card.Flip();
+            foreach(Card card in testCards)
+            {
+                card.Flip();
+            }
         }
     }
 }
