@@ -55,8 +55,23 @@ namespace Solitaire
         private Move m_move;
         private Move.MoveTypes m_moveType = Move.MoveTypes.NORMAL;
 
+        private Animator m_animator;
+        private Transform m_originalParent;
+        private bool m_startFlipAnimation = false;
+
+        private void Start()
+        {
+            m_animator = GetComponent<Animator>();
+        }
+
         // Only used for dynamic card translation animations
         private void Update()
+        {
+            HandleTranslation();
+            HandleAnimation();
+        }
+
+        private void HandleTranslation()
         {
             if (m_translating)
             {
@@ -147,6 +162,21 @@ namespace Solitaire
                     m_totalTime = 0.0f;
                 }
             }
+        }
+
+        private void HandleAnimation()
+        {
+            if (!AnimatorIsPlaying(m_animator) && m_startFlipAnimation)
+            {
+                transform.SetParent(m_originalParent);
+                m_startFlipAnimation = false;
+            }
+        }
+
+        private bool AnimatorIsPlaying(Animator animator)
+        {
+            return animator.GetCurrentAnimatorStateInfo(0).length >
+                   animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
         }
 
         /**
@@ -335,8 +365,10 @@ namespace Solitaire
             currentState = m_flipped ? CardState.FACE_UP : CardState.FACE_DOWN;
 
             // Keep track of original parent so that it can be restored after flipping
-            Transform originalParent = transform.parent;
-            transform.parent = null; // Temporarily detach from parent
+            m_originalParent = transform.parent;
+            
+            transform.SetParent(null);
+            //transform.parent = null; // Temporarily detach from parent
 
             // Need to temporarily disable mesh collider and remove from parent when doing rotation
             MeshCollider meshCollider = gameObject.GetComponent<MeshCollider>();
@@ -352,8 +384,9 @@ namespace Solitaire
 
                 // Implement flip animation
                 string trigger = m_flipped ? "FlipFaceUp" : "FlipFaceDown";
-                Animator animator = GetComponent<Animator>();
-                animator.SetTrigger(trigger);
+                m_animator = GetComponent<Animator>();
+                m_animator.SetTrigger(trigger);
+                m_startFlipAnimation = true;
             }
             else
             {
@@ -363,10 +396,11 @@ namespace Solitaire
             }
 
             // Re-enable the mesh collider
-            meshCollider.enabled = true;                            
+            meshCollider.enabled = true;
 
             // Re-attach to parent
-            transform.parent = originalParent;
+            //transform.parent = originalParent;
+            //transform.SetParent(originalParent);
             return currentState;
         }
     }

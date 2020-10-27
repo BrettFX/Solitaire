@@ -8,14 +8,31 @@ namespace Solitaire
         [Header("Card Flip Animation Unit Test")]
         public Card[] testCards;
 
+        [Header("Card Prefab Unit Test")]
+        public GameObject cardPrefab;
+        private GameObject m_spawnedCardObj;
+
         public void Start()
         {
-            foreach (Card card in testCards)
+            if (testCards[0].isActiveAndEnabled)
+            {
+                foreach (Card card in testCards)
+                {
+                    Animator animator = card.gameObject.AddComponent<Animator>();
+                    animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(GameManager.CARD_ANIMATOR_PATH);
+                    animator.applyRootMotion = true; // Do animation on root game object only
+                }
+
+                InstantiateCardTest();
+            }
+
+            // Iterate all card objects and add an animator to it
+            Card[] cards = FindObjectsOfType<Card>();
+            foreach (Card card in cards)
             {
                 Animator animator = card.gameObject.AddComponent<Animator>();
-                animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>("Animations/Card");
+                animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(GameManager.CARD_ANIMATOR_PATH);
                 animator.applyRootMotion = true; // Do animation on root game object only
-                animator.Rebind();
             }
         }
 
@@ -34,12 +51,33 @@ namespace Solitaire
             GameManager.Instance.SetDoingAutoWin(enabled);
         }
 
+        private void InstantiateCardTest()
+        {
+            Vector3 pos = new Vector3(
+                testCards[0].transform.position.x - 100,
+                0,
+                -1
+            );
+            m_spawnedCardObj = Instantiate(cardPrefab, pos, Quaternion.identity);
+            m_spawnedCardObj.name = "Test_Card_Prefab_Instance";
+
+            // Add the card animator to the card
+            Card spawnedCard = m_spawnedCardObj.GetComponent<Card>();
+            Animator animator = spawnedCard.gameObject.AddComponent<Animator>();
+            animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(GameManager.CARD_ANIMATOR_PATH);
+            animator.applyRootMotion = true; // Do animation on root game object only
+
+            spawnedCard.Flip();
+        }
+
         public void FlipCardTest()
         {
             foreach(Card card in testCards)
             {
                 card.Flip();
             }
+
+            m_spawnedCardObj.GetComponent<Card>().Flip();
         }
     }
 }

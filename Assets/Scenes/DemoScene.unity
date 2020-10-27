@@ -5594,6 +5594,8 @@ MonoBehaviour:
   - {fileID: 569407381}
   - {fileID: 548263232}
   - {fileID: 793920726}
+  cardPrefab: {fileID: 3671427380648830263, guid: 89122728123be5b4ab9ba1cda28008f1,
+    type: 3}
 --- !u!4 &740085385
 Transform:
   m_ObjectHideFlags: 0
