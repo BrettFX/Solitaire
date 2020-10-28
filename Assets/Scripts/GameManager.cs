@@ -28,8 +28,6 @@ namespace Solitaire
         public const float FOUNDATION_Y_OFFSET = 37.5f;
         public const float FACE_DOWN_Y_OFFSET = FOUNDATION_Y_OFFSET / 3; // Face down cards will have a smaller y-offset
 
-        public const string CARD_ANIMATOR_PATH = "Animations/Card";
-
         public static readonly string[] VALUE_REF =
         {
             "0", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "JACK", "QUEEN", "KING"
@@ -927,16 +925,11 @@ namespace Solitaire
                     spawnedCardObj.name = VALUE_REF[card.value] + "_" + card.suit;
                     spawnedCardObj.transform.parent = stackTarget;
 
-                    // Add the card animator to the card
-                    Card spawnedCard = spawnedCardObj.GetComponent<Card>();
-                    Animator animator = spawnedCard.gameObject.AddComponent<Animator>();
-                    animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(CARD_ANIMATOR_PATH);
-                    animator.applyRootMotion = true; // Do animation on root game object only
-
                     // Only make the last card flip face up
                     if (j + 1 == i + 1)
                     {
-                        spawnedCard.Flip();
+                        Card spawnedCard = spawnedCardObj.GetComponent<Card>();
+                        spawnedCard.Flip(false);
                     }
 
                     zOffset++;
@@ -978,12 +971,6 @@ namespace Solitaire
                 GameObject spawnedCardObj = Instantiate(cardPrefab, posOffset, Quaternion.identity);
                 spawnedCardObj.name = VALUE_REF[card.value] + "_" + card.suit;
                 spawnedCardObj.transform.parent = stackTarget;
-
-                // Add the card animator to the card
-                Card spawnedCard = spawnedCardObj.GetComponent<Card>();
-                Animator animator = spawnedCard.gameObject.AddComponent<Animator>();
-                animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(CARD_ANIMATOR_PATH);
-                animator.applyRootMotion = true; // Do animation on root game object only
 
                 zOffset++;
 

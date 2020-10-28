@@ -57,7 +57,6 @@ namespace Solitaire
 
         private Animator m_animator;
         private Transform m_originalParent;
-        private bool m_startFlipAnimation = false;
 
         private void Start()
         {
@@ -68,7 +67,6 @@ namespace Solitaire
         private void Update()
         {
             HandleTranslation();
-            HandleAnimation();
         }
 
         private void HandleTranslation()
@@ -162,21 +160,6 @@ namespace Solitaire
                     m_totalTime = 0.0f;
                 }
             }
-        }
-
-        private void HandleAnimation()
-        {
-            if (!AnimatorIsPlaying(m_animator) && m_startFlipAnimation)
-            {
-                transform.SetParent(m_originalParent);
-                m_startFlipAnimation = false;
-            }
-        }
-
-        private bool AnimatorIsPlaying(Animator animator)
-        {
-            return animator.GetCurrentAnimatorStateInfo(0).length >
-                   animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
         }
 
         /**
@@ -359,23 +342,34 @@ namespace Solitaire
             return currentState.Equals(CardState.FACE_DOWN);
         }
 
-        public CardState Flip()
+        public CardState Flip(bool animate = true)
         {
             m_flipped = !m_flipped;
             currentState = m_flipped ? CardState.FACE_UP : CardState.FACE_DOWN;
 
             // Keep track of original parent so that it can be restored after flipping
             m_originalParent = transform.parent;
-            
+
+            // TODO handle corner case when original parent is null and when card came from stock
+
+            // Need to detatch from parent to avoid odd clipping behavior
+            // Will re-attach once any animations complete
             transform.SetParent(null);
-            //transform.parent = null; // Temporarily detach from parent
 
             // Need to temporarily disable mesh collider and remove from parent when doing rotation
             MeshCollider meshCollider = gameObject.GetComponent<MeshCollider>();
             meshCollider.enabled = false;
 
-            if (GameManager.ANIMATIONS_ENABLED)
+            if (animate)
             {
+                // Need to tell the snap manager parent to wait until animation is done
+                if (m_originalParent != null)
+                {
+                    SnapManager snapManager = m_originalParent.GetComponent<SnapManager>();
+                    if (snapManager != null)
+                        snapManager.SetWaiting(true);
+                }
+
                 transform.position = new Vector3(
                     transform.position.x,
                     transform.position.y,
@@ -386,22 +380,37 @@ namespace Solitaire
                 string trigger = m_flipped ? "FlipFaceUp" : "FlipFaceDown";
                 m_animator = GetComponent<Animator>();
                 m_animator.SetTrigger(trigger);
-                m_startFlipAnimation = true;
+
             }
             else
             {
                 int degrees = m_flipped ? 180 : 0;
                 // Flip the card 180 degrees about the y axis
-                transform.rotation = Quaternion.Euler(0, degrees, 0);   
+                transform.rotation = Quaternion.Euler(0, degrees, 0);
+                transform.SetParent(m_originalParent);
             }
 
             // Re-enable the mesh collider
             meshCollider.enabled = true;
-
-            // Re-attach to parent
-            //transform.parent = originalParent;
-            //transform.SetParent(originalParent);
             return currentState;
+        }
+
+        /**
+         * Event invoked by animation event in animation editor.
+         * This function will be called on the last frame of the events that call it.
+         */
+        public void CardAnimationCompleteEvent()
+        {
+            // Re-attach to parent now that the animation event has completed
+            transform.SetParent(m_originalParent);
+
+            // Tell the snap manager parent to stop waiting now
+            if (m_originalParent != null)
+            {
+                SnapManager snapManager = m_originalParent.GetComponent<SnapManager>();
+                if (snapManager != null)
+                    snapManager.SetWaiting(false);
+            }
         }
     }
 }

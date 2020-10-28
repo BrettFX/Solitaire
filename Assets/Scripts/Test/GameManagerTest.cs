@@ -15,25 +15,7 @@ namespace Solitaire
         public void Start()
         {
             if (testCards[0].isActiveAndEnabled)
-            {
-                foreach (Card card in testCards)
-                {
-                    Animator animator = card.gameObject.AddComponent<Animator>();
-                    animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(GameManager.CARD_ANIMATOR_PATH);
-                    animator.applyRootMotion = true; // Do animation on root game object only
-                }
-
                 InstantiateCardTest();
-            }
-
-            // Iterate all card objects and add an animator to it
-            Card[] cards = FindObjectsOfType<Card>();
-            foreach (Card card in cards)
-            {
-                Animator animator = card.gameObject.AddComponent<Animator>();
-                animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(GameManager.CARD_ANIMATOR_PATH);
-                animator.applyRootMotion = true; // Do animation on root game object only
-            }
         }
 
         public void SimulateAutoWin(Toggle toggle)
@@ -63,10 +45,6 @@ namespace Solitaire
 
             // Add the card animator to the card
             Card spawnedCard = m_spawnedCardObj.GetComponent<Card>();
-            Animator animator = spawnedCard.gameObject.AddComponent<Animator>();
-            animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(GameManager.CARD_ANIMATOR_PATH);
-            animator.applyRootMotion = true; // Do animation on root game object only
-
             spawnedCard.Flip();
         }
 
