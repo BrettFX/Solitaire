@@ -6,7 +6,7 @@ namespace Solitaire
 {
     public class SnapManager : MonoBehaviour
     {
-        public GameManager.Sections belongsTo;
+        public GameManager.Sections belongingSection;
         private Card[] m_attachedCards;
         private MeshCollider m_snapCollider;
         private bool m_waiting = false;
@@ -44,7 +44,7 @@ namespace Solitaire
                     card.SetStackable(i == m_attachedCards.Length - 1);
 
                     // Need to flip the last card in the stack face up if it's face down (only applies to Tableau)
-                    if (i == m_attachedCards.Length - 1 && belongsTo.Equals(GameManager.Sections.TABLEAU) && !m_waiting)
+                    if (i == m_attachedCards.Length - 1 && belongingSection.Equals(GameManager.Sections.TABLEAU) && !m_waiting)
                     {
                         // Only flip it face up if it's face down and the previous card move was valid
                         if (card.IsFaceDown())
@@ -62,7 +62,7 @@ namespace Solitaire
                         }
                     }
 
-                    bool belongsToTableau = belongsTo.Equals(GameManager.Sections.TABLEAU);
+                    bool belongsToTableau = belongingSection.Equals(GameManager.Sections.TABLEAU);
                     float targetX = transform.position.x;
                     float targetY = transform.position.y - (belongsToTableau ? yOffsetSum : 0);
                     float targetZ = -i;
@@ -95,6 +95,15 @@ namespace Solitaire
         }
 
         /**
+         * Determines whether the section in question is the belonging section.
+         * @see GameManager.Sections
+         */
+        public bool BelongsTo(GameManager.Sections section)
+        {
+            return belongingSection.Equals(section);
+        }
+
+        /**
          * Determine if the card to be placed on this snap is valid or not.
          * Handles checking specific parent that this snap is a part of (e.g., Foundation or
          * Tableau). Immediately determined as invalid if dropping on Stock or Talon.
@@ -102,7 +111,7 @@ namespace Solitaire
         public bool IsValidMove(Card card)
         {
             bool valid = false;
-            switch (belongsTo)
+            switch (belongingSection)
             {
                 case GameManager.Sections.FOUNDATIONS:
                     valid = IsValidNextFoundationCard(card);

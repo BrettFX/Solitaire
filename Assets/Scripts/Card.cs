@@ -44,6 +44,7 @@ namespace Solitaire
         private Transform m_startParent;
 
         private volatile bool m_translating = false;
+        private volatile bool m_flipping = false;
 
         private Transform m_targetTranslateSnap;
         private Vector3 m_targetTranslatePos;
@@ -133,7 +134,7 @@ namespace Solitaire
                         // Only flip card if it's face down and processing normal move
                         if (currentState.Equals(CardState.FACE_DOWN) && m_moveType.Equals(Move.MoveTypes.NORMAL))
                         {
-                            // Flip the card without an animation
+                            // Flip the card with an animation
                             Flip();
 
                             // Stage the event
@@ -146,10 +147,13 @@ namespace Solitaire
                         }
 
                         // Place the card in the respective snap parent
-                        transform.parent = m_targetTranslateSnap;
+                        if (!targetSnapManager.BelongsTo(GameManager.Sections.TALON))
+                        {
+                            transform.parent = m_targetTranslateSnap;
 
-                        // Re-enable the mesh colliders on this card
-                        GetComponent<MeshCollider>().enabled = true;
+                            // Re-enable the mesh colliders on this card
+                            GetComponent<MeshCollider>().enabled = true;
+                        }
                     }
 
                     // Need to remove any locks and blocks on parent snap manager and game manager instance caused by events
@@ -188,7 +192,7 @@ namespace Solitaire
             SnapManager snapManager = snap.GetComponent<SnapManager>();
             bool faceDownTarget = snapManager.HasCard() && snapManager.GetTopCard().IsFaceDown();
 
-            GameManager.Sections targetSection = snapManager.belongsTo;
+            GameManager.Sections targetSection = snapManager.belongingSection;
 
             // Set the next parent in the move
             m_move.SetNextParent(snapManager.transform);
@@ -317,6 +321,11 @@ namespace Solitaire
             return m_translating;
         }
 
+        public bool IsFlipping()
+        {
+            return m_flipping;
+        }
+
         public void SetStartPos(Vector3 pos)
         {
             m_startPos = pos;
@@ -344,13 +353,13 @@ namespace Solitaire
 
         public CardState Flip(bool animate = true)
         {
+            m_flipping = true;
+
             m_flipped = !m_flipped;
             currentState = m_flipped ? CardState.FACE_UP : CardState.FACE_DOWN;
 
             // Keep track of original parent so that it can be restored after flipping
             m_originalParent = transform.parent;
-
-            // TODO handle corner case when original parent is null and when card came from stock
 
             // Need to detatch from parent to avoid odd clipping behavior
             // Will re-attach once any animations complete
@@ -368,6 +377,16 @@ namespace Solitaire
                     SnapManager snapManager = m_originalParent.GetComponent<SnapManager>();
                     if (snapManager != null)
                         snapManager.SetWaiting(true);
+                }
+                // Handle corner case when original parent is null and when card came from stock
+                else if (m_originalParent == null && m_startParent != null)
+                {
+                    SnapManager startSnapManager = m_startParent.GetComponent<SnapManager>();
+                    // Need to set original parent to talon pile so the card doesn't snap back to stock
+                    if (startSnapManager.BelongsTo(GameManager.Sections.STOCK))
+                    {
+                        m_originalParent = GameManager.Instance.GetTalonPile();
+                    }
                 }
 
                 transform.position = new Vector3(
@@ -388,6 +407,7 @@ namespace Solitaire
                 // Flip the card 180 degrees about the y axis
                 transform.rotation = Quaternion.Euler(0, degrees, 0);
                 transform.SetParent(m_originalParent);
+                m_flipping = false;
             }
 
             // Re-enable the mesh collider
@@ -411,6 +431,8 @@ namespace Solitaire
                 if (snapManager != null)
                     snapManager.SetWaiting(false);
             }
+
+            m_flipping = false;
         }
     }
 }

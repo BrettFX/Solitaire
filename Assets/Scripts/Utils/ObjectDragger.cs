@@ -43,7 +43,9 @@ namespace Solitaire
         private bool DraggingIsAllowed()
         {
             // Don't allow dragging if doing auto win or if already in a winning state
-            return !GameManager.Instance.IsDoingAutoWin() && !GameManager.Instance.IsWinningState() && !GameManager.Instance.IsPaused();
+            return !GameManager.Instance.IsDoingAutoWin() &&
+                   !GameManager.Instance.IsWinningState() &&
+                   !GameManager.Instance.IsPaused();
         }
 
         void OnMouseDown()
@@ -72,6 +74,11 @@ namespace Solitaire
                 // Initialize the dragged cards list by referencing the set of cards that are attached to the
                 // respective snap that one or many cards are to be dragged from.
                 m_draggedCards = GetComponentInParent<SnapManager>().GetCardSet(GetComponent<Card>());
+
+                // Don't continue processing if card is translating or flipping
+                Card topCard = m_draggedCards[0];
+                if (topCard.IsTranslating() || topCard.IsFlipping())
+                    return;
 
                 // Check the first card to see if it's a stock card
                 if (GameManager.DEBUG_MODE) Debug.Log("Tag Clicked: " + m_draggedCards[0].transform.parent.parent.tag);
@@ -119,7 +126,8 @@ namespace Solitaire
             // Only allow dragging cards
             if (gameObject.CompareTag("Card"))
             {
-                if (m_isStockCard || GetComponent<Card>().IsFaceDown())
+                Card topCard = GetComponent<Card>();
+                if (m_isStockCard || topCard.IsFaceDown() || topCard.IsTranslating() || topCard.IsFlipping())
                 {
                     // Don't allow dragging stock cards or face-down cards
                     return;
@@ -167,6 +175,10 @@ namespace Solitaire
             // Only process if it was a card being dragged
             if (gameObject.CompareTag("Card") || gameObject.CompareTag("Snap"))
             {
+                Card topCard = GetComponent<Card>();
+                if (topCard.IsTranslating() || topCard.IsFlipping())
+                    return;
+
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
 
@@ -430,8 +442,17 @@ namespace Solitaire
                     {
                         foreach (Card card in m_draggedCards)
                         {
-                            card.transform.position = card.GetStartPos();
-                            card.transform.parent = card.GetStartParent();
+                            // Hanle corner case for when origin was the stock pile
+                            if (m_originSnapManager.BelongsTo(GameManager.Sections.STOCK))
+                            {
+                                card.transform.parent = GameManager.Instance.GetTalonPile();
+                                card.transform.position = card.transform.parent.position;
+                            }
+                            else
+                            {
+                                card.transform.position = card.GetStartPos();
+                                card.transform.parent = card.GetStartParent();
+                            }
 
                             // Re-enable the mesh colliders on the cards
                             card.GetComponent<MeshCollider>().enabled = true;

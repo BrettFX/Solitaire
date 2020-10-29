@@ -24,7 +24,7 @@ namespace Solitaire
         // Control the speed that cards are moved from one point to the next (lower = faster where 0.0 is instantaneous)
         public const float CARD_TRANSLATION_SPEED = 0.25f; 
 
-        public const float Z_OFFSET_DRAGGING = 70.0f;
+        public const float Z_OFFSET_DRAGGING = 80.0f;
         public const float FOUNDATION_Y_OFFSET = 37.5f;
         public const float FACE_DOWN_Y_OFFSET = FOUNDATION_Y_OFFSET / 3; // Face down cards will have a smaller y-offset
 
@@ -714,7 +714,7 @@ namespace Solitaire
                 );
 
                 // Rotate the card to be face down again
-                card.Flip();
+                card.Flip(false);
 
                 // Add the card to the stock
                 card.transform.parent = m_stockPile;
@@ -768,7 +768,7 @@ namespace Solitaire
 
                 // Rotate the card to be face up
                 if (card.IsFaceDown())
-                    card.Flip();
+                    card.Flip(false);
 
                 // Add the card to the talon
                 card.transform.parent = m_talonPile;
@@ -945,7 +945,7 @@ namespace Solitaire
         private void SpawnStockCards(ref List<CardTpl> deck)
         {
             // Card spawn location is dependent on the location of the Stock parent
-            Transform stackTarget = stock.GetComponentInChildren<SnapManager>().GetComponent<Transform>();
+            Transform stackTarget = stock.GetComponentInChildren<SnapManager>().transform;
             if (DEBUG_MODE) Debug.Log("Stack target is " + stackTarget.tag + " at " + stackTarget.position);
 
             int zOffset = 1;
@@ -1006,7 +1006,7 @@ namespace Solitaire
                     if (nextMove)
                     {
                         SnapManager nextSnapManager = nextMove.GetComponent<SnapManager>();
-                        bool validMove = nextSnapManager.belongsTo.Equals(Sections.FOUNDATIONS);
+                        bool validMove = nextSnapManager.belongingSection.Equals(Sections.FOUNDATIONS);
                         if (validMove)
                         {
                             snapManager.SetWaiting(true);
