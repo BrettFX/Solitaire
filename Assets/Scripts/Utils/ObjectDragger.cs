@@ -75,11 +75,6 @@ namespace Solitaire
                 // respective snap that one or many cards are to be dragged from.
                 m_draggedCards = GetComponentInParent<SnapManager>().GetCardSet(GetComponent<Card>());
 
-                // Don't continue processing if card is translating or flipping
-                Card topCard = m_draggedCards[0];
-                if (topCard.IsTranslating() || topCard.IsFlipping())
-                    return;
-
                 // Check the first card to see if it's a stock card
                 if (GameManager.DEBUG_MODE) Debug.Log("Tag Clicked: " + m_draggedCards[0].transform.parent.parent.tag);
                 m_isStockCard = m_draggedCards[0].transform.parent.parent.CompareTag("Stock");
@@ -127,7 +122,7 @@ namespace Solitaire
             if (gameObject.CompareTag("Card"))
             {
                 Card topCard = GetComponent<Card>();
-                if (m_isStockCard || topCard.IsFaceDown() || topCard.IsTranslating() || topCard.IsFlipping())
+                if (m_isStockCard || topCard.IsFaceDown())
                 {
                     // Don't allow dragging stock cards or face-down cards
                     return;
@@ -175,10 +170,6 @@ namespace Solitaire
             // Only process if it was a card being dragged
             if (gameObject.CompareTag("Card") || gameObject.CompareTag("Snap"))
             {
-                Card topCard = GetComponent<Card>();
-                if (topCard.IsTranslating() || topCard.IsFlipping())
-                    return;
-
                 Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
 
