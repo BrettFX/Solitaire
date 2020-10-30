@@ -78,7 +78,13 @@ namespace Solitaire
                 {
                     foreach (Card card in m_draggedCards)
                     {
+                        // Ensure that the z-offset is applied to the target translation position to avoid clipping
                         Vector3 modTargetPos = card.GetTargetTranslatePosition();
+                        modTargetPos = new Vector3(
+                            modTargetPos.x,
+                            modTargetPos.y,
+                            -(Mathf.Abs(modTargetPos.z) + Mathf.Abs(GameManager.Z_OFFSET_DRAGGING))
+                        );
 
                         // Use linear interpolation (lerp) to move from point a to point b within a specific amount of time
                         card.transform.position = Vector3.Lerp(
@@ -93,15 +99,39 @@ namespace Solitaire
                 }
                 else
                 {
+                    // Ensure that the z-offset is applied to the target translation position to avoid clipping
+                    Vector3 modTargetPos = new Vector3(
+                        m_targetTranslatePos.x,
+                        m_targetTranslatePos.y,
+                        -(Mathf.Abs(m_targetTranslatePos.z) + Mathf.Abs(GameManager.Z_OFFSET_DRAGGING))
+                    );
+
                     // Use linear interpolation (lerp) to move from point a to point b within a specific amount of time
                     transform.position = Vector3.Lerp(
                         GetStartPos(),
-                        m_targetTranslatePos,
+                        modTargetPos,
                         m_totalTime
                      );
 
                     // Stop translating once the total time has elapsed for linear interpolation
                     m_translating = m_totalTime < 1.0f;
+
+                    // Only flip card if it's face down and processing normal move
+                    if (currentState.Equals(CardState.FACE_DOWN) && m_moveType.Equals(Move.MoveTypes.NORMAL))
+                    {
+                        SnapManager targetSnapManager = m_targetTranslateSnap.GetComponent<SnapManager>();
+
+                        // Flip the card with an animation
+                        Flip();
+
+                        // Stage the event
+                        Event evt = new Event();
+                        evt.SetType(Event.EventType.FLIP);
+                        evt.SetCard(this);
+                        // Setting relative snap manager to this instance for locking when reversing event
+                        evt.SetRelativeSnapManager(targetSnapManager);
+                        GameManager.Instance.AddEventToLastMove(evt);
+                    }
                 }
 
                 // Accumulate total time with respect to the card translation speed
@@ -132,19 +162,19 @@ namespace Solitaire
                     else
                     {
                         // Only flip card if it's face down and processing normal move
-                        if (currentState.Equals(CardState.FACE_DOWN) && m_moveType.Equals(Move.MoveTypes.NORMAL))
-                        {
-                            // Flip the card with an animation
-                            Flip();
+                        //if (currentState.Equals(CardState.FACE_DOWN) && m_moveType.Equals(Move.MoveTypes.NORMAL))
+                        //{
+                        //    // Flip the card with an animation
+                        //    Flip();
 
-                            // Stage the event
-                            Event evt = new Event();
-                            evt.SetType(Event.EventType.FLIP);
-                            evt.SetCard(this);
-                            // Setting relative snap manager to this instance for locking when reversing event
-                            evt.SetRelativeSnapManager(targetSnapManager);
-                            GameManager.Instance.AddEventToLastMove(evt);
-                        }
+                        //    // Stage the event
+                        //    Event evt = new Event();
+                        //    evt.SetType(Event.EventType.FLIP);
+                        //    evt.SetCard(this);
+                        //    // Setting relative snap manager to this instance for locking when reversing event
+                        //    evt.SetRelativeSnapManager(targetSnapManager);
+                        //    GameManager.Instance.AddEventToLastMove(evt);
+                        //}
 
                         // Place the card in the respective snap parent
                         if (!targetSnapManager.BelongsTo(GameManager.Sections.TALON))
@@ -392,7 +422,7 @@ namespace Solitaire
                 transform.position = new Vector3(
                     transform.position.x,
                     transform.position.y,
-                    -GameManager.Z_OFFSET_DRAGGING
+                    -(Mathf.Abs(transform.position.z) + Mathf.Abs(GameManager.Z_OFFSET_DRAGGING))
                 );
 
                 // Implement flip animation
@@ -421,6 +451,8 @@ namespace Solitaire
          */
         public void CardAnimationCompleteEvent()
         {
+            if (GameManager.DEBUG_MODE) Debug.Log("Card animation complete.");
+
             // Re-attach to parent now that the animation event has completed
             transform.SetParent(m_originalParent);
 

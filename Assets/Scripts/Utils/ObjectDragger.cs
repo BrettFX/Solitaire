@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Solitaire
 {
@@ -143,19 +144,27 @@ namespace Solitaire
 
                 // Need to iterate the set of dragged cards and adjust the position accordingly
                 float yOffset = GameManager.FOUNDATION_Y_OFFSET;
-                int i = 0;                
-                foreach (Card card in m_draggedCards)
+                int i = 0;
+                try
                 {
-                    // Need to temporarily remove the game object from its stack so that snap manager can update cards in each stack
-                    if (card.transform.parent)
-                        card.transform.parent = null;
+                    foreach (Card card in m_draggedCards)
+                    {
+                        // Need to temporarily remove the game object from its stack so that snap manager can update cards in each stack
+                        if (card.transform.parent)
+                            card.transform.parent = null;
 
-                    Vector3 cardPosition = card.transform.position;
-                    Vector3 newCardPos = new Vector3(curPosition.x, curPosition.y - (yOffset * i), curPosition.z - i);
-                    card.transform.position = newCardPos;
+                        Vector3 cardPosition = card.transform.position;
+                        Vector3 newCardPos = new Vector3(curPosition.x, curPosition.y - (yOffset * i), curPosition.z - i);
+                        card.transform.position = newCardPos;
 
-                    i++;
+                        i++;
+                    }
                 }
+                catch (Exception e)
+                {
+                    Debug.Log("Unexpected issue with dragging occurred but handled (" + e.GetType() + ")");
+                }
+                
             }
         }
 

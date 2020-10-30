@@ -65,7 +65,7 @@ namespace Solitaire
                     bool belongsToTableau = belongingSection.Equals(GameManager.Sections.TABLEAU);
                     float targetX = transform.position.x;
                     float targetY = transform.position.y - (belongsToTableau ? yOffsetSum : 0);
-                    float targetZ = -i;
+                    float targetZ = card.IsFlipping() ? -(GameManager.Z_OFFSET_DRAGGING + i ) : -i;
 
                     // Normalize x-pos, y-pos, and z-pos to ensure that all cards remain in the proper location
                     if (card.transform.position.x != targetX ||

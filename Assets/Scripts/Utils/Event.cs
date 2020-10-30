@@ -22,7 +22,7 @@
                 case EventType.FLIP:
                     // Need to temporarily lock snap manager so that the card isn't flipped back after reverse
                     m_relativeSnapManager.SetWaiting(true);
-                    m_cards[0].Flip();
+                    m_cards[0].Flip(false); // Don't animate for... reasons.
                     break;
                 case EventType.REPLINISH:
                     GameManager.Instance.DeplinishStock(Move.MoveTypes.INCOGNITO);
