@@ -478,8 +478,8 @@ namespace Solitaire
                     move.SetNextParent(m_draggedCards[0].transform.parent);
                     GameManager.Instance.AddMove(move, Move.MoveTypes.NORMAL);
 
-                    // Play the card set sound
-                    SettingsManager.Instance.cardSetSound.Play();
+                    // Play the card set sound one shot so that other clips can play at the same time
+                    SettingsManager.Instance.cardSetSound.PlayOneShot(SettingsManager.Instance.cardSetSoundClip);
                 }
 
                 // Can stop waiting now that the move is complete

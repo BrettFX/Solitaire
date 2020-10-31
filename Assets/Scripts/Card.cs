@@ -140,8 +140,8 @@ namespace Solitaire
                 // Perform final steps after translation is complete
                 if (!m_translating)
                 {
-                    // Play the card set sound
-                    SettingsManager.Instance.cardSetSound.Play();
+                    // Play the card set sound one shot so more than one clip can play at a time
+                    SettingsManager.Instance.cardSetSound.PlayOneShot(SettingsManager.Instance.cardSetSoundClip);
 
                     SnapManager targetSnapManager = m_targetTranslateSnap.GetComponent<SnapManager>();
 
