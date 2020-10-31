@@ -161,23 +161,8 @@ namespace Solitaire
                     }
                     else
                     {
-                        // Only flip card if it's face down and processing normal move
-                        //if (currentState.Equals(CardState.FACE_DOWN) && m_moveType.Equals(Move.MoveTypes.NORMAL))
-                        //{
-                        //    // Flip the card with an animation
-                        //    Flip();
-
-                        //    // Stage the event
-                        //    Event evt = new Event();
-                        //    evt.SetType(Event.EventType.FLIP);
-                        //    evt.SetCard(this);
-                        //    // Setting relative snap manager to this instance for locking when reversing event
-                        //    evt.SetRelativeSnapManager(targetSnapManager);
-                        //    GameManager.Instance.AddEventToLastMove(evt);
-                        //}
-
-                        // Place the card in the respective snap parent
-                        if (!targetSnapManager.BelongsTo(GameManager.Sections.TALON))
+                        // Only reattach to parent here if the snap target isn't the talon OR if it's a redo move
+                        if (!targetSnapManager.BelongsTo(GameManager.Sections.TALON) || m_moveType.Equals(Move.MoveTypes.REDO))
                         {
                             transform.parent = m_targetTranslateSnap;
 
@@ -409,13 +394,16 @@ namespace Solitaire
                         snapManager.SetWaiting(true);
                 }
                 // Handle corner case when original parent is null and when card came from stock
-                else if (m_originalParent == null && m_startParent != null)
+                else
                 {
-                    SnapManager startSnapManager = m_startParent.GetComponent<SnapManager>();
-                    // Need to set original parent to talon pile so the card doesn't snap back to stock
-                    if (startSnapManager.BelongsTo(GameManager.Sections.STOCK))
+                    if (m_startParent != null)
                     {
-                        m_originalParent = GameManager.Instance.GetTalonPile();
+                        SnapManager startSnapManager = m_startParent.GetComponent<SnapManager>();
+                        // Need to set original parent to talon pile so the card doesn't snap back to stock
+                        if (startSnapManager.BelongsTo(GameManager.Sections.STOCK))
+                        {
+                            m_originalParent = GameManager.Instance.GetTalonPile();
+                        }
                     }
                 }
 

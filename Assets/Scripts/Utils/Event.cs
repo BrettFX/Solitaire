@@ -15,7 +15,7 @@
         private SnapManager m_relativeSnapManager;
 
         public void Reverse()
-        {
+        {   
             // Perform the reverse action of the event based on event type
             switch (m_eventType)
             {
