@@ -435,6 +435,7 @@ namespace Solitaire
                 if (!valid)
                 {
                     if (GameManager.DEBUG_MODE) Debug.Log("Invalid Move.");
+
                     // If the drag location is deemed invalid then we should snap back to starting position
                     // Need to iterate the list of dragged cards and set each card back to their respective 
                     // starting position and starting parent
@@ -445,8 +446,17 @@ namespace Solitaire
                             // Hanle corner case for when origin was the stock pile
                             if (m_originSnapManager.BelongsTo(GameManager.Sections.STOCK))
                             {
-                                card.transform.parent = GameManager.Instance.GetTalonPile();
-                                card.transform.position = card.transform.parent.position;
+                                Vector3 startPos = card.GetStartPos();
+                                bool samePos = card.transform.position.x == startPos.x &&
+                                               card.transform.position.y == startPos.y;
+                                // Only handle this corner case if the card's curren position isn't the same
+                                // as it's starting position.
+                                if (!samePos)
+                                {
+                                    Transform talonTransform = GameManager.Instance.GetTalonPile();
+                                    card.transform.position = talonTransform.position;
+                                    card.transform.parent = talonTransform;
+                                }
                             }
                             else
                             {
