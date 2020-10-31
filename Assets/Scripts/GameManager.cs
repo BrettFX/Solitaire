@@ -432,12 +432,36 @@ namespace Solitaire
         }
 
         /**
+         * Determines wether it is safe to process move actions for cards.
+         * Not safe when there exists any cards that are presently in transit
+         * to a new position and/or are performing any other animations (e.g., flipping).
          * 
+         * @return bool    wether it's safe to move cards or not.
+         */
+        public bool IsSafeToMoveCards()
+        {
+            // Get all card instances in scene
+            Card[] cards = FindObjectsOfType<Card>();
+            bool safe = true;
+            foreach (Card card in cards)
+            {
+                if (card.IsTranslating() || card.IsFlipping())
+                {
+                    safe = false;
+                    break;
+                }
+            }
+
+            return safe;
+        }
+
+        /**
+         * Undo the last move that was done.
          */
         public void Undo()
         {
             // Don't proceed if already blocked
-            if (!m_blocked)
+            if (!m_blocked && IsSafeToMoveCards())
             {
                 // Block additional actions and events until undo is complete.
                 m_blocked = true;
@@ -446,12 +470,14 @@ namespace Solitaire
         }
 
         /**
-         * 
+         * Redo the last undone move. Moves can only be redone as long as there
+         * are still undone moves to redo and if a new move is not added to the
+         * list of moves to undo.
          */
         public void Redo()
         {
             // Don't proceed if already blocked
-            if (!m_blocked)
+            if (!m_blocked && IsSafeToMoveCards())
             {
                 // Block additional actions and events until undo is complete.
                 m_blocked = true;
