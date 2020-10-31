@@ -614,6 +614,11 @@ namespace Solitaire
             return m_talonPile;
         }
 
+        public Transform GetStockPile()
+        {
+            return m_stockPile;
+        }
+
         /**
          * Get the next avaiable/valid move for the card in question.
          * Scan through the placeable card locations in the Talons
