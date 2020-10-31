@@ -7,14 +7,7 @@ namespace Solitaire
 {
     public class SettingsManager : MonoBehaviour
     {
-        private static SettingsManager instance;
-        public static SettingsManager Instance
-        {
-            get
-            {
-                return instance;
-            }
-        }
+        public static SettingsManager Instance { get; private set; }
 
         public struct SettingsPage
         {
@@ -35,6 +28,8 @@ namespace Solitaire
         public AudioSource gearSound;
         public AudioSource cardSetSound;
         public AudioClip cardSetSoundClip;
+        public AudioSource cardFlipSound;
+        public AudioClip cardFlipSoundClip;
         public AudioSource clickSound;
         public AudioSource sfxTestSource; // Used for playing sound effect while adjusting sfx volume
         public AudioSource[] sfxSources;
@@ -64,22 +59,22 @@ namespace Solitaire
         private void Awake()
         {
             // If the instance variable is already assigned...
-            if (instance != null)
+            if (Instance != null)
             {
                 // If the instance is currently active...
-                if (instance.gameObject.activeInHierarchy == true)
+                if (Instance.gameObject.activeInHierarchy == true)
                 {
                     // Warn the user that there are multiple Game Managers within the scene and destroy the old manager.
                     Debug.LogWarning("There are multiple instances of the Settings Manager script. Removing the old manager from the scene.");
-                    Destroy(instance.gameObject);
+                    Destroy(Instance.gameObject);
                 }
 
                 // Remove the old manager.
-                instance = null;
+                Instance = null;
             }
 
             // Assign the instance variable as the Game Manager script on this object.
-            instance = GetComponent<SettingsManager>();
+            Instance = GetComponent<SettingsManager>();
         }
 
         // Start is called before the first frame update
@@ -116,9 +111,6 @@ namespace Solitaire
 
                 m_settingsPagesLookup.Add(drivingButtons[i], settingsPage);
             }
-
-            //if (!music.isPlaying)
-            //    music.Play();
         }
 
         private void Update()

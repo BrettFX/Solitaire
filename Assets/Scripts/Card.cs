@@ -430,6 +430,9 @@ namespace Solitaire
                 m_animator = GetComponent<Animator>();
                 m_animator.SetTrigger(trigger);
 
+                AudioSource cardFlipSound = SettingsManager.Instance.cardFlipSound;
+                cardFlipSound.PlayOneShot(SettingsManager.Instance.cardFlipSoundClip);
+
             }
             else
             {

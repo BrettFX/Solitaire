@@ -7231,6 +7231,16 @@ PrefabInstance:
       propertyPath: cardSetSoundClip
       value: 
       objectReference: {fileID: 8300000, guid: 303c162f4ea704eb7949d71c5dd77aad, type: 3}
+    - target: {fileID: 3532238972538092681, guid: 89b66039693f5470c83f57688f6d2fa8,
+        type: 3}
+      propertyPath: cardFlipSound
+      value: 
+      objectReference: {fileID: 1248732207}
+    - target: {fileID: 3532238972538092681, guid: 89b66039693f5470c83f57688f6d2fa8,
+        type: 3}
+      propertyPath: cardFlipSoundClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 8bae132db948240abb81f8704dae33d3, type: 3}
     - target: {fileID: 7416346872393494684, guid: 89b66039693f5470c83f57688f6d2fa8,
         type: 3}
       propertyPath: m_LocalPosition.x
