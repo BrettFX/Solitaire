@@ -121,6 +121,17 @@ namespace Solitaire
             //    music.Play();
         }
 
+        private void Update()
+        {
+            // Keep the volume settings up to date
+            AudioListener.volume = sldMasterVol.value / 100.0f;
+            music.volume = sldMusicVol.value / 100.0f;
+            foreach (AudioSource sfxSource in sfxSources)
+            {
+                sfxSource.volume = sldSfxVol.value / 100.0f;
+            }
+        }
+
         /**
          * Load previously saves settings from player prefs. If any settings
          * do not exist from player prefs for the slider values then the default
