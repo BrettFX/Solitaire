@@ -50,7 +50,8 @@ namespace Solitaire
         {
             PLAYING,
             PAUSED,
-            WON
+            WON_PLAYING,
+            WON_PAUSED
         };
 
         [Header("Set Up")]
@@ -154,7 +155,7 @@ namespace Solitaire
         private void Update()
         {
             // Only process if the game has not been won
-            if (!m_currentGameState.Equals(GameStates.WON))
+            if (!HasWon())
             {
                 if (!IsWinningState())
                 {
@@ -190,55 +191,58 @@ namespace Solitaire
                 }
                 else
                 {
-                    m_currentGameState = GameStates.WON;
-
                     // Clear all moves from the moves lists once the game has been won
                     m_moves.Clear();
                     m_undoneMoves.Clear();
 
                     if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
 
-                    // Trigger the button pulse animation for the reset button if it isn't already playing
-                    if (!m_playingResetBtnPulse && !IsPaused())
-                    {
-                        Animator animator = btnConfirmReset.GetComponent<Animator>();
-                        animator.SetBool("WinningState", true);
-                        m_playingResetBtnPulse = true;
-                    }
-                    else if (m_playingResetBtnPulse && IsPaused())
-                    {
-                        Animator animator = btnConfirmReset.GetComponent<Animator>();
-                        animator.SetBool("WinningState", false);
-                        m_playingResetBtnPulse = false;
-                    }
-
                     // Play winning sound if it hasn't already been played
-                    // TODO Fix bug with pause state being enabled on winning state
                     AudioSource winSound = SettingsManager.Instance.winSound;
-                    if (!winSound.isPlaying && !m_currentGameState.Equals(GameStates.PAUSED))
+                    if (!winSound.isPlaying && !IsPaused())
                         winSound.Play();
-                }
 
-                // Toggle interactability on undo and redo buttons based on size of respective moves list
-                btnUndo.interactable = m_moves.Count > 0 && !m_doingAutoWin && !IsPaused();
-                btnRedo.interactable = m_undoneMoves.Count > 0 && !m_doingAutoWin && !IsPaused();
-
-                // Toggle interactability of reset button based on auto win state
-                btnConfirmReset.interactable = !m_doingAutoWin && !IsPaused();
-                btnSettings.interactable = !m_doingAutoWin && !IsPaused();
-
-                if (m_moves.Count >= MAX_MOVES_STACK_SIZE)
-                {
-                    // Remove the oldest move
-                    m_moves.RemoveOldest();
-                }
-
-                if (m_undoneMoves.Count >= MAX_MOVES_STACK_SIZE)
-                {
-                    // Remove the oldest undone move
-                    m_undoneMoves.RemoveOldest();
+                    SetGameState(GameStates.WON_PLAYING);
                 }
             }
+
+            // Only toggle button pulse animations for the reset button if in won state
+            if (HasWon())
+            {
+                // Trigger the button pulse animation for the reset button if it isn't already playing
+                if (!m_playingResetBtnPulse && !IsPaused())
+                {
+                    Animator animator = btnConfirmReset.GetComponent<Animator>();
+                    animator.SetBool("WinningState", true);
+                    m_playingResetBtnPulse = true;
+                }
+                else if (m_playingResetBtnPulse && IsPaused())
+                {
+                    Animator animator = btnConfirmReset.GetComponent<Animator>();
+                    animator.SetBool("WinningState", false);
+                    m_playingResetBtnPulse = false;
+                }
+            }
+
+            if (m_moves.Count >= MAX_MOVES_STACK_SIZE)
+            {
+                // Remove the oldest move
+                m_moves.RemoveOldest();
+            }
+
+            if (m_undoneMoves.Count >= MAX_MOVES_STACK_SIZE)
+            {
+                // Remove the oldest undone move
+                m_undoneMoves.RemoveOldest();
+            }
+
+            // Toggle interactability on undo and redo buttons based on size of respective moves list
+            btnUndo.interactable = m_moves.Count > 0 && !m_doingAutoWin && !IsPaused() && !HasWon();
+            btnRedo.interactable = m_undoneMoves.Count > 0 && !m_doingAutoWin && !IsPaused() && !HasWon();
+
+            // Toggle interactability of reset button based on auto win state
+            btnConfirmReset.interactable = !m_doingAutoWin && !IsPaused();
+            btnSettings.interactable = !m_doingAutoWin && !IsPaused();
         }
 
         public void SetGameState(GameStates gameState)
@@ -332,7 +336,8 @@ namespace Solitaire
             {
                 winnableState = totalFaceDownTableauCards == 0 &&
                                 cardsOfInterestCount >= 52 - 13 &&
-                                stock.GetComponentInChildren<SnapManager>().GetCardCount() == 0;
+                                stock.GetComponentInChildren<SnapManager>().GetCardCount() == 0 &&
+                                m_talonPile.GetComponent<SnapManager>().GetCardCount() == 0;
 
                 if (!winnableState)
                     m_enteredWinnableState = false;
@@ -363,11 +368,8 @@ namespace Solitaire
 
             SettingsManager.Instance.gearSound.Play();
 
-            if (!m_currentGameState.Equals(GameStates.WON))
-            {
-                SetPaused(true);
-                m_stopWatch.Stop();
-            }
+            SetPaused(true);
+            if (!HasWon()) m_stopWatch.Stop();
 
             // Display the modal overlay for settings
             settingsModalOverlay.SetActive(true);
@@ -375,11 +377,8 @@ namespace Solitaire
 
         public void CloseSettings()
         {
-            if (!m_currentGameState.Equals(GameStates.WON))
-            {
-                SetPaused(false);
-                m_stopWatch.Start();
-            }
+            SetPaused(false);
+            if (!HasWon()) m_stopWatch.Start();
 
             // Close the modal overlay for settings
             settingsModalOverlay.SetActive(false);
@@ -617,7 +616,17 @@ namespace Solitaire
          */
         public bool IsPaused()
         {
-            return m_currentGameState.Equals(GameStates.PAUSED);
+            return m_currentGameState.Equals(GameStates.PAUSED) ||
+                   m_currentGameState.Equals(GameStates.WON_PAUSED);
+        }
+
+        /**
+         * Wether or not the game has been won.
+         */
+        public bool HasWon()
+        {
+            return m_currentGameState.Equals(GameStates.WON_PLAYING) ||
+                   m_currentGameState.Equals(GameStates.WON_PAUSED);
         }
 
         /**
@@ -628,7 +637,14 @@ namespace Solitaire
          */
         public void SetPaused(bool paused)
         {
-            m_currentGameState = paused ? GameStates.PAUSED : GameStates.PLAYING;
+            if (HasWon())
+            {
+                SetGameState(paused ? GameStates.WON_PAUSED : GameStates.WON_PLAYING);
+            }
+            else
+            {
+                SetGameState(paused ? GameStates.PAUSED : GameStates.PLAYING);
+            }
         }
 
         /**

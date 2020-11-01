@@ -209,61 +209,64 @@ namespace Solitaire
                         else
                         {
                             Card cardOfInterest = gameObject.GetComponent<Card>();
-                            string cardParentSetTag = cardOfInterest.GetStartParent().parent.tag;
-
-                            // Determine if double click
-                            float timeDiff = Time.timeSinceLevelLoad - m_timeSinceLastClick;
-                            if (GameManager.DEBUG_MODE) { Debug.Log("Time difference since last click: " + timeDiff); }
-                            bool doubleClick = (m_timeSinceLastClick >= 0) && timeDiff <= CLICK_DIFF_TIME_THRESHOLD;
-
-                            Transform nextMove = null;
-
-                            // Don't apply double-click logic to stock
-                            // Also don't permit click spamming for drawing cards (use game manager action/event block)
-                            if (cardParentSetTag.Equals("Stock") && !GameManager.Instance.IsBlocked())
+                            if (cardOfInterest.GetStartParent() != null)
                             {
-                                // Move the card to the talon pile once it has been clicked on the stock (draw card)
-                                GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events
-                                cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
-                            }
-                            else if (doubleClick)
-                            {
-                                // Determine the next valid move. Supply the dragged cards count so prevent the scenario in which
-                                // more than one card is dragged to a foundation in one event.
-                                nextMove = GameManager.Instance.GetNextAvailableMove(cardOfInterest, m_draggedCards.Length);
-                                if (GameManager.DEBUG_MODE)
-                                {
-                                    Debug.Log("Double clicked!");
-                                    Debug.Log("Next Move: " + nextMove);
-                                }
+                                string cardParentSetTag = cardOfInterest.GetStartParent().parent.tag;
 
-                                // If double click and there is a valid next move
-                                // Then, automatically move the double clicked card to the most appropriate location.
-                                if (nextMove)
+                                // Determine if double click
+                                float timeDiff = Time.timeSinceLevelLoad - m_timeSinceLastClick;
+                                if (GameManager.DEBUG_MODE) { Debug.Log("Time difference since last click: " + timeDiff); }
+                                bool doubleClick = (m_timeSinceLastClick >= 0) && timeDiff <= CLICK_DIFF_TIME_THRESHOLD;
+
+                                Transform nextMove = null;
+
+                                // Don't apply double-click logic to stock
+                                // Also don't permit click spamming for drawing cards (use game manager action/event block)
+                                if (cardParentSetTag.Equals("Stock") && !GameManager.Instance.IsBlocked())
                                 {
-                                    // Move all cards in set of dragged cards (can be 1)
+                                    // Move the card to the talon pile once it has been clicked on the stock (draw card)
                                     GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events
-                                    cardOfInterest.MoveTo(nextMove, m_draggedCards);
-
-                                    // Have to notify that waiting is complete for destination snap manager
-                                    m_originSnapManager.GetComponent<SnapManager>().SetWaiting(false);
+                                    cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
                                 }
-                            }
-
-                            // Handle cleanup case
-                            if (!cardParentSetTag.Equals("Stock") && !nextMove)
-                            {
-                                // Need to set the parent back to the original parent for card(s) in the set of dragged cards.
-                                foreach (Card card in m_draggedCards)
+                                else if (doubleClick)
                                 {
-                                    card.transform.parent = card.GetStartParent();
+                                    // Determine the next valid move. Supply the dragged cards count so prevent the scenario in which
+                                    // more than one card is dragged to a foundation in one event.
+                                    nextMove = GameManager.Instance.GetNextAvailableMove(cardOfInterest, m_draggedCards.Length);
+                                    if (GameManager.DEBUG_MODE)
+                                    {
+                                        Debug.Log("Double clicked!");
+                                        Debug.Log("Next Move: " + nextMove);
+                                    }
 
-                                    // Ensure all mesh colliders are re-enabled (corner case when double clicking a face down card)
-                                    card.GetComponent<MeshCollider>().enabled = true;
+                                    // If double click and there is a valid next move
+                                    // Then, automatically move the double clicked card to the most appropriate location.
+                                    if (nextMove)
+                                    {
+                                        // Move all cards in set of dragged cards (can be 1)
+                                        GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events
+                                        cardOfInterest.MoveTo(nextMove, m_draggedCards);
+
+                                        // Have to notify that waiting is complete for destination snap manager
+                                        m_originSnapManager.GetComponent<SnapManager>().SetWaiting(false);
+                                    }
                                 }
 
-                                // Unblock actions/events since invalid click
-                                GameManager.Instance.SetBlocked(false);
+                                // Handle cleanup case
+                                if (!cardParentSetTag.Equals("Stock") && !nextMove)
+                                {
+                                    // Need to set the parent back to the original parent for card(s) in the set of dragged cards.
+                                    foreach (Card card in m_draggedCards)
+                                    {
+                                        card.transform.parent = card.GetStartParent();
+
+                                        // Ensure all mesh colliders are re-enabled (corner case when double clicking a face down card)
+                                        card.GetComponent<MeshCollider>().enabled = true;
+                                    }
+
+                                    // Unblock actions/events since invalid click
+                                    GameManager.Instance.SetBlocked(false);
+                                }
                             }
                         }
 
