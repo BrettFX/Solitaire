@@ -76,26 +76,31 @@ namespace Solitaire
                 // respective snap that one or many cards are to be dragged from.
                 m_draggedCards = GetComponentInParent<SnapManager>().GetCardSet(GetComponent<Card>());
 
-                // Check the first card to see if it's a stock card
-                if (GameManager.DEBUG_MODE) Debug.Log("Tag Clicked: " + m_draggedCards[0].transform.parent.parent.tag);
-                m_isStockCard = m_draggedCards[0].transform.parent.parent.CompareTag("Stock");
-                if (GameManager.DEBUG_MODE) Debug.Log("Is Stock Card: " + m_isStockCard);
-
-                // Set each dragged card's start position and parent
-                int i = 0;
-                m_originSnapManager = m_draggedCards[0].GetComponentInParent<SnapManager>();
-                m_originSnapManager.SetWaiting(true); // Wait until cards are dropped and validated before flipping any cards in tableau
-                
-                foreach (Card card in m_draggedCards)
+                if (m_draggedCards != null && m_draggedCards.Length > 0)
                 {
-                    card.SetStartPos(card.transform.position);
-                    card.SetStartParent(card.transform.parent);
+                    // Check the first card to see if it's a stock card
+                    if (GameManager.DEBUG_MODE) Debug.Log("Tag Clicked: " + m_draggedCards[0].transform.parent.parent.tag);
+                    m_isStockCard = m_draggedCards[0].transform.parent.parent.CompareTag("Stock");
+                    if (GameManager.DEBUG_MODE) Debug.Log("Is Stock Card: " + m_isStockCard);
 
-                    // Temporarily disable the mesh collider for all cards except the first one in the set of dragged cards.
-                    if (i != 0)
-                        card.GetComponent<MeshCollider>().enabled = false;
-                    i++;
+                    // Set each dragged card's start position and parent
+                    int i = 0;
+                    m_originSnapManager = m_draggedCards[0].GetComponentInParent<SnapManager>();
+                    m_originSnapManager.SetWaiting(true); // Wait until cards are dropped and validated before flipping any cards in tableau
+
+                    foreach (Card card in m_draggedCards)
+                    {
+                        card.SetStartPos(card.transform.position);
+                        card.SetStartParent(card.transform.parent);
+
+                        // Temporarily disable the mesh collider for all cards except the first one in the set of dragged cards.
+                        if (i != 0)
+                            card.GetComponent<MeshCollider>().enabled = false;
+                        i++;
+                    }
                 }
+
+               
             }
         }
 
