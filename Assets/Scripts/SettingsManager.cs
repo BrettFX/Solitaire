@@ -25,6 +25,7 @@ namespace Solitaire
         public GameObject statsPage;
 
         [Header("Audio Assets")]
+        public AudioSource winSound;
         public AudioSource gearSound;
         public AudioSource cardSetSound;
         public AudioClip cardSetSoundClip;
