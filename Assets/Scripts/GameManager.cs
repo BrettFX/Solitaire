@@ -202,7 +202,9 @@ namespace Solitaire
                     if (!winSound.isPlaying && !IsPaused())
                         winSound.Play();
 
+                    // Set the game state to win and invoke the stats manager win function
                     SetGameState(GameStates.WON_PLAYING);
+                    StatsManager.Instance.OnWin();
                 }
             }
 
@@ -553,6 +555,9 @@ namespace Solitaire
          */
         public void Reset()
         {
+            // Invoke the respective stats manager lose function
+            StatsManager.Instance.OnLose();
+
             // Reset the stop watch time
             m_stopWatch.Reset();
 

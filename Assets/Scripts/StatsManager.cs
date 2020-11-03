@@ -21,6 +21,8 @@ namespace Solitaire
      */
     public class StatsManager : MonoBehaviour
     {
+        public static StatsManager Instance { get; private set; }
+
         [Header("Statistics Containers")]
         public GameObject fastestTimeStat;
         public GameObject longestTimeStat;
@@ -44,6 +46,27 @@ namespace Solitaire
         private ulong m_totalLoss;
         private float winLossRatio;
 
+        private void Awake()
+        {
+            // If the instance variable is already assigned...
+            if (Instance != null)
+            {
+                // If the instance is currently active...
+                if (Instance.gameObject.activeInHierarchy == true)
+                {
+                    // Warn the user that there are multiple Game Managers within the scene and destroy the old manager.
+                    Debug.LogWarning("There are multiple instances of the " + this + " script. Removing the old manager from the scene.");
+                    Destroy(Instance.gameObject);
+                }
+
+                // Remove the old manager.
+                Instance = null;
+            }
+
+            // Assign the instance variable as the Game Manager script on this object.
+            Instance = GetComponent<StatsManager>();
+        }
+
         // Start is called before the first frame update
         void Start()
         {
@@ -54,6 +77,24 @@ namespace Solitaire
         void Update()
         {
 
+        }
+
+        /**
+         * Invoked when the player wins the game. All statistics related
+         * to winning the game will be saved to player prefs.
+         */
+        public void OnWin()
+        {
+            Debug.Log("Game has been won. Saving statistics (not yet implemented)...");
+        }
+
+        /**
+         * Invoked when the player loses the game. All statistics related
+         * to losing the game will be saved to player prefs.
+         */
+        public void OnLose()
+        {
+            Debug.Log("Game has been lost. Saving statistics (not yet implemented)...");
         }
 
         /**
