@@ -91,10 +91,10 @@ namespace Solitaire
             m_averageTimeMillis = PlayerPrefs.GetFloat(AVERAGE_TIME_KEY, 0.0f);
             DisplayStatistic(averageTimeStat, m_averageTimeMillis.ToString(), true);
 
-            m_leastMoves = (uint)PlayerPrefs.GetInt(LEAST_MOVES_KEY, 0);
+            m_leastMoves = uint.Parse(PlayerPrefs.GetString(LEAST_MOVES_KEY, "0"));
             DisplayStatistic(leastMovesStat, m_leastMoves.ToString(), false);
 
-            m_mostMoves = (uint)PlayerPrefs.GetInt(MOST_MOVES_KEY, 0);
+            m_mostMoves = uint.Parse(PlayerPrefs.GetString(MOST_MOVES_KEY, "0"));
             DisplayStatistic(mostMovesStat, m_mostMoves.ToString(), false);
 
             m_averageMoves = PlayerPrefs.GetFloat(AVERAGE_MOVES_KEY, 0.0f);
@@ -115,7 +115,13 @@ namespace Solitaire
         }
 
         /**
+         * Display values to the statistics UI fields given a statistic
+         * component target, a respective value to set, and whether the formatted
+         * value should be interpreted as a timestamp or not.
          * 
+         * @param statistic   the Statistic UI component to target in the Scene.
+         * @param value       the value to set for the respective statistic UI component.
+         * @param isTimestamp whether the value should be interpreted as a timestamp.
          */
         private void DisplayStatistic(Statistic statistic, string value, bool isTimestamp)
         {
@@ -129,8 +135,22 @@ namespace Solitaire
          */
         public void OnWin()
         {
-            Debug.Log("Game has been won. Saving statistics (not yet implemented)...");
+            if (GameManager.DEBUG_MODE) Debug.Log("Game has been won. Saving statistics...");
             // TODO calculate all winning related stats here
+            /*
+             * UPDATE/SAVE the following:
+             * fastest time
+             * longest (slowest) time
+             * average time
+             * least moves
+             * most moves
+             * average moves
+             * total moves
+             * total wins
+             * total losses
+             * win-loss ratio
+             */
+
         }
 
         /**
@@ -139,10 +159,20 @@ namespace Solitaire
          */
         public void OnLose()
         {
-            Debug.Log("Game has been lost. Saving statistics (not yet implemented)...");
+            if (GameManager.DEBUG_MODE) Debug.Log("Game has been lost. Saving statistics...");
             // TODO calculate all losing related stats here
+            /*
+             * UPDATE/SAVE the following:
+             * total losses
+             * win-loss ratio
+             * total moves over time
+             */
             m_totalLoss++;
+            m_winLossRatio = m_totalWins / m_totalLoss;
 
+            PlayerPrefs.SetString(TOTAL_LOSSES_KEY, m_totalLoss.ToString());
+            PlayerPrefs.SetFloat(WIN_LOSS_RATIO_KEY, m_winLossRatio);
+            PlayerPrefs.SetString(TOTAL_MOVES_KEY, m_totalMoves.ToString());
         }
 
         /**
