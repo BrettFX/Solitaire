@@ -489,6 +489,9 @@ namespace Solitaire
                     // Play the card set sound one shot so that other clips can play at the same time
                     AudioSource cardSetSound = SettingsManager.Instance.cardSetSound;
                     cardSetSound.PlayOneShot(SettingsManager.Instance.cardSetSoundClip);
+
+                    // Track the total number of moves with stats manager
+                    StatsManager.Instance.TallyMove();
                 }
 
                 // Can stop waiting now that the move is complete

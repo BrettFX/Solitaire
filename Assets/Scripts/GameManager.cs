@@ -880,6 +880,17 @@ namespace Solitaire
             }
         }
 
+        /**
+         * Get the current time in milliseconds that has elapsed on the
+         * stop watch.
+         * 
+         * @return float the current time in milliseconds.
+         */
+        public long GetCurrentTime()
+        {
+            return m_stopWatch.ElapsedMilliseconds;
+        }
+
         private void LoadCardSprites()
         {
             // Load the card sprites from resources

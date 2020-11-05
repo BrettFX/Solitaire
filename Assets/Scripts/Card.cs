@@ -317,6 +317,9 @@ namespace Solitaire
             if (moveType == Move.MoveTypes.NORMAL)
                 GameManager.Instance.AddMove(m_move, moveType);
 
+            // Track the total number of moves with stats manager
+            StatsManager.Instance.TallyMove();
+
             // Begin the translating animation
             m_translating = true;                           
         }
