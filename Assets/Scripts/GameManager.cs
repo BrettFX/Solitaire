@@ -546,8 +546,9 @@ namespace Solitaire
          */
         public void Reset()
         {
-            // Invoke the respective stats manager lose function
-            StatsManager.Instance.OnLose();
+            // Invoke the respective stats manager lose function only if not in won state
+            if (!HasWon())
+                StatsManager.Instance.OnLose();
 
             // Reset the stop watch time
             m_stopWatch.Reset();

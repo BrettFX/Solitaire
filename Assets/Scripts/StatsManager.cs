@@ -15,6 +15,8 @@ namespace Solitaire
      * - Total moves over time
      * - Total wins
      * - Total losses
+     * - Win Streak
+     * - Lose Streak
      * - Win-Loss ratio
      */
     public class StatsManager : MonoBehaviour
@@ -39,6 +41,8 @@ namespace Solitaire
         private const string TOTAL_WINS_KEY = "TotalWins";
         private const string TOTAL_LOSSES_KEY = "TotalLosses";
         private const string WIN_LOSS_RATIO_KEY = "WinLossRatio";
+        private const string WIN_STREAK_KEY = "WinningStreak";
+        private const string LOSE_STREAK_KEY = "LosingStreak";
 
         [Header("Statistics Containers")]
         public Statistic fastestTimeStat;
@@ -51,6 +55,8 @@ namespace Solitaire
         public Statistic totalWinsStat;
         public Statistic totalLossesStat;
         public Statistic winLossRatioStat;
+        public Statistic winStreakStat;
+        public Statistic loseStreakStat;
 
         private string m_timeHistory;
         private string m_movesHistory;
@@ -65,6 +71,8 @@ namespace Solitaire
         private ulong m_totalWins;
         private ulong m_totalLoss;
         private float m_winLossRatio;
+        private uint m_winStreak;
+        private uint m_loseStreak;
 
         private void Awake()
         {
@@ -114,6 +122,8 @@ namespace Solitaire
             m_totalMoves = ulong.Parse(PlayerPrefs.GetString(TOTAL_MOVES_KEY, m_currentMoves.ToString()));
             m_totalWins = ulong.Parse(PlayerPrefs.GetString(TOTAL_WINS_KEY, "0"));
             m_totalLoss = ulong.Parse(PlayerPrefs.GetString(TOTAL_LOSSES_KEY, "0"));
+            m_winStreak = uint.Parse(PlayerPrefs.GetString(WIN_STREAK_KEY, "0"));
+            m_loseStreak = uint.Parse(PlayerPrefs.GetString(LOSE_STREAK_KEY, "0"));
             m_winLossRatio = PlayerPrefs.GetFloat(WIN_LOSS_RATIO_KEY, 0.0f);
         }
 
@@ -128,6 +138,8 @@ namespace Solitaire
             DisplayStatistic(totalMovesStat, m_totalMoves.ToString(), false, FillStates.NO_FILL);
             DisplayStatistic(totalWinsStat, m_totalWins.ToString(), false, FillStates.NO_FILL);
             DisplayStatistic(totalLossesStat, m_totalLoss.ToString(), false, FillStates.NO_FILL);
+            DisplayStatistic(winStreakStat, m_winStreak.ToString(), false, FillStates.NO_FILL);
+            DisplayStatistic(loseStreakStat, m_loseStreak.ToString(), false, FillStates.NO_FILL);
             DisplayStatistic(winLossRatioStat, m_winLossRatio.ToString(), false);
         }
 
@@ -183,7 +195,7 @@ namespace Solitaire
             if (GameManager.DEBUG_MODE) Debug.Log("Game has been won. Saving statistics...");
 
             long currentTimeMillis = GameManager.Instance.GetCurrentTime();
-            m_fastestTimeMillis = m_fastestTimeMillis > currentTimeMillis ? currentTimeMillis : m_fastestTimeMillis;
+            m_fastestTimeMillis = m_fastestTimeMillis > currentTimeMillis || m_fastestTimeMillis == 0 ? currentTimeMillis : m_fastestTimeMillis;
             m_longestTimeMillis = currentTimeMillis > m_longestTimeMillis ? currentTimeMillis : m_longestTimeMillis;
 
             // Compute the average time
@@ -191,12 +203,14 @@ namespace Solitaire
 
             // Determine least and most moves
             m_mostMoves = m_currentMoves > m_mostMoves ? m_currentMoves : m_mostMoves;
-            m_leastMoves = m_leastMoves > m_currentMoves ? m_currentMoves : m_leastMoves;
+            m_leastMoves = m_leastMoves > m_currentMoves || m_leastMoves == 0 ? m_currentMoves : m_leastMoves;
 
             // Calculate the average moves
             ComputeAverageMoves();
 
             m_totalWins++;
+            m_winStreak++;
+            m_loseStreak = 0;
             m_winLossRatio = m_totalLoss != 0 ? m_totalWins / m_totalLoss : m_totalWins;
 
             // Save all computed/tracked values to player prefs
@@ -210,6 +224,8 @@ namespace Solitaire
             PlayerPrefs.SetFloat(AVERAGE_MOVES_KEY, m_averageMoves);
             PlayerPrefs.SetString(TOTAL_MOVES_KEY, m_totalMoves.ToString());
             PlayerPrefs.SetString(TOTAL_WINS_KEY, m_totalWins.ToString());
+            PlayerPrefs.SetString(WIN_STREAK_KEY, m_winStreak.ToString());
+            PlayerPrefs.SetString(LOSE_STREAK_KEY, m_loseStreak.ToString());
             PlayerPrefs.SetFloat(WIN_LOSS_RATIO_KEY, m_winLossRatio);
 
             PlayerPrefs.Save();
@@ -229,9 +245,13 @@ namespace Solitaire
             if (GameManager.DEBUG_MODE) Debug.Log("Game has been lost. Saving statistics...");
 
             m_totalLoss++;
+            m_winStreak = 0;
+            m_loseStreak++;
             m_winLossRatio = m_totalWins / m_totalLoss;
 
             PlayerPrefs.SetString(TOTAL_LOSSES_KEY, m_totalLoss.ToString());
+            PlayerPrefs.SetString(WIN_STREAK_KEY, m_winStreak.ToString());
+            PlayerPrefs.SetString(LOSE_STREAK_KEY, m_loseStreak.ToString());
             PlayerPrefs.SetFloat(WIN_LOSS_RATIO_KEY, m_winLossRatio);
             PlayerPrefs.SetString(TOTAL_MOVES_KEY, m_totalMoves.ToString());
             PlayerPrefs.SetString(TIME_HISTORY_KEY, m_timeHistory);
@@ -259,6 +279,8 @@ namespace Solitaire
             PlayerPrefs.DeleteKey(TOTAL_MOVES_KEY);
             PlayerPrefs.DeleteKey(TOTAL_WINS_KEY);
             PlayerPrefs.DeleteKey(TOTAL_LOSSES_KEY);
+            PlayerPrefs.DeleteKey(WIN_STREAK_KEY);
+            PlayerPrefs.DeleteKey(LOSE_STREAK_KEY);
             PlayerPrefs.DeleteKey(WIN_LOSS_RATIO_KEY);
 
             // Re-init the saved stats vars
