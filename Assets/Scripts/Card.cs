@@ -74,6 +74,7 @@ namespace Solitaire
         {
             if (m_translating)
             {
+                float zOffset = m_flipping ? GameManager.Z_OFFSET_DRAGGING / 2.0f : GameManager.Z_OFFSET_DRAGGING;
                 if (m_draggedCards != null && m_draggedCards.Length > 1)
                 {
                     foreach (Card card in m_draggedCards)
@@ -83,7 +84,7 @@ namespace Solitaire
                         modTargetPos = new Vector3(
                             modTargetPos.x,
                             modTargetPos.y,
-                            -(Mathf.Abs(modTargetPos.z) + Mathf.Abs(GameManager.Z_OFFSET_DRAGGING))
+                            -(Mathf.Abs(modTargetPos.z) + zOffset)
                         );
 
                         // Use linear interpolation (lerp) to move from point a to point b within a specific amount of time
@@ -103,7 +104,7 @@ namespace Solitaire
                     Vector3 modTargetPos = new Vector3(
                         m_targetTranslatePos.x,
                         m_targetTranslatePos.y,
-                        -(Mathf.Abs(m_targetTranslatePos.z) + Mathf.Abs(GameManager.Z_OFFSET_DRAGGING))
+                        -(Mathf.Abs(m_targetTranslatePos.z) + zOffset)
                     );
 
                     // Use linear interpolation (lerp) to move from point a to point b within a specific amount of time
@@ -135,7 +136,7 @@ namespace Solitaire
                 }
 
                 // Accumulate total time with respect to the card translation speed
-                m_totalTime += Time.deltaTime / GameManager.CARD_TRANSLATION_SPEED;
+                m_totalTime += Time.deltaTime / GameManager.Instance.GetCardTranslationSpeed();
 
                 // Perform final steps after translation is complete
                 if (!m_translating)
@@ -161,29 +162,23 @@ namespace Solitaire
                     }
                     else
                     {
-                        // Only flip card if it's face down and processing normal move
-                        //if (currentState.Equals(CardState.FACE_DOWN) && m_moveType.Equals(Move.MoveTypes.NORMAL))
-                        //{
-                        //    // Flip the card with an animation
-                        //    Flip();
-
-                        //    // Stage the event
-                        //    Event evt = new Event();
-                        //    evt.SetType(Event.EventType.FLIP);
-                        //    evt.SetCard(this);
-                        //    // Setting relative snap manager to this instance for locking when reversing event
-                        //    evt.SetRelativeSnapManager(targetSnapManager);
-                        //    GameManager.Instance.AddEventToLastMove(evt);
-                        //}
-
-                        // Place the card in the respective snap parent
-                        if (!targetSnapManager.BelongsTo(GameManager.Sections.TALON))
+                        // Only reattach to parent here if this card is not presently flipping
+                        if (!m_flipping)
                         {
                             transform.parent = m_targetTranslateSnap;
 
                             // Re-enable the mesh colliders on this card
                             GetComponent<MeshCollider>().enabled = true;
                         }
+
+                        // Only reattach to parent here if the snap target isn't the talon OR if it's a redo move
+                        //if (!targetSnapManager.BelongsTo(GameManager.Sections.TALON) || m_moveType.Equals(Move.MoveTypes.REDO))
+                        //{
+                        //    transform.parent = m_targetTranslateSnap;
+
+                        //    // Re-enable the mesh colliders on this card
+                        //    GetComponent<MeshCollider>().enabled = true;
+                        //}
                     }
 
                     // Need to remove any locks and blocks on parent snap manager and game manager instance caused by events
@@ -288,7 +283,7 @@ namespace Solitaire
                     draggedCard.transform.position = new Vector3(
                         draggedCard.transform.position.x,
                         draggedCard.transform.position.y,
-                        -GameManager.Z_OFFSET_DRAGGING - i
+                        -(GameManager.Z_OFFSET_DRAGGING + i)
                     );
                 }
             }
@@ -321,6 +316,9 @@ namespace Solitaire
             // Add the move to the game manager instance (only if normal move and not undone or redone)
             if (moveType == Move.MoveTypes.NORMAL)
                 GameManager.Instance.AddMove(m_move, moveType);
+
+            // Track the total number of moves with stats manager
+            StatsManager.Instance.TallyMove();
 
             // Begin the translating animation
             m_translating = true;                           
@@ -409,13 +407,16 @@ namespace Solitaire
                         snapManager.SetWaiting(true);
                 }
                 // Handle corner case when original parent is null and when card came from stock
-                else if (m_originalParent == null && m_startParent != null)
+                else
                 {
-                    SnapManager startSnapManager = m_startParent.GetComponent<SnapManager>();
-                    // Need to set original parent to talon pile so the card doesn't snap back to stock
-                    if (startSnapManager.BelongsTo(GameManager.Sections.STOCK))
+                    if (m_startParent != null)
                     {
-                        m_originalParent = GameManager.Instance.GetTalonPile();
+                        SnapManager startSnapManager = m_startParent.GetComponent<SnapManager>();
+                        // Need to set original parent to talon pile so the card doesn't snap back to stock
+                        if (startSnapManager.BelongsTo(GameManager.Sections.STOCK))
+                        {
+                            m_originalParent = GameManager.Instance.GetTalonPile();
+                        }
                     }
                 }
 
@@ -456,15 +457,26 @@ namespace Solitaire
         {
             if (GameManager.DEBUG_MODE) Debug.Log("Card animation complete.");
 
-            // Re-attach to parent now that the animation event has completed
-            transform.SetParent(m_originalParent);
-
-            // Tell the snap manager parent to stop waiting now
-            if (m_originalParent != null)
+            if (!m_translating)
             {
-                SnapManager snapManager = m_originalParent.GetComponent<SnapManager>();
-                if (snapManager != null)
-                    snapManager.SetWaiting(false);
+                // Handle corner cases with flipping cards between stock and talon
+                SnapManager originalSnap = m_originalParent.GetComponent<SnapManager>();
+                if (m_moveType.Equals(Move.MoveTypes.UNDO) && originalSnap.BelongsTo(GameManager.Sections.TALON))
+                    m_originalParent = GameManager.Instance.GetStockPile();
+
+                if (m_moveType.Equals(Move.MoveTypes.REDO) && originalSnap.BelongsTo(GameManager.Sections.STOCK))
+                    m_originalParent = GameManager.Instance.GetTalonPile();
+
+                // Re-attach to parent now that the animation event has completed
+                transform.SetParent(m_originalParent);
+
+                // Tell the snap manager parent to stop waiting now
+                if (m_originalParent != null)
+                {
+                    SnapManager snapManager = m_originalParent.GetComponent<SnapManager>();
+                    if (snapManager != null)
+                        snapManager.SetWaiting(false);
+                }
             }
 
             m_flipping = false;

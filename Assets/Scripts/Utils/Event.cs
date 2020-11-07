@@ -15,14 +15,14 @@
         private SnapManager m_relativeSnapManager;
 
         public void Reverse()
-        {
+        {   
             // Perform the reverse action of the event based on event type
             switch (m_eventType)
             {
                 case EventType.FLIP:
                     // Need to temporarily lock snap manager so that the card isn't flipped back after reverse
                     m_relativeSnapManager.SetWaiting(true);
-                    m_cards[0].Flip(false); // Don't animate for... reasons.
+                    m_cards[0].Flip(false);
                     break;
                 case EventType.REPLINISH:
                     GameManager.Instance.DeplinishStock(Move.MoveTypes.INCOGNITO);

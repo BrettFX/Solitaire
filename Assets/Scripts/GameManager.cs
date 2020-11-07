@@ -22,7 +22,8 @@ namespace Solitaire
         private const int MAX_MOVES_STACK_SIZE = 1000;
 
         // Control the speed that cards are moved from one point to the next (lower = faster where 0.0 is instantaneous)
-        public const float CARD_TRANSLATION_SPEED = 0.25f; 
+        public const float CARD_TRANSLATION_SPEED_NORMAL = 0.25f;
+        public const float CARD_TRANSLATION_SPEED_FAST = 0.10f;
 
         public const float Z_OFFSET_DRAGGING = 70.0f;
         public const float FOUNDATION_Y_OFFSET = 37.5f;
@@ -44,6 +45,14 @@ namespace Solitaire
             STOCK,
             TALON,
             FOUNDATIONS
+        };
+
+        public enum GameStates
+        {
+            PLAYING,
+            PAUSED,
+            WON_PLAYING,
+            WON_PAUSED
         };
 
         [Header("Set Up")]
@@ -84,13 +93,14 @@ namespace Solitaire
         private CustomStack<Move> m_undoneMoves;  // Keep track of moves that have been undone for redo capability
 
         private volatile bool m_blocked = false;
-        private bool m_paused = false;
         private volatile bool m_doingAutoWin = false;
         private bool m_autoWinComplete = false;
         private bool m_enteredWinnableState = false;
         private bool m_playingResetBtnPulse = false;
 
         private bool m_firstTimeFocused = true;
+
+        private GameStates m_currentGameState = GameStates.PLAYING;
 
         /**
          * Ensure this class remains a singleton instance
@@ -128,7 +138,7 @@ namespace Solitaire
             m_firstTimeFocused = true;
 
             // Only load card sprites and spawn stack if not using the demo scene (for unit testing support)
-            if (!SceneManager.GetActiveScene().name.Equals("DemoScene"))
+            if (!SceneManager.GetActiveScene().name.Contains("Demo"))
             {
                 LoadCardSprites();
                 SpawnStack();
@@ -145,68 +155,81 @@ namespace Solitaire
 
         private void Update()
         {
-            if (!IsWinningState())
+            // Only process if the game has not been won
+            if (!HasWon())
             {
-                // Turn off the button pulse animation for the reset button if it is playing
-                if (m_playingResetBtnPulse || m_paused)
+                if (!IsWinningState())
                 {
-                    Animator animator = btnConfirmReset.GetComponent<Animator>();
-                    animator.SetBool("WinningState", false);
-                    m_playingResetBtnPulse = false;
+                    // Turn off the button pulse animation for the reset button if it is playing
+                    if (m_playingResetBtnPulse || IsPaused())
+                    {
+                        Animator animator = btnConfirmReset.GetComponent<Animator>();
+                        animator.SetBool("WinningState", false);
+                        m_playingResetBtnPulse = false;
+                    }
+
+                    // Check if the game is in a winnable state.
+                    // Set the auto-win button to be active accordingly
+                    if (!m_doingAutoWin)
+                    {
+                        if (IsWinnableState())
+                        {
+                            // Need various checks to make sure the auto-win button doesn't inadvertently reappear 
+                            if (!btnAutoWin.activeInHierarchy && !m_blocked && !m_autoWinComplete)
+                                btnAutoWin.SetActive(true);
+                        }
+                        else
+                        {
+                            if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
+                        }
+                    }
+
+                    // Pause the timer if the game is paused
+                    if (!IsPaused())
+                    {
+                        UpdateTimer();
+                    }
                 }
-
-                // Check if the game is in a winnable state.
-                // Set the auto-win button to be active accordingly
-                if (!m_doingAutoWin)
+                else
                 {
-                    if (IsWinnableState())
-                    {
-                        // Need various checks to make sure the auto-win button doesn't inadvertently reappear 
-                        if (!btnAutoWin.activeInHierarchy && !m_blocked && !m_autoWinComplete)
-                            btnAutoWin.SetActive(true);
-                    }
-                    else
-                    {
-                        if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
-                    }
-                } 
+                    // Clear all moves from the moves lists once the game has been won
+                    m_moves.Clear();
+                    m_undoneMoves.Clear();
 
-                // Pause the timer if the game is paused
-                if (!m_paused)
-                {
-                    UpdateTimer();
+                    if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
+
+                    // Play winning sound if it hasn't already been played
+                    AudioSource winSound = SettingsManager.Instance.winSound;
+                    if (!winSound.isPlaying && !IsPaused())
+                        winSound.Play();
+
+                    // Set the game state to win and invoke the stats manager win function
+                    SetGameState(GameStates.WON_PLAYING);
+                    StatsManager.Instance.OnWin();
+
+                    // Show the win settings page (to start new game) and pause the game
+                    SetPaused(true);
+                    SettingsManager.Instance.winSettingsPage.SetActive(true);
                 }
             }
-            else
+
+            // Only toggle button pulse animations for the reset button if in won state
+            if (HasWon())
             {
-                // Clear all moves from the moves lists once the game has been won
-                m_moves.Clear();
-                m_undoneMoves.Clear();
-
-                if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
-
                 // Trigger the button pulse animation for the reset button if it isn't already playing
-                if (!m_playingResetBtnPulse && !m_paused)
+                if (!m_playingResetBtnPulse && !IsPaused())
                 {
                     Animator animator = btnConfirmReset.GetComponent<Animator>();
                     animator.SetBool("WinningState", true);
                     m_playingResetBtnPulse = true;
                 }
-                else if (m_playingResetBtnPulse && m_paused)
+                else if (m_playingResetBtnPulse && IsPaused())
                 {
                     Animator animator = btnConfirmReset.GetComponent<Animator>();
                     animator.SetBool("WinningState", false);
                     m_playingResetBtnPulse = false;
                 }
             }
-
-            // Toggle interactability on undo and redo buttons based on size of respective moves list
-            btnUndo.interactable = m_moves.Count > 0 && !m_doingAutoWin && !m_paused;
-            btnRedo.interactable = m_undoneMoves.Count > 0 && !m_doingAutoWin && !m_paused;
-
-            // Toggle interactability of reset button based on auto win state
-            btnConfirmReset.interactable = !m_doingAutoWin && !m_paused;
-            btnSettings.interactable = !m_doingAutoWin && !m_paused;
 
             if (m_moves.Count >= MAX_MOVES_STACK_SIZE)
             {
@@ -219,6 +242,29 @@ namespace Solitaire
                 // Remove the oldest undone move
                 m_undoneMoves.RemoveOldest();
             }
+
+            // Toggle interactability on undo and redo buttons based on size of respective moves list
+            btnUndo.interactable = m_moves.Count > 0 && !m_doingAutoWin && !IsPaused() && !HasWon();
+            btnRedo.interactable = m_undoneMoves.Count > 0 && !m_doingAutoWin && !IsPaused() && !HasWon();
+
+            // Toggle interactability of reset button based on auto win state
+            btnConfirmReset.interactable = !m_doingAutoWin && !IsPaused();
+            btnSettings.interactable = !m_doingAutoWin && !IsPaused();
+        }
+
+        public float GetCardTranslationSpeed()
+        {
+            return IsDoingAutoWin() ? CARD_TRANSLATION_SPEED_FAST : CARD_TRANSLATION_SPEED_NORMAL;
+        }
+
+        public void SetGameState(GameStates gameState)
+        {
+            m_currentGameState = gameState;
+        }
+
+        public GameStates GetGameState()
+        {
+            return m_currentGameState;
         }
 
         /**
@@ -302,7 +348,8 @@ namespace Solitaire
             {
                 winnableState = totalFaceDownTableauCards == 0 &&
                                 cardsOfInterestCount >= 52 - 13 &&
-                                stock.GetComponentInChildren<SnapManager>().GetCardCount() == 0;
+                                stock.GetComponentInChildren<SnapManager>().GetCardCount() == 0 &&
+                                m_talonPile.GetComponent<SnapManager>().GetCardCount() == 0;
 
                 if (!winnableState)
                     m_enteredWinnableState = false;
@@ -328,22 +375,39 @@ namespace Solitaire
 
         public void OpenSettings()
         {
-            Animator spinAnimator = btnSettings.GetComponent<Animator>();
-            spinAnimator.SetTrigger("DoSpin");
+            if (!HasWon())
+            {
+                Animator spinAnimator = btnSettings.GetComponent<Animator>();
+                spinAnimator.SetTrigger("DoSpin");
 
-            SettingsManager.Instance.gearSound.Play();
+                SettingsManager.Instance.gearSound.Play();
 
-            m_paused = true;
-            m_stopWatch.Stop();
+                SetPaused(true);
+                m_stopWatch.Stop();
+            }
+            else
+            {
+                SettingsManager.Instance.winSettingsPage.SetActive(false);
+            }
 
             // Display the modal overlay for settings
             settingsModalOverlay.SetActive(true);
+
+            
         }
 
         public void CloseSettings()
         {
-            m_paused = false;
-            m_stopWatch.Start();
+            if (!HasWon())
+            {
+                SetPaused(false);
+                m_stopWatch.Start();
+            }
+
+            else
+            {
+                SettingsManager.Instance.winSettingsPage.SetActive(true);
+            }
 
             // Close the modal overlay for settings
             settingsModalOverlay.SetActive(false);
@@ -367,16 +431,7 @@ namespace Solitaire
         **/
         private void UpdateTimer()
         {
-            float t = m_stopWatch.ElapsedMilliseconds / 1000.0f;
-            float milliseconds = (Mathf.Floor(t * 100) % 100); // calculate the milliseconds for the timer
-
-            int seconds = (int)(t % 60); // return the remainder of the seconds divide by 60 as an int
-            t /= 60; // divide current time y 60 to get minutes
-            int minutes = (int)(t % 60); //return the remainder of the minutes divide by 60 as an int
-            t /= 60; // divide by 60 to get hours
-            int hours = (int)(t % 24); // return the remainder of the hours divided by 60 as an int
-
-            lblTimer.text = string.Format("{0}:{1}:{2}.{3}", hours.ToString("00"), minutes.ToString("00"), seconds.ToString("00"), milliseconds.ToString("00"));
+            lblTimer.text = Utils.GetTimestamp(m_stopWatch.ElapsedMilliseconds);
         }
 
         /**
@@ -432,12 +487,36 @@ namespace Solitaire
         }
 
         /**
+         * Determines wether it is safe to process move actions for cards.
+         * Not safe when there exists any cards that are presently in transit
+         * to a new position and/or are performing any other animations (e.g., flipping).
          * 
+         * @return bool    wether it's safe to move cards or not.
+         */
+        public bool IsSafeToMoveCards()
+        {
+            // Get all card instances in scene
+            Card[] cards = FindObjectsOfType<Card>();
+            bool safe = true;
+            foreach (Card card in cards)
+            {
+                if (card.IsTranslating() || card.IsFlipping())
+                {
+                    safe = false;
+                    break;
+                }
+            }
+
+            return safe;
+        }
+
+        /**
+         * Undo the last move that was done.
          */
         public void Undo()
         {
             // Don't proceed if already blocked
-            if (!m_blocked)
+            if (!m_blocked && IsSafeToMoveCards())
             {
                 // Block additional actions and events until undo is complete.
                 m_blocked = true;
@@ -446,12 +525,14 @@ namespace Solitaire
         }
 
         /**
-         * 
+         * Redo the last undone move. Moves can only be redone as long as there
+         * are still undone moves to redo and if a new move is not added to the
+         * list of moves to undo.
          */
         public void Redo()
         {
             // Don't proceed if already blocked
-            if (!m_blocked)
+            if (!m_blocked && IsSafeToMoveCards())
             {
                 // Block additional actions and events until undo is complete.
                 m_blocked = true;
@@ -465,13 +546,13 @@ namespace Solitaire
          */
         public void ToggleResetModal()
         {
-            m_paused = !m_paused;
+            SetPaused(!IsPaused());
 
             // Stop the stop watch when paused so that the displayed time stops.
             // Start the stop watch if not paused
-            if (m_paused)
+            if (IsPaused())
             {
-                SettingsManager.Instance.clickSound.Play();
+
                 m_stopWatch.Stop();
             }
             else
@@ -481,6 +562,10 @@ namespace Solitaire
 
             // Display the modal overlay prompt to confirm Reset
             resetModalOverlay.SetActive(!resetModalOverlay.activeInHierarchy);
+
+            // Only play the click sound if the reset window is open
+            if (resetModalOverlay.activeInHierarchy)
+                SettingsManager.Instance.clickSound.Play();
         }
 
         /**
@@ -488,6 +573,10 @@ namespace Solitaire
          */
         public void Reset()
         {
+            // Invoke the respective stats manager lose function only if not in won state
+            if (!HasWon())
+                StatsManager.Instance.OnLose();
+
             // Reset the stop watch time
             m_stopWatch.Reset();
 
@@ -551,7 +640,35 @@ namespace Solitaire
          */
         public bool IsPaused()
         {
-            return m_paused;
+            return m_currentGameState.Equals(GameStates.PAUSED) ||
+                   m_currentGameState.Equals(GameStates.WON_PAUSED);
+        }
+
+        /**
+         * Wether or not the game has been won.
+         */
+        public bool HasWon()
+        {
+            return m_currentGameState.Equals(GameStates.WON_PLAYING) ||
+                   m_currentGameState.Equals(GameStates.WON_PAUSED);
+        }
+
+        /**
+         * Control the game state based on if the game should be 
+         * paused or not.
+         * 
+         * @param bool paused    the paused flag to determine the game state.
+         */
+        public void SetPaused(bool paused)
+        {
+            if (HasWon())
+            {
+                SetGameState(paused ? GameStates.WON_PAUSED : GameStates.WON_PLAYING);
+            }
+            else
+            {
+                SetGameState(paused ? GameStates.PAUSED : GameStates.PLAYING);
+            }
         }
 
         /**
@@ -586,6 +703,11 @@ namespace Solitaire
         public Transform GetTalonPile()
         {
             return m_talonPile;
+        }
+
+        public Transform GetStockPile()
+        {
+            return m_stockPile;
         }
 
         /**
@@ -784,6 +906,17 @@ namespace Solitaire
                 move.AddEvent(ev);
                 AddMove(move, MoveTypes.NORMAL);
             }
+        }
+
+        /**
+         * Get the current time in milliseconds that has elapsed on the
+         * stop watch.
+         * 
+         * @return float the current time in milliseconds.
+         */
+        public long GetCurrentTime()
+        {
+            return m_stopWatch.ElapsedMilliseconds;
         }
 
         private void LoadCardSprites()

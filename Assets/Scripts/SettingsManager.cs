@@ -21,10 +21,12 @@ namespace Solitaire
 
         [Header("Settings Pages")]
         public GameObject mainSettingsPage;
+        public GameObject winSettingsPage;
         public GameObject audioPage;
         public GameObject statsPage;
 
         [Header("Audio Assets")]
+        public AudioSource winSound;
         public AudioSource gearSound;
         public AudioSource cardSetSound;
         public AudioClip cardSetSoundClip;
@@ -166,6 +168,7 @@ namespace Solitaire
 
             audioPage.SetActive(false);
             mainSettingsPage.SetActive(true);
+
         }
 
         public void CloseStatsSettings()
