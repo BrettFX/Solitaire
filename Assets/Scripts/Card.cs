@@ -136,7 +136,7 @@ namespace Solitaire
                 }
 
                 // Accumulate total time with respect to the card translation speed
-                m_totalTime += Time.deltaTime / GameManager.CARD_TRANSLATION_SPEED;
+                m_totalTime += Time.deltaTime / GameManager.Instance.GetCardTranslationSpeed();
 
                 // Perform final steps after translation is complete
                 if (!m_translating)

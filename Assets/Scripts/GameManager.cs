@@ -22,7 +22,8 @@ namespace Solitaire
         private const int MAX_MOVES_STACK_SIZE = 1000;
 
         // Control the speed that cards are moved from one point to the next (lower = faster where 0.0 is instantaneous)
-        public const float CARD_TRANSLATION_SPEED = 0.25f; 
+        public const float CARD_TRANSLATION_SPEED_NORMAL = 0.25f;
+        public const float CARD_TRANSLATION_SPEED_FAST = 0.10f;
 
         public const float Z_OFFSET_DRAGGING = 70.0f;
         public const float FOUNDATION_Y_OFFSET = 37.5f;
@@ -249,6 +250,11 @@ namespace Solitaire
             // Toggle interactability of reset button based on auto win state
             btnConfirmReset.interactable = !m_doingAutoWin && !IsPaused();
             btnSettings.interactable = !m_doingAutoWin && !IsPaused();
+        }
+
+        public float GetCardTranslationSpeed()
+        {
+            return IsDoingAutoWin() ? CARD_TRANSLATION_SPEED_FAST : CARD_TRANSLATION_SPEED_NORMAL;
         }
 
         public void SetGameState(GameStates gameState)
