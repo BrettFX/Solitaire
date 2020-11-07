@@ -140,7 +140,7 @@ namespace Solitaire
             DisplayStatistic(totalLossesStat, m_totalLoss.ToString(), false, FillStates.NO_FILL);
             DisplayStatistic(winStreakStat, m_winStreak.ToString(), false, FillStates.NO_FILL);
             DisplayStatistic(loseStreakStat, m_loseStreak.ToString(), false, FillStates.NO_FILL);
-            DisplayStatistic(winLossRatioStat, m_winLossRatio.ToString(), false);
+            DisplayStatistic(winLossRatioStat, m_winLossRatio.ToString(), false, m_totalWins + m_totalLoss > 0 ? FillStates.NO_FILL : FillStates.FILL_NA_ON_ZERO, 2);
         }
 
         /**
@@ -151,8 +151,10 @@ namespace Solitaire
          * @param statistic   the Statistic UI component to target in the Scene.
          * @param value       the value to set for the respective statistic UI component.
          * @param isTimestamp whether the value should be interpreted as a timestamp.
+         * @param fillState   determines how the statistic should be displayed if a default value is assigned.
+         * @param precision   determines how many decimal places to show for floating point statistics.
          */
-        private void DisplayStatistic(Statistic statistic, string value, bool isTimestamp, FillStates fillState = FillStates.FILL_NA_ON_ZERO)
+        private void DisplayStatistic(Statistic statistic, string value, bool isTimestamp, FillStates fillState = FillStates.FILL_NA_ON_ZERO, int precision = 0)
         {
             string formatted = value.Equals("0") && fillState.Equals(FillStates.FILL_NA_ON_ZERO) ? "N/A" : value;
             if (isTimestamp)
@@ -161,6 +163,11 @@ namespace Solitaire
                     formatted = "N/A";
                 else
                     formatted = Utils.GetTimestamp(float.Parse(value));
+            }
+            else if (fillState.Equals(FillStates.NO_FILL))
+            {
+                // Format to show only 2 decimal places
+                formatted = float.Parse(value).ToString("F" + precision);
             }
 
             statistic.SetText(formatted);
@@ -211,7 +218,7 @@ namespace Solitaire
             m_totalWins++;
             m_winStreak++;
             m_loseStreak = 0;
-            m_winLossRatio = m_totalLoss != 0 ? m_totalWins / m_totalLoss : m_totalWins;
+            m_winLossRatio = m_totalLoss != 0 ? m_totalWins / (float)m_totalLoss : m_totalWins;
 
             // Save all computed/tracked values to player prefs
             PlayerPrefs.SetString(TIME_HISTORY_KEY, m_timeHistory);
@@ -247,7 +254,7 @@ namespace Solitaire
             m_totalLoss++;
             m_winStreak = 0;
             m_loseStreak++;
-            m_winLossRatio = m_totalWins / m_totalLoss;
+            m_winLossRatio = m_totalWins / (float)m_totalLoss;
 
             PlayerPrefs.SetString(TOTAL_LOSSES_KEY, m_totalLoss.ToString());
             PlayerPrefs.SetString(WIN_STREAK_KEY, m_winStreak.ToString());
