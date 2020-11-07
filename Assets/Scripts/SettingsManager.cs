@@ -21,6 +21,7 @@ namespace Solitaire
 
         [Header("Settings Pages")]
         public GameObject mainSettingsPage;
+        public GameObject winSettingsPage;
         public GameObject audioPage;
         public GameObject statsPage;
 
@@ -167,6 +168,7 @@ namespace Solitaire
 
             audioPage.SetActive(false);
             mainSettingsPage.SetActive(true);
+
         }
 
         public void CloseStatsSettings()

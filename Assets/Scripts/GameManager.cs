@@ -205,6 +205,10 @@ namespace Solitaire
                     // Set the game state to win and invoke the stats manager win function
                     SetGameState(GameStates.WON_PLAYING);
                     StatsManager.Instance.OnWin();
+
+                    // Show the win settings page (to start new game) and pause the game
+                    SetPaused(true);
+                    SettingsManager.Instance.winSettingsPage.SetActive(true);
                 }
             }
 
@@ -365,22 +369,39 @@ namespace Solitaire
 
         public void OpenSettings()
         {
-            Animator spinAnimator = btnSettings.GetComponent<Animator>();
-            spinAnimator.SetTrigger("DoSpin");
+            if (!HasWon())
+            {
+                Animator spinAnimator = btnSettings.GetComponent<Animator>();
+                spinAnimator.SetTrigger("DoSpin");
 
-            SettingsManager.Instance.gearSound.Play();
+                SettingsManager.Instance.gearSound.Play();
 
-            SetPaused(true);
-            if (!HasWon()) m_stopWatch.Stop();
+                SetPaused(true);
+                m_stopWatch.Stop();
+            }
+            else
+            {
+                SettingsManager.Instance.winSettingsPage.SetActive(false);
+            }
 
             // Display the modal overlay for settings
             settingsModalOverlay.SetActive(true);
+
+            
         }
 
         public void CloseSettings()
         {
-            SetPaused(false);
-            if (!HasWon()) m_stopWatch.Start();
+            if (!HasWon())
+            {
+                SetPaused(false);
+                m_stopWatch.Start();
+            }
+
+            else
+            {
+                SettingsManager.Instance.winSettingsPage.SetActive(true);
+            }
 
             // Close the modal overlay for settings
             settingsModalOverlay.SetActive(false);
