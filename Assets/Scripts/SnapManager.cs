@@ -61,6 +61,14 @@ namespace Solitaire
                             GameManager.Instance.AddEventToLastMove(evt);
                         }
                     }
+                    else if (belongingSection.Equals(GameManager.Sections.STOCK) && !card.IsFaceDown())
+                    {
+                        card.Flip(false);
+                    }
+                    else if (belongingSection.Equals(GameManager.Sections.TALON) && card.IsFaceDown())
+                    {
+                        card.Flip(false);
+                    }
 
                     bool belongsToTableau = belongingSection.Equals(GameManager.Sections.TABLEAU);
                     float targetX = transform.position.x;

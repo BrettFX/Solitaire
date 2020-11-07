@@ -18,6 +18,7 @@ namespace Solitaire
 
         private float m_timeSinceLastClick = -1.0f;
         bool m_isStockCard = false;
+        bool m_isDoingAnimation = false;
         bool m_dragged = false;
 
         private SnapManager m_originSnapManager;
@@ -72,6 +73,14 @@ namespace Solitaire
             // If card, we need to get a list of the cards that are to be dragged (through the use of the Snap Manager)
             if (gameObject.CompareTag("Card") && transform.parent != null)
             {
+                Card targetCard = GetComponent<Card>();
+                m_isDoingAnimation = targetCard.IsTranslating() || targetCard.IsFlipping();
+                if (m_isDoingAnimation)
+                {
+                    Debug.Log("Card is doing an animation and cannot be dragged!");
+                    return;
+                }
+
                 // Initialize the dragged cards list by referencing the set of cards that are attached to the
                 // respective snap that one or many cards are to be dragged from.
                 m_draggedCards = GetComponentInParent<SnapManager>().GetCardSet(GetComponent<Card>());
@@ -108,6 +117,12 @@ namespace Solitaire
         {
             // Don't process if dragging isn't currently allowed
             if (!DraggingIsAllowed())
+            {
+                return;
+            }
+
+            // Don't process if target card is performing an animation
+            if (m_isDoingAnimation)
             {
                 return;
             }
@@ -177,6 +192,12 @@ namespace Solitaire
         {
             // Don't process if dragging isn't currently allowed
             if (!DraggingIsAllowed())
+            {
+                return;
+            }
+
+            // Don't process if target card is performing an animation
+            if (m_isDoingAnimation)
             {
                 return;
             }
