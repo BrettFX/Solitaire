@@ -37,8 +37,11 @@ namespace Solitaire
 
         public void SetCards(Card[] cards)
         {
-            m_cards = cards;
-            m_topCard = m_cards[0];
+            if (cards.Length > 0)
+            {
+                m_cards = cards;
+                m_topCard = m_cards[0];
+            }
         }
 
         public void AddEvent(Event e)
