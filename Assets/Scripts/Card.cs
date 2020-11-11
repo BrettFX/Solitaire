@@ -460,7 +460,35 @@ namespace Solitaire
             if (!m_translating)
             {
                 // Handle corner cases with flipping cards between stock and talon
-                SnapManager originalSnap = m_originalParent.GetComponent<SnapManager>();
+                SnapManager originalSnap = null;
+                if (m_originalParent != null)
+                {
+                    originalSnap = m_originalParent.GetComponent<SnapManager>();
+                }
+                else if (m_startParent != null)
+                {
+                    originalSnap = m_startParent.GetComponent<SnapManager>();
+                }
+                else
+                {
+                    // Need to determine which snap the card is closest to
+                    Vector3 collisionVector = new Vector3(10.0f, 10.0f, 1000.0f);
+                    Collider[] hitColliders = Physics.OverlapBox(transform.position, collisionVector);
+                    foreach (Collider hitCollider in hitColliders)
+                    {
+                        if (hitCollider.transform.CompareTag("Snap"))
+                        {
+                            // No need to continue once the snap has been found
+                            originalSnap = hitCollider.transform.GetComponent<SnapManager>();
+                            break;
+                        }
+                    }
+                }
+
+                // Set new original parent to ensure non-null value (which may be itself)
+                m_originalParent = originalSnap.transform;
+
+                // Handle corner cases
                 if (m_moveType.Equals(Move.MoveTypes.UNDO) && originalSnap.BelongsTo(GameManager.Sections.TALON))
                     m_originalParent = GameManager.Instance.GetStockPile();
 
