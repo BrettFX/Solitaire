@@ -23,7 +23,7 @@ namespace Solitaire
 
         // Control the speed that cards are moved from one point to the next (lower = faster where 0.0 is instantaneous)
         public const float CARD_TRANSLATION_SPEED_NORMAL = 0.25f;
-        public const float CARD_TRANSLATION_SPEED_FAST = 0.10f;
+        public const float CARD_TRANSLATION_SPEED_FAST = 0.05f;
 
         public const float Z_OFFSET_DRAGGING = 70.0f;
         public const float FOUNDATION_Y_OFFSET = 37.5f;
@@ -736,73 +736,77 @@ namespace Solitaire
         {
             Transform nextMove = null;
 
-            // Handle face-down card corner case (only process if the card is face up)
-            if (card != null && !card.IsFaceDown())
+            // Only process next available move if the card isn't translating or flipping
+            if (card != null && !card.IsTranslating() && !card.IsFlipping())
             {
-                // First priority is the Foundations since the primary objective of the game is
-                // to get all cards to the Foundations.
-                // Only check valid foundation location if the card count is 1
-                if (cardCount == 1)
+                // Handle face-down card corner case (only process if the card is face up)
+                if (!card.IsFaceDown())
                 {
-                    foreach (SnapManager snapManager in m_foundationSnapManagers)
+                    // First priority is the Foundations since the primary objective of the game is
+                    // to get all cards to the Foundations.
+                    // Only check valid foundation location if the card count is 1
+                    if (cardCount == 1)
                     {
-                        if (snapManager.IsValidMove(card))
+                        foreach (SnapManager snapManager in m_foundationSnapManagers)
                         {
-                            // Skip if the next move is the current card location
-                            if (!snapManager.transform.Equals(card.GetStartParent()))
+                            if (snapManager.IsValidMove(card))
                             {
-                                nextMove = snapManager.transform;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Second priority is the tableau. Don't try to find a move if one has already been found
-                // in the foundations
-                if (!nextMove)
-                {
-                    List<Transform> possibleMoves = new List<Transform>();
-
-                    // Do first pass through snap managers to get set of possible moves
-                    foreach (SnapManager snapManager in m_tableauSnapManagers)
-                    {
-                        if (snapManager.IsValidMove(card))
-                        {
-                            // Skip if the next move is the current card location
-                            if (!snapManager.transform.Equals(card.GetStartParent()))
-                            {
-                                possibleMoves.Add(snapManager.transform);
-                            }
-                        }
-                    }
-
-                    // Only proceed if there is at least one possible move
-                    if (possibleMoves.Count > 0)
-                    {
-                        // Prioritize the move that is closest to the current card
-                        int closestIndex = 0;
-
-                        // Use square magnitude to calculate least distance between relative card
-                        // and possible moves
-                        float sqrMagnitude = Vector3.SqrMagnitude(card.transform.position - possibleMoves[0].position);
-                        float minDistance = sqrMagnitude;
-                        for (int i = 0; i < possibleMoves.Count; i++)
-                        {
-                            // Determine if there is a closer move to the card in question (after the first calculation).
-                            if (i != 0)
-                            {
-                                sqrMagnitude = Vector3.SqrMagnitude(card.transform.position - possibleMoves[i].position);
-                                if (sqrMagnitude < minDistance)
+                                // Skip if the next move is the current card location
+                                if (!snapManager.transform.Equals(card.GetStartParent()))
                                 {
-                                    minDistance = sqrMagnitude;
-                                    closestIndex = i;
+                                    nextMove = snapManager.transform;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // Second priority is the tableau. Don't try to find a move if one has already been found
+                    // in the foundations
+                    if (!nextMove)
+                    {
+                        List<Transform> possibleMoves = new List<Transform>();
+
+                        // Do first pass through snap managers to get set of possible moves
+                        foreach (SnapManager snapManager in m_tableauSnapManagers)
+                        {
+                            if (snapManager.IsValidMove(card))
+                            {
+                                // Skip if the next move is the current card location
+                                if (!snapManager.transform.Equals(card.GetStartParent()))
+                                {
+                                    possibleMoves.Add(snapManager.transform);
                                 }
                             }
                         }
 
-                        // Assign the next move to be the closest to the current card
-                        nextMove = possibleMoves[closestIndex];
+                        // Only proceed if there is at least one possible move
+                        if (possibleMoves.Count > 0)
+                        {
+                            // Prioritize the move that is closest to the current card
+                            int closestIndex = 0;
+
+                            // Use square magnitude to calculate least distance between relative card
+                            // and possible moves
+                            float sqrMagnitude = Vector3.SqrMagnitude(card.transform.position - possibleMoves[0].position);
+                            float minDistance = sqrMagnitude;
+                            for (int i = 0; i < possibleMoves.Count; i++)
+                            {
+                                // Determine if there is a closer move to the card in question (after the first calculation).
+                                if (i != 0)
+                                {
+                                    sqrMagnitude = Vector3.SqrMagnitude(card.transform.position - possibleMoves[i].position);
+                                    if (sqrMagnitude < minDistance)
+                                    {
+                                        minDistance = sqrMagnitude;
+                                        closestIndex = i;
+                                    }
+                                }
+                            }
+
+                            // Assign the next move to be the closest to the current card
+                            nextMove = possibleMoves[closestIndex];
+                        }
                     }
                 }
             }
@@ -991,6 +995,20 @@ namespace Solitaire
             }
         }
 
+        /**
+         * Exit the game on an action event (button click)
+         */
+        public void ExitGame()
+        {
+            #if UNITY_EDITOR
+                // Application.Quit() does not work in the editor so
+                // UnityEditor.EditorApplication.isPlaying need to be set to false to end the game
+                UnityEditor.EditorApplication.isPlaying = false;
+            #else
+                Application.Quit();
+            #endif
+        }
+
         private void SpawnStack()
         {
             // Generate the initial list of 52 cards first before shuffling
@@ -1121,43 +1139,41 @@ namespace Solitaire
             
             yield return new WaitForEndOfFrame();
 
-            int attempts = 0; // Loop counter to prevent infinite loop and game crash
-            int bounds = 5000;
-            List<SnapManager> targetSnapManagers = new List<SnapManager>(tableau.GetComponentsInChildren<SnapManager>())
+            // Build min priority queue based on all cards in tableau (prioritize lower value cards)
+            PriorityQueue<Card> cardQueue = new PriorityQueue<Card>(true);
+            Card[] cards = FindObjectsOfType<Card>();
+            foreach(Card card in cards)
             {
-                m_talonPile.GetComponent<SnapManager>()
-            };
+                cardQueue.Enqueue(card.value, card);
+            }
 
-            while (attempts < bounds)
+            // Dequeue cards from priority queue and move each one to the foundation
+            while (cardQueue.Count > 0)
             {
-                foreach (SnapManager snapManager in targetSnapManagers)
+                Card priorityCard = cardQueue.Dequeue();
+                Transform nextMove = GetNextAvailableMove(priorityCard);
+
+                // Only process move if one existed and if it is to a foundation
+                if (nextMove)
                 {
-                    Card topCard = snapManager.GetTopCard();
-                    Transform nextMove = GetNextAvailableMove(topCard);
-
-                    // Only process move if one existed and if it is to a foundation
-                    if (nextMove)
+                    SnapManager nextSnapManager = nextMove.GetComponent<SnapManager>();
+                    bool validMove = nextSnapManager.belongingSection.Equals(Sections.FOUNDATIONS);
+                    if (validMove)
                     {
-                        SnapManager nextSnapManager = nextMove.GetComponent<SnapManager>();
-                        bool validMove = nextSnapManager.belongingSection.Equals(Sections.FOUNDATIONS);
-                        if (validMove)
-                        {
-                            snapManager.SetWaiting(true);
-                            SetBlocked(true); // Card will set blocked to false after the translation completes
-                            topCard.MoveTo(nextMove);
-                            yield return new WaitUntil(() => topCard.transform.parent != null || !topCard.IsTranslating());
-                            snapManager.SetWaiting(false);
-                        }
+                        // Make note of the current amount of attached cards
+                        int currentCardCount = nextSnapManager.GetCardCount();
+
+                        priorityCard.MoveTo(nextMove);
+
+                        // Wait until the card is finished translating, is attached to the snap, and the current
+                        // card count has incremented by one
+                        yield return new WaitUntil(() => {
+                            return priorityCard.transform.parent != null &&
+                                   !priorityCard.IsTranslating() &&
+                                   nextSnapManager.GetCardCount() >= (currentCardCount + 1);
+                        });
                     }
                 }
-
-                // Stop if last card (prevents freezing on last card translation
-                if (GetFoundationSum() >= 51)
-                {
-                    break;
-                }
-
-                attempts++;
             }
 
             SetDoingAutoWin(false);
