@@ -374,6 +374,25 @@ namespace Solitaire
             return m_startParent;
         }
 
+        public Transform GetCurrentParent()
+        {
+            // Handle corner case when parent is null by returning the transform of the nearest snap
+            // only if the card isn't currently translating or flipping
+            SnapManager currentSnapManager = GetComponentInParent<SnapManager>();
+            Transform currentParent = null;
+            //Transform currentParent = GetComponentInParent<SnapManager>().transform;
+            if (currentSnapManager == null)
+            {
+                SnapManager nearestSnap = Utils.GetNearestSnapManager(this);
+                if (nearestSnap != null)
+                {
+                    currentParent = nearestSnap.transform;
+                }
+            }
+
+            return currentParent;
+        }
+
         public bool IsFaceDown()
         {
             return currentState.Equals(CardState.FACE_DOWN);
@@ -472,17 +491,7 @@ namespace Solitaire
                 else
                 {
                     // Need to determine which snap the card is closest to
-                    Vector3 collisionVector = new Vector3(10.0f, 10.0f, 1000.0f);
-                    Collider[] hitColliders = Physics.OverlapBox(transform.position, collisionVector);
-                    foreach (Collider hitCollider in hitColliders)
-                    {
-                        if (hitCollider.transform.CompareTag("Snap"))
-                        {
-                            // No need to continue once the snap has been found
-                            originalSnap = hitCollider.transform.GetComponent<SnapManager>();
-                            break;
-                        }
-                    }
+                    originalSnap = Utils.GetNearestSnapManager(this);
                 }
 
                 // Set new original parent to ensure non-null value (which may be itself)
@@ -508,6 +517,17 @@ namespace Solitaire
             }
 
             m_flipping = false;
+        }
+
+        /**
+         * Overridden ToString function for this card class to display
+         * the card suit and value.
+         * 
+         * @return String the string representation of the card.
+         */
+        public override string ToString()
+        {
+            return value + " of " + suit;
         }
     }
 }

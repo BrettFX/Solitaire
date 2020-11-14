@@ -747,12 +747,13 @@ namespace Solitaire
                     // Only check valid foundation location if the card count is 1
                     if (cardCount == 1)
                     {
+                        //Debug.Log("Checking if " + card.ToString() + " is valid to move to foundation...");
                         foreach (SnapManager snapManager in m_foundationSnapManagers)
                         {
                             if (snapManager.IsValidMove(card))
                             {
                                 // Skip if the next move is the current card location
-                                if (!snapManager.transform.Equals(card.GetStartParent()))
+                                if (!snapManager.transform.Equals(card.GetCurrentParent()))
                                 {
                                     nextMove = snapManager.transform;
                                     break;
@@ -767,13 +768,13 @@ namespace Solitaire
                     {
                         List<Transform> possibleMoves = new List<Transform>();
 
-                        // Do first pass through snap managers to get set of possible moves
+                        // Do first pass through tableau snap managers to get set of possible moves
                         foreach (SnapManager snapManager in m_tableauSnapManagers)
                         {
                             if (snapManager.IsValidMove(card))
                             {
                                 // Skip if the next move is the current card location
-                                if (!snapManager.transform.Equals(card.GetStartParent()))
+                                if (!snapManager.transform.Equals(card.GetCurrentParent()))
                                 {
                                     possibleMoves.Add(snapManager.transform);
                                 }
@@ -1146,6 +1147,9 @@ namespace Solitaire
             int attempts = 0;
             int maxAttempts = 5000;
 
+            // Build min priority queue based on all cards in tableau (prioritize lower value cards)
+            PriorityQueue<Card> cardQueue = new PriorityQueue<Card>(true);
+
             // Add max attempts in case there is some corner case that occurs and causes a fail
             while (attempts < maxAttempts)
             {
@@ -1157,13 +1161,15 @@ namespace Solitaire
                     break;
                 }
 
-                // Build min priority queue based on all cards in tableau (prioritize lower value cards)
-                PriorityQueue<Card> cardQueue = new PriorityQueue<Card>(true);
-                Card[] cards = FindObjectsOfType<Card>();
-                foreach (Card card in cards)
+                SnapManager[] tableauSnaps = tableau.GetComponentsInChildren<SnapManager>();
+                foreach (SnapManager tableauSnap in tableauSnaps)
                 {
-                    if (card.GetComponentInParent<SnapManager>().BelongsTo(Sections.TABLEAU))
-                        cardQueue.Enqueue(card.value, card);
+                    // Get only the top card for now
+                    Card topCard = tableauSnap.GetTopCard();
+                    if (topCard != null)
+                    {
+                        cardQueue.Enqueue(topCard.value, topCard);
+                    }
                 }
 
                 // Dequeue cards from priority queue and move each one to the foundation
@@ -1175,6 +1181,7 @@ namespace Solitaire
                     // Only process move if one existed and if it is to a foundation
                     if (nextMove)
                     {
+                        SnapManager currentSnapManager = priorityCard.GetComponentInParent<SnapManager>();
                         SnapManager nextSnapManager = nextMove.GetComponent<SnapManager>();
                         bool validMove = nextSnapManager.belongingSection.Equals(Sections.FOUNDATIONS);
                         if (validMove)
@@ -1191,6 +1198,13 @@ namespace Solitaire
                                        !priorityCard.IsTranslating() &&
                                        nextSnapManager.GetCardCount() >= (currentCardCount + 1);
                             });
+
+                            // Add the current snap manager's top card to the priority queue
+                            Card nextTopCard = currentSnapManager.GetTopCard();
+                            if (nextTopCard != null)
+                            {
+                                cardQueue.Enqueue(nextTopCard.value, nextTopCard);
+                            }
                         }
                     }
                 }

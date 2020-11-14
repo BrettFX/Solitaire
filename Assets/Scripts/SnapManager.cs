@@ -163,8 +163,8 @@ namespace Solitaire
             else
             {
                 // Get the top card and validate
-                Card currentCard = m_attachedCards[m_attachedCards.Length - 1];
-                valid = (nextCard.value == currentCard.value + 1) && nextCard.suit.Equals(currentCard.suit);
+                Card topCard = GetTopCard();
+                valid = (nextCard.value == topCard.value + 1) && nextCard.suit.Equals(topCard.suit);
             }
 
             return valid;
@@ -188,9 +188,9 @@ namespace Solitaire
             else
             {
                 // Get the top card and validate
-                Card currentCard = m_attachedCards[m_attachedCards.Length - 1];
-                bool altColorSuit = GetSuitColor(currentCard.suit, true) == GetSuitColor(nextCard.suit, false);
-                valid = (nextCard.value == currentCard.value - 1) && altColorSuit;
+                Card topCard = GetTopCard();
+                bool altColorSuit = GetSuitColor(topCard.suit, true) == GetSuitColor(nextCard.suit, false);
+                valid = (nextCard.value == topCard.value - 1) && altColorSuit && !topCard.IsFaceDown();
             }
 
             return valid;
