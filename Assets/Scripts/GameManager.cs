@@ -1131,49 +1131,69 @@ namespace Solitaire
         }
 
         /**
-         * 
+         * Perform the core function for running the auto complete process.
+         * This coroutine will rapidly move cards from the tableau to the foundation
+         * and automatically complete the game once a valid winning state has been
+         * determined by the system.
          */
         private IEnumerator AutoWinCoroutine()
         {
             SetDoingAutoWin(true);
-            
-            yield return new WaitForEndOfFrame();
 
-            // Build min priority queue based on all cards in tableau (prioritize lower value cards)
-            PriorityQueue<Card> cardQueue = new PriorityQueue<Card>(true);
-            Card[] cards = FindObjectsOfType<Card>();
-            foreach(Card card in cards)
+            int attempts = 0;
+            int maxAttempts = 5000;
+
+            // Add max attempts in case there is some corner case that occurs and causes a fail
+            while (attempts < maxAttempts)
             {
-                cardQueue.Enqueue(card.value, card);
-            }
+                yield return new WaitForEndOfFrame();
 
-            // Dequeue cards from priority queue and move each one to the foundation
-            while (cardQueue.Count > 0)
-            {
-                Card priorityCard = cardQueue.Dequeue();
-                Transform nextMove = GetNextAvailableMove(priorityCard);
-
-                // Only process move if one existed and if it is to a foundation
-                if (nextMove)
+                // Break out of the loop if the win state has been met
+                if (HasWon())
                 {
-                    SnapManager nextSnapManager = nextMove.GetComponent<SnapManager>();
-                    bool validMove = nextSnapManager.belongingSection.Equals(Sections.FOUNDATIONS);
-                    if (validMove)
+                    Debug.Log("Game has been won already... done with auto win coroutine.");
+                    break;
+                }
+
+                // Build min priority queue based on all cards in tableau (prioritize lower value cards)
+                PriorityQueue<Card> cardQueue = new PriorityQueue<Card>(true);
+                Card[] cards = FindObjectsOfType<Card>();
+                foreach (Card card in cards)
+                {
+                    if (card.GetComponentInParent<SnapManager>().BelongsTo(Sections.TABLEAU))
+                        cardQueue.Enqueue(card.value, card);
+                }
+
+                // Dequeue cards from priority queue and move each one to the foundation
+                while (cardQueue.Count > 0)
+                {
+                    Card priorityCard = cardQueue.Dequeue();
+                    Transform nextMove = GetNextAvailableMove(priorityCard);
+
+                    // Only process move if one existed and if it is to a foundation
+                    if (nextMove)
                     {
-                        // Make note of the current amount of attached cards
-                        int currentCardCount = nextSnapManager.GetCardCount();
+                        SnapManager nextSnapManager = nextMove.GetComponent<SnapManager>();
+                        bool validMove = nextSnapManager.belongingSection.Equals(Sections.FOUNDATIONS);
+                        if (validMove)
+                        {
+                            // Make note of the current amount of attached cards
+                            int currentCardCount = nextSnapManager.GetCardCount();
 
-                        priorityCard.MoveTo(nextMove);
+                            priorityCard.MoveTo(nextMove);
 
-                        // Wait until the card is finished translating, is attached to the snap, and the current
-                        // card count has incremented by one
-                        yield return new WaitUntil(() => {
-                            return priorityCard.transform.parent != null &&
-                                   !priorityCard.IsTranslating() &&
-                                   nextSnapManager.GetCardCount() >= (currentCardCount + 1);
-                        });
+                            // Wait until the card is finished translating, is attached to the snap, and the current
+                            // card count has incremented by one
+                            yield return new WaitUntil(() => {
+                                return priorityCard.transform.parent != null &&
+                                       !priorityCard.IsTranslating() &&
+                                       nextSnapManager.GetCardCount() >= (currentCardCount + 1);
+                            });
+                        }
                     }
                 }
+
+                attempts++;
             }
 
             SetDoingAutoWin(false);
