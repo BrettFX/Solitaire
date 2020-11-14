@@ -920,9 +920,9 @@ namespace Solitaire
          */
         public long GetCurrentTime()
         {
-            // TODO parse stopwatch elapsed milliseconds to the same format as output label
-            // and compare to the label value. Normalize return result here to match what
-            // the label is displaying.
+            // Update the timer lable to make sure it is in sync with current value of stopwatch.
+            // This handles corner case when the stop watch is stoped and this function is invoked (e.g., win state)
+            UpdateTimer();
             return m_stopWatch.ElapsedMilliseconds;
         }
 
