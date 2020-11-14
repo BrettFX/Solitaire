@@ -1151,7 +1151,6 @@ namespace Solitaire
                 // Break out of the loop if the win state has been met
                 if (HasWon())
                 {
-                    Debug.Log("Game has been won already... done with auto win coroutine.");
                     break;
                 }
 
