@@ -77,7 +77,7 @@ namespace Solitaire
                 m_isDoingAnimation = targetCard.IsTranslating() || targetCard.IsFlipping();
                 if (m_isDoingAnimation)
                 {
-                    Debug.Log("Card is doing an animation and cannot be dragged!");
+                    if (GameManager.DEBUG_MODE) Debug.Log("Card is doing an animation and cannot be dragged!");
                     return;
                 }
 

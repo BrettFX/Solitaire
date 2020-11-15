@@ -35,12 +35,14 @@ namespace Solitaire
 
             if (card != null)
             {
-                Vector3 collisionVector = new Vector3(10.0f, 1000.0f, 1000.0f);
+                Vector3 collisionVector = new Vector3(10.0f, 10.0f, 1000.0f);
                 Collider[] hitColliders = Physics.OverlapBox(card.transform.position, collisionVector);
 
                 // First pass will be to find the snap manager
-                foreach (Collider hitCollider in hitColliders)
+                // Iterate backwards to start with the nearest collisions relative to the card
+                for (int i = hitColliders.Length - 1; i >= 0; i--)
                 {
+                    Collider hitCollider = hitColliders[i];
                     if (hitCollider.transform.CompareTag("Snap"))
                     {
                         // No need to continue once the snap has been found
@@ -52,8 +54,10 @@ namespace Solitaire
                 // If a snap couldn't be found then attempt to get the parent snap off of a collided card
                 if (nearestSnap == null)
                 {
-                    foreach (Collider hitCollider in hitColliders)
+                    // Iterate backwards to start with the nearest collisions relative to the card
+                    for (int i = hitColliders.Length - 1; i >= 0; i--)
                     {
+                        Collider hitCollider = hitColliders[i];
                         if (hitCollider.transform.CompareTag("Card"))
                         {
                             // Attempt to get snap from collided card

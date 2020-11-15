@@ -743,6 +743,8 @@ namespace Solitaire
             // Only process next available move if the card isn't translating or flipping
             if (card != null && !card.IsTranslating() && !card.IsFlipping())
             {
+                Transform cardCurrentParent = card.GetCurrentParent();
+
                 // Handle face-down card corner case (only process if the card is face up)
                 if (!card.IsFaceDown())
                 {
@@ -757,7 +759,7 @@ namespace Solitaire
                             if (snapManager.IsValidMove(card))
                             {
                                 // Skip if the next move is the current card location
-                                if (!snapManager.transform.Equals(card.GetCurrentParent()))
+                                if (!snapManager.transform.Equals(cardCurrentParent))
                                 {
                                     nextMove = snapManager.transform;
                                     break;
@@ -778,7 +780,7 @@ namespace Solitaire
                             if (snapManager.IsValidMove(card))
                             {
                                 // Skip if the next move is the current card location
-                                if (!snapManager.transform.Equals(card.GetCurrentParent()))
+                                if (!snapManager.transform.Equals(cardCurrentParent))
                                 {
                                     possibleMoves.Add(snapManager.transform);
                                 }
