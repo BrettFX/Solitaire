@@ -210,6 +210,10 @@ namespace Solitaire
                     // Show the win settings page (to start new game) and pause the game
                     SetPaused(true);
                     SettingsManager.Instance.winSettingsPage.SetActive(true);
+
+                    // Set the new fastest time label visibility if a new fastest time was done
+                    bool newFastestTime = StatsManager.Instance.IsNewFastestTime();
+                    SettingsManager.Instance.lblHighScoreNotification.SetActive(newFastestTime);
                 }
             }
 

@@ -48,6 +48,9 @@ namespace Solitaire
         public List<GameObject> currPages = new List<GameObject>();
         public List<GameObject> nextPages = new List<GameObject>();
 
+        [Header("Miscellaneous")]
+        public GameObject lblHighScoreNotification;
+
         private Dictionary<Button, SettingsPage> m_settingsPagesLookup;
 
         private Slider[] m_settingsSliders;

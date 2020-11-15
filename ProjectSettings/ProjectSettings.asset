@@ -270,6 +270,78 @@ PlayerSettings:
   m_BuildTargetPlatformIcons:
   - m_BuildTarget: Android
     m_Icons:
+    - m_Textures:
+      - {fileID: 2800000, guid: c5adf6067fe2b4342bdc6792b4d3f498, type: 3}
+      m_Width: 192
+      m_Height: 192
+      m_Kind: 1
+      m_SubKind: 
+    - m_Textures:
+      - {fileID: 2800000, guid: e06d80e50fa294103ac77ca8fd5253b0, type: 3}
+      m_Width: 144
+      m_Height: 144
+      m_Kind: 1
+      m_SubKind: 
+    - m_Textures:
+      - {fileID: 2800000, guid: e3846ba321fd342d99a911e8cb28c32e, type: 3}
+      m_Width: 96
+      m_Height: 96
+      m_Kind: 1
+      m_SubKind: 
+    - m_Textures:
+      - {fileID: 2800000, guid: 10de5f21f759b4697b461f35785055e8, type: 3}
+      m_Width: 72
+      m_Height: 72
+      m_Kind: 1
+      m_SubKind: 
+    - m_Textures:
+      - {fileID: 2800000, guid: 615a37deeb82e4681af6b4d39d67970a, type: 3}
+      m_Width: 48
+      m_Height: 48
+      m_Kind: 1
+      m_SubKind: 
+    - m_Textures:
+      - {fileID: 2800000, guid: 557184dfb48d5454c9b063aa5d236794, type: 3}
+      m_Width: 36
+      m_Height: 36
+      m_Kind: 1
+      m_SubKind: 
+    - m_Textures:
+      - {fileID: 2800000, guid: c5adf6067fe2b4342bdc6792b4d3f498, type: 3}
+      m_Width: 192
+      m_Height: 192
+      m_Kind: 0
+      m_SubKind: 
+    - m_Textures:
+      - {fileID: 2800000, guid: e06d80e50fa294103ac77ca8fd5253b0, type: 3}
+      m_Width: 144
+      m_Height: 144
+      m_Kind: 0
+      m_SubKind: 
+    - m_Textures:
+      - {fileID: 2800000, guid: e3846ba321fd342d99a911e8cb28c32e, type: 3}
+      m_Width: 96
+      m_Height: 96
+      m_Kind: 0
+      m_SubKind: 
+    - m_Textures:
+      - {fileID: 2800000, guid: 10de5f21f759b4697b461f35785055e8, type: 3}
+      m_Width: 72
+      m_Height: 72
+      m_Kind: 0
+      m_SubKind: 
+    - m_Textures:
+      - {fileID: 2800000, guid: 615a37deeb82e4681af6b4d39d67970a, type: 3}
+      m_Width: 48
+      m_Height: 48
+      m_Kind: 0
+      m_SubKind: 
+    - m_Textures:
+      - {fileID: 2800000, guid: 557184dfb48d5454c9b063aa5d236794, type: 3}
+      m_Width: 36
+      m_Height: 36
+      m_Kind: 0
+      m_SubKind: 
     - m_Textures: []
       m_Width: 432
       m_Height: 432
@@ -300,66 +372,117 @@ PlayerSettings:
       m_Height: 81
       m_Kind: 2
       m_SubKind: 
-    - m_Textures: []
-      m_Width: 192
-      m_Height: 192
+  - m_BuildTarget: iPhone
+    m_Icons:
+    - m_Textures:
+      - {fileID: 2800000, guid: 1e91ffbe9fe6443089bc99655dc62e74, type: 3}
+      m_Width: 120
+      m_Height: 120
+      m_Kind: 3
+      m_SubKind: iPhone
+    - m_Textures:
+      - {fileID: 2800000, guid: 50277753b17d444628f522afdec5bd0a, type: 3}
+      m_Width: 80
+      m_Height: 80
+      m_Kind: 3
+      m_SubKind: iPhone
+    - m_Textures:
+      - {fileID: 2800000, guid: 50277753b17d444628f522afdec5bd0a, type: 3}
+      m_Width: 80
+      m_Height: 80
+      m_Kind: 3
+      m_SubKind: iPad
+    - m_Textures:
+      - {fileID: 2800000, guid: 557184dfb48d5454c9b063aa5d236794, type: 3}
+      m_Width: 40
+      m_Height: 40
+      m_Kind: 3
+      m_SubKind: iPad
+    - m_Textures:
+      - {fileID: 2800000, guid: 31b30c4c5e94e457ab75d02bc6925006, type: 3}
+      m_Width: 87
+      m_Height: 87
       m_Kind: 1
-      m_SubKind: 
-    - m_Textures: []
-      m_Width: 144
-      m_Height: 144
+      m_SubKind: iPhone
+    - m_Textures:
+      - {fileID: 2800000, guid: df8a1f0fd9b954f0bb7ade3f1b3ca658, type: 3}
+      m_Width: 58
+      m_Height: 58
       m_Kind: 1
-      m_SubKind: 
-    - m_Textures: []
-      m_Width: 96
-      m_Height: 96
+      m_SubKind: iPhone
+    - m_Textures:
+      - {fileID: 2800000, guid: 12abfd09b15e44462af92a0eab2ae62a, type: 3}
+      m_Width: 29
+      m_Height: 29
       m_Kind: 1
-      m_SubKind: 
-    - m_Textures: []
-      m_Width: 72
-      m_Height: 72
+      m_SubKind: iPhone
+    - m_Textures:
+      - {fileID: 2800000, guid: df8a1f0fd9b954f0bb7ade3f1b3ca658, type: 3}
+      m_Width: 58
+      m_Height: 58
       m_Kind: 1
-      m_SubKind: 
-    - m_Textures: []
-      m_Width: 48
-      m_Height: 48
+      m_SubKind: iPad
+    - m_Textures:
+      - {fileID: 2800000, guid: 12abfd09b15e44462af92a0eab2ae62a, type: 3}
+      m_Width: 29
+      m_Height: 29
       m_Kind: 1
-      m_SubKind: 
+      m_SubKind: iPad
+    - m_Textures:
+      - {fileID: 2800000, guid: 2c459d6e5e906464580cff593c1f1495, type: 3}
+      m_Width: 60
+      m_Height: 60
+      m_Kind: 2
+      m_SubKind: iPhone
+    - m_Textures:
+      - {fileID: 2800000, guid: 557184dfb48d5454c9b063aa5d236794, type: 3}
+      m_Width: 40
+      m_Height: 40
+      m_Kind: 2
+      m_SubKind: iPhone
+    - m_Textures:
+      - {fileID: 2800000, guid: 557184dfb48d5454c9b063aa5d236794, type: 3}
+      m_Width: 40
+      m_Height: 40
+      m_Kind: 2
+      m_SubKind: iPad
+    - m_Textures:
+      - {fileID: 2800000, guid: 91964e5b954fd4f74aae5969e1a36472, type: 3}
+      m_Width: 20
+      m_Height: 20
+      m_Kind: 2
+      m_SubKind: iPad
+    - m_Textures:
+      - {fileID: 2800000, guid: 591cd25d052c74649bb3e745b480de99, type: 3}
+      m_Width: 1024
+      m_Height: 1024
+      m_Kind: 4
+      m_SubKind: App Store
     - m_Textures: []
-      m_Width: 36
-      m_Height: 36
-      m_Kind: 1
-      m_SubKind: 
-    - m_Textures: []
-      m_Width: 192
-      m_Height: 192
+      m_Width: 180
+      m_Height: 180
       m_Kind: 0
-      m_SubKind: 
+      m_SubKind: iPhone
     - m_Textures: []
-      m_Width: 144
-      m_Height: 144
+      m_Width: 120
+      m_Height: 120
       m_Kind: 0
-      m_SubKind: 
+      m_SubKind: iPhone
     - m_Textures: []
-      m_Width: 96
-      m_Height: 96
+      m_Width: 167
+      m_Height: 167
       m_Kind: 0
-      m_SubKind: 
+      m_SubKind: iPad
     - m_Textures: []
-      m_Width: 72
-      m_Height: 72
+      m_Width: 152
+      m_Height: 152
       m_Kind: 0
-      m_SubKind: 
+      m_SubKind: iPad
     - m_Textures: []
-      m_Width: 48
-      m_Height: 48
+      m_Width: 76
+      m_Height: 76
       m_Kind: 0
-      m_SubKind: 
-    - m_Textures: []
-      m_Width: 36
-      m_Height: 36
-      m_Kind: 0
-      m_SubKind: 
+      m_SubKind: iPad
   m_BuildTargetBatching:
   - m_BuildTarget: Standalone
     m_StaticBatching: 1

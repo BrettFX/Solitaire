@@ -74,6 +74,8 @@ namespace Solitaire
         private uint m_winStreak;
         private uint m_loseStreak;
 
+        private bool m_newFastestTime;
+
         private void Awake()
         {
             // If the instance variable is already assigned...
@@ -100,6 +102,7 @@ namespace Solitaire
         {
             // Init current game vars
             m_currentMoves = 0;
+            m_newFastestTime = false;
 
             // Init saved stats vars
             Init();
@@ -183,6 +186,17 @@ namespace Solitaire
         }
 
         /**
+         * Determine if the latest logged time is the new fastest time or not.
+         * This function is intended to be invoked once the game has been won.
+         * 
+         * @return whether the current time is the new fastest time.
+         */
+        public bool IsNewFastestTime()
+        {
+            return m_newFastestTime;
+        }
+
+        /**
          * Invoked when the player wins the game. All statistics related
          * to winning the game will be saved to player prefs. 
          * 
@@ -202,7 +216,9 @@ namespace Solitaire
             if (GameManager.DEBUG_MODE) Debug.Log("Game has been won. Saving statistics...");
 
             long currentTimeMillis = GameManager.Instance.GetCurrentTime();
-            m_fastestTimeMillis = m_fastestTimeMillis > currentTimeMillis || m_fastestTimeMillis == 0 ? currentTimeMillis : m_fastestTimeMillis;
+            m_newFastestTime = m_fastestTimeMillis > currentTimeMillis || m_fastestTimeMillis == 0;
+
+            m_fastestTimeMillis = m_newFastestTime ? currentTimeMillis : m_fastestTimeMillis;
             m_longestTimeMillis = currentTimeMillis > m_longestTimeMillis ? currentTimeMillis : m_longestTimeMillis;
 
             // Compute the average time
