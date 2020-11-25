@@ -62,28 +62,59 @@ namespace Solitaire
                 switch (touch.phase)
                 {
                     case TouchPhase.Began:
-                        Ray raycast = Camera.main.ScreenPointToRay(touch.position);
-                        if (Physics.Raycast(raycast, out RaycastHit raycastHit))
-                        {
-                            m_isCard = raycastHit.collider.CompareTag("Card");
-                        }
-
+                        HandleTouchDown(touch);
                         break;
                     case TouchPhase.Moved:
                     case TouchPhase.Stationary:
                         // Only allow dragging cards
                         if (m_isCard)
                         {
-                            HandleDrag(touch);
+                            HandleTouchDrag(touch);
                         }
                         
                         break;
                     case TouchPhase.Ended:
                     case TouchPhase.Canceled:
-                        m_isCard = false;
+                        HandleTouchUp();
                         break;
                 }
             }
+        }
+
+        /**
+         * 
+         */
+        private void HandleTouchDown(Touch touch)
+        {
+            // Don't process if dragging isn't currently allowed
+            if (!DraggingIsAllowed())
+            {
+                return;
+            }
+
+            //Ray raycast = Camera.main.ScreenPointToRay(touch.position);
+            //if (Physics.Raycast(raycast, out RaycastHit raycastHit))
+            //{
+            //    m_isCard = raycastHit.collider.CompareTag("Card");
+            //}
+
+            m_screenPoint = Camera.main.WorldToScreenPoint(gameObject.transform.position);
+            Vector3 curScreenPoint = new Vector3(touch.position.x, touch.position.y, m_screenPoint.z);
+            m_offset = gameObject.transform.position - Camera.main.ScreenToWorldPoint(curScreenPoint);
+
+            // Keep track of the starting position for future validation
+            m_startPos = Camera.main.ScreenToWorldPoint(curScreenPoint) + m_offset;
+
+            Vector3 collisionVector = new Vector3(10.0f, 10.0f, 1000.0f);
+            bool collides = Physics.CheckBox(m_startPos, collisionVector);
+            if (collides)
+            {
+                m_isCard = gameObject.CompareTag("Card");
+
+            }
+
+            // Register this object dragger instance
+            //GameManager.Instance.RegisterObjectDragger(this);
         }
 
         /**
@@ -92,10 +123,19 @@ namespace Solitaire
          * 
          * @param Touch touch the current touch point.
          */
-        private void HandleDrag(Touch touch)
+        private void HandleTouchDrag(Touch touch)
         {
+            Debug.Log("Updating transform position: " + transform);
             m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
             transform.position = new Vector3(m_screenPoint.x, m_screenPoint.y, transform.position.z);
+        }
+
+        /**
+         * 
+         */
+        private void HandleTouchUp()
+        {
+            m_isCard = false;
         }
     }
 }

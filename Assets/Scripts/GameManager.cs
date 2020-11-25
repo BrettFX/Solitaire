@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -85,6 +86,7 @@ namespace Solitaire
 
         // Globally track if cards are being dragged to prevent multi-touch scenarios
         private ObjectDragger m_activeDragger = null;
+        private ObjectDraggerTouch m_activeDraggerTouch = null;
 
         // Used to update displayed time (maintains an accurate time accumulation)
         private System.Diagnostics.Stopwatch m_stopWatch;
@@ -997,7 +999,7 @@ namespace Solitaire
             for (int i = array.Count; i > 1; i--)
             {
                 // Pick random element to swap.
-                int j = Random.Range(0, array.Count - 1); // 0 <= j <= i-1
+                int j = UnityEngine.Random.Range(0, array.Count - 1); // 0 <= j <= i-1
                                                           // Swap.
                 T tmp = array[j];
                 array[j] = array[i - 1];
