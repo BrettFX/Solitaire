@@ -7,10 +7,10 @@ namespace Solitaire
         private const float CLICK_PROXIMITY_THRESHOLD = 100.0f; // Magnitude proximity threshold
         private const float CLICK_DIFF_TIME_THRESHOLD = 0.3f;   // Difference time threshold between clicks
 
-        private Vector3 screenPoint;
-        private Vector3 offset;
+        private Vector3 m_screenPoint;
+        private Vector3 m_offset;
 
-        private Vector3 startPos;
+        private Vector3 m_startPos;
 
         // Keep track of the cards that are currently being dragged (can be 1 or many at a time)
         private Card[] m_draggedCards;
@@ -19,6 +19,7 @@ namespace Solitaire
         bool m_isStockCard = false;
         bool m_isDoingAnimation = false;
         bool m_dragged = false;
+        bool m_isCard = false;
 
         private SnapManager m_originSnapManager;
 
@@ -37,7 +38,7 @@ namespace Solitaire
         private bool IsClick(Vector3 currentPos)
         {
             // Valid click if within +/- threshold
-            float sqrMagnitude = Vector3.SqrMagnitude(startPos - currentPos);
+            float sqrMagnitude = Vector3.SqrMagnitude(m_startPos - currentPos);
             return sqrMagnitude <= CLICK_PROXIMITY_THRESHOLD;
         }
 
@@ -54,32 +55,47 @@ namespace Solitaire
         {
             if (Input.touchCount > 0)
             {
+                // Getting the first touch point (prohibits multi-touch)
                 Touch touch = Input.GetTouch(0);
 
                 // Determine touch type and process accordingly
-                switch(touch.phase)
+                switch (touch.phase)
                 {
                     case TouchPhase.Began:
-                        Debug.Log("Touch began");
+                        Ray raycast = Camera.main.ScreenPointToRay(touch.position);
+                        if (Physics.Raycast(raycast, out RaycastHit raycastHit))
+                        {
+                            m_isCard = raycastHit.collider.CompareTag("Card");
+                        }
+
                         break;
                     case TouchPhase.Moved:
                     case TouchPhase.Stationary:
-                        // Temporary implementation for testing
-                        // See: https://answers.unity.com/questions/1223838/drag-gameobject-with-finger-touch-in-smartphone.html
-                        // Get the touch position from the screen touch to world point
-                        Vector3 touchedPos = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
-
-                        // Lerp and set the position of the current object to that of the touch, but smoothly over time.
-                        transform.position = Vector3.Lerp(transform.position, touchedPos, Time.deltaTime);
+                        // Only allow dragging cards
+                        if (m_isCard)
+                        {
+                            HandleDrag(touch);
+                        }
+                        
                         break;
                     case TouchPhase.Ended:
-                        Debug.Log("Touch ended");
-                        break;
                     case TouchPhase.Canceled:
-                        Debug.Log("Touch canceled");
+                        m_isCard = false;
                         break;
                 }
             }
+        }
+
+        /**
+         * Handle dragging the game object associated with this ObjectDraggerTouch
+         * instance. Updates the respective transform with the current touch location.
+         * 
+         * @param Touch touch the current touch point.
+         */
+        private void HandleDrag(Touch touch)
+        {
+            m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
+            transform.position = new Vector3(m_screenPoint.x, m_screenPoint.y, transform.position.z);
         }
     }
 }
