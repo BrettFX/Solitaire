@@ -86,7 +86,6 @@ namespace Solitaire
 
         // Globally track if cards are being dragged to prevent multi-touch scenarios
         private ObjectDragger m_activeDragger = null;
-        private ObjectDraggerTouch m_activeDraggerTouch = null;
 
         // Used to update displayed time (maintains an accurate time accumulation)
         private System.Diagnostics.Stopwatch m_stopWatch;
