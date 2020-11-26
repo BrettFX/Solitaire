@@ -2840,6 +2840,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: TouchCard
       objectReference: {fileID: 0}
+    - target: {fileID: 3671427380648830263, guid: 89122728123be5b4ab9ba1cda28008f1,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 5263716625021561995, guid: 89122728123be5b4ab9ba1cda28008f1, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 89122728123be5b4ab9ba1cda28008f1, type: 3}
@@ -14695,6 +14700,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: TouchCard (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3671427380648830263, guid: 89122728123be5b4ab9ba1cda28008f1,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 5263716625021561995, guid: 89122728123be5b4ab9ba1cda28008f1, type: 3}
