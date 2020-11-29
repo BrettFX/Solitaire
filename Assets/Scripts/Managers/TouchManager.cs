@@ -45,8 +45,6 @@ namespace Solitaire
         {
             // Valid click if within +/- threshold
             float sqrMagnitude = Vector3.SqrMagnitude(m_startPos - currentPos);
-            Debug.Log("Square Magnitude: " + sqrMagnitude);
-            Debug.Log("Click prox thresh: " + CLICK_PROXIMITY_THRESHOLD);
             return sqrMagnitude <= CLICK_PROXIMITY_THRESHOLD;
         }
 
@@ -138,12 +136,15 @@ namespace Solitaire
             // If card, we need to get a list of the cards that are to be dragged (through the use of the Snap Manager)
             if (m_isCard && m_currentObject.transform.parent != null)
             {
-                m_screenPoint = Camera.main.WorldToScreenPoint(m_currentObject.transform.position);
-                Vector3 curScreenPoint = new Vector3(touch.position.x, touch.position.y, m_screenPoint.z);
-                m_offset = m_currentObject.transform.position - Camera.main.ScreenToWorldPoint(curScreenPoint);
+                //m_screenPoint = Camera.main.WorldToScreenPoint(m_currentObject.transform.position);
+                //Vector3 curScreenPoint = new Vector3(touch.position.x, touch.position.y, m_screenPoint.z);
+                //m_offset = m_currentObject.transform.position - Camera.main.ScreenToWorldPoint(curScreenPoint);
 
-                // Keep track of the starting position for future validation
-                m_startPos = Camera.main.ScreenToWorldPoint(curScreenPoint) + m_offset;
+                //// Keep track of the starting position for future validation
+                //m_startPos = Camera.main.ScreenToWorldPoint(curScreenPoint) + m_offset;
+
+                m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
+                m_startPos = m_screenPoint;
 
                 Card targetCard = m_currentObject.GetComponent<Card>();
                 m_isDoingAnimation = targetCard.IsTranslating() || targetCard.IsFlipping();
@@ -179,10 +180,6 @@ namespace Solitaire
                         i++;
                     }
                 }
-                else
-                {
-                    Debug.Log("Got here and dragged cards was either null or empty");
-                }
             }
         }
 
@@ -206,12 +203,6 @@ namespace Solitaire
                 return;
             }
 
-            // Don't allow dragging if there is another instance of an object dragger that is already dragging
-            if (!GameManager.Instance.GetRegisteredObjectDragger() == this)
-            {
-                return;
-            }
-
             // Only allow dragging cards
             if (m_isCard)
             {
@@ -230,7 +221,8 @@ namespace Solitaire
                 }
 
                 m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
-                Vector3 curPosition = Camera.main.ScreenToWorldPoint(m_screenPoint) + m_offset;
+                //Vector3 curPosition = Camera.main.ScreenToWorldPoint(m_screenPoint) + m_offset;
+                Vector3 curPosition = m_screenPoint;
 
                 // Set z-value to a large negative number so that the card that is being dragged always appears on top
                 curPosition.z = -GameManager.Z_OFFSET_DRAGGING;
@@ -288,7 +280,8 @@ namespace Solitaire
             if (m_isCard || (m_currentObject != null && m_currentObject.CompareTag("Snap")))
             {
                 m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
-                Vector3 curPosition = Camera.main.ScreenToWorldPoint(m_screenPoint) + m_offset;
+                //Vector3 curPosition = Camera.main.ScreenToWorldPoint(m_screenPoint) + m_offset;
+                Vector3 curPosition = m_screenPoint;
                 if (GameManager.DEBUG_MODE)
                 {
                     Debug.Log("Stopped dragging at: " + curPosition);
@@ -462,7 +455,7 @@ namespace Solitaire
                         else if (collidedTransform.CompareTag("Card"))
                         {
                             // Determine if the card was the same one that is being dragged/dropped
-                            if (collidedTransform.Equals(transform))
+                            if (collidedTransform.Equals(m_currentObject.transform))
                             {
                                 if (GameManager.DEBUG_MODE) Debug.Log("Collided object is self, skipping...");
                             }
