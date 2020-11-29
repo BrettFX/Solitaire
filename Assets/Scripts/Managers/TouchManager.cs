@@ -207,6 +207,17 @@ namespace Solitaire
             if (m_isCard)
             {
                 Card topCard = m_currentObject.GetComponent<Card>();
+
+                m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
+                //Vector3 curPosition = Camera.main.ScreenToWorldPoint(m_screenPoint) + m_offset;
+                Vector3 curPosition = m_screenPoint;
+
+                // Don't animate dragging if within click threshold (smooths up animations)
+                if (IsClick(curPosition))
+                {
+                    return;
+                }
+
                 if (m_isStockCard || topCard.IsFaceDown())
                 {
                     // Don't allow dragging stock cards or face-down cards
@@ -219,10 +230,6 @@ namespace Solitaire
                     GameManager.Instance.SetBlocked(true);
                     m_dragged = true; // Denote that there was a valid dragging action
                 }
-
-                m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
-                //Vector3 curPosition = Camera.main.ScreenToWorldPoint(m_screenPoint) + m_offset;
-                Vector3 curPosition = m_screenPoint;
 
                 // Set z-value to a large negative number so that the card that is being dragged always appears on top
                 curPosition.z = -GameManager.Z_OFFSET_DRAGGING;
