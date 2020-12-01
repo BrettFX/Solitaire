@@ -29,6 +29,8 @@ namespace Solitaire
 
         private SnapManager m_originSnapManager;
 
+        private int m_touchCount = 0;
+
         /**
          * Compare the distance between the starting position and current position
          * of a click by computing the square magnitude of the difference between the
@@ -89,7 +91,8 @@ namespace Solitaire
         // Update is called once per frame
         void Update()
         {
-            if (Input.touchCount > 0)
+            m_touchCount = Input.touchCount;
+            if (m_touchCount > 0)
             {
                 // Getting the first touch point (prohibits multi-touch)
                 Touch touch = Input.GetTouch(0);
@@ -110,6 +113,17 @@ namespace Solitaire
                         break;
                 }
             }
+        }
+
+        /**
+         * Get the current touch count to determin how many fingers are
+         * presently touching the screen.
+         * 
+         * @return int the current touch count.
+         */
+        public int GetTouchCount()
+        {
+            return m_touchCount;
         }
 
         /**
@@ -144,6 +158,7 @@ namespace Solitaire
                 //m_startPos = Camera.main.ScreenToWorldPoint(curScreenPoint) + m_offset;
 
                 m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
+                //m_offset = m_currentObject.transform.position - Camera.main.ScreenToWorldPoint(m_screenPoint);
                 m_startPos = m_screenPoint;
 
                 Card targetCard = m_currentObject.GetComponent<Card>();
@@ -211,6 +226,7 @@ namespace Solitaire
                 m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
                 //Vector3 curPosition = Camera.main.ScreenToWorldPoint(m_screenPoint) + m_offset;
                 Vector3 curPosition = m_screenPoint;
+                //Vector3 curPosition = new Vector3(touch.position.x, touch.position.y, 10);
 
                 // Don't animate dragging if within click threshold (smooths up animations)
                 if (IsClick(curPosition))

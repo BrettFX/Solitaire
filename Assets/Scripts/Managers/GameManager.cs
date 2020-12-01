@@ -380,25 +380,27 @@ namespace Solitaire
 
         public void OpenSettings()
         {
-            if (!HasWon())
+            // Only allow action if there is currently only one finger touching the screen
+            if (TouchManager.Instance.GetTouchCount() == 1)
             {
-                Animator spinAnimator = btnSettings.GetComponent<Animator>();
-                spinAnimator.SetTrigger("DoSpin");
+                if (!HasWon())
+                {
+                    Animator spinAnimator = btnSettings.GetComponent<Animator>();
+                    spinAnimator.SetTrigger("DoSpin");
 
-                SettingsManager.Instance.gearSound.Play();
+                    SettingsManager.Instance.gearSound.Play();
 
-                SetPaused(true);
-                m_stopWatch.Stop();
+                    SetPaused(true);
+                    m_stopWatch.Stop();
+                }
+                else
+                {
+                    SettingsManager.Instance.winSettingsPage.SetActive(false);
+                }
+
+                // Display the modal overlay for settings
+                settingsModalOverlay.SetActive(true);
             }
-            else
-            {
-                SettingsManager.Instance.winSettingsPage.SetActive(false);
-            }
-
-            // Display the modal overlay for settings
-            settingsModalOverlay.SetActive(true);
-
-            
         }
 
         public void CloseSettings()
@@ -423,12 +425,16 @@ namespace Solitaire
          */
         public void AutoWin()
         {
-            // Handle base case when auto win button is clicked when not in a winnable state
-            if (!IsWinnableState())
-                return;
+            // Only allow action if there is currently only one finger touching the screen
+            if (TouchManager.Instance.GetTouchCount() == 1)
+            {
+                // Handle base case when auto win button is clicked when not in a winnable state
+                if (!IsWinnableState())
+                    return;
 
-            btnAutoWin.SetActive(false);            // Hide the auto-win button while processing
-            StartCoroutine(AutoWinCoroutine());     // Win the game
+                btnAutoWin.SetActive(false);            // Hide the auto-win button while processing
+                StartCoroutine(AutoWinCoroutine());     // Win the game
+            }
         }
 
         /**
@@ -520,12 +526,16 @@ namespace Solitaire
          */
         public void Undo()
         {
-            // Don't proceed if already blocked
-            if (!m_blocked && IsSafeToMoveCards())
+            // Only allow action if there is currently only one finger touching the screen
+            if (TouchManager.Instance.GetTouchCount() == 1)
             {
-                // Block additional actions and events until undo is complete.
-                m_blocked = true;
-                ProcessMoveAction(MoveTypes.UNDO);
+                // Don't proceed if already blocked
+                if (!m_blocked && IsSafeToMoveCards())
+                {
+                    // Block additional actions and events until undo is complete.
+                    m_blocked = true;
+                    ProcessMoveAction(MoveTypes.UNDO);
+                }
             }
         }
 
@@ -536,12 +546,16 @@ namespace Solitaire
          */
         public void Redo()
         {
-            // Don't proceed if already blocked
-            if (!m_blocked && IsSafeToMoveCards())
+            // Only allow action if there is currently only one finger touching the screen
+            if (TouchManager.Instance.GetTouchCount() == 1)
             {
-                // Block additional actions and events until undo is complete.
-                m_blocked = true;
-                ProcessMoveAction(MoveTypes.REDO);
+                // Don't proceed if already blocked
+                if (!m_blocked && IsSafeToMoveCards())
+                {
+                    // Block additional actions and events until undo is complete.
+                    m_blocked = true;
+                    ProcessMoveAction(MoveTypes.REDO);
+                }
             }
         }
 
@@ -551,26 +565,30 @@ namespace Solitaire
          */
         public void ToggleResetModal()
         {
-            SetPaused(!IsPaused());
-
-            // Stop the stop watch when paused so that the displayed time stops.
-            // Start the stop watch if not paused
-            if (IsPaused())
+            // Only allow action if there is currently only one finger touching the screen
+            if (TouchManager.Instance.GetTouchCount() == 1)
             {
+                SetPaused(!IsPaused());
 
-                m_stopWatch.Stop();
+                // Stop the stop watch when paused so that the displayed time stops.
+                // Start the stop watch if not paused
+                if (IsPaused())
+                {
+
+                    m_stopWatch.Stop();
+                }
+                else
+                {
+                    m_stopWatch.Start();
+                }
+
+                // Display the modal overlay prompt to confirm Reset
+                resetModalOverlay.SetActive(!resetModalOverlay.activeInHierarchy);
+
+                // Only play the click sound if the reset window is open
+                if (resetModalOverlay.activeInHierarchy)
+                    SettingsManager.Instance.clickSound.Play();
             }
-            else
-            {
-                m_stopWatch.Start();
-            }
-
-            // Display the modal overlay prompt to confirm Reset
-            resetModalOverlay.SetActive(!resetModalOverlay.activeInHierarchy);
-
-            // Only play the click sound if the reset window is open
-            if (resetModalOverlay.activeInHierarchy)
-                SettingsManager.Instance.clickSound.Play();
         }
 
         /**
