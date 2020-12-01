@@ -222,15 +222,14 @@ namespace Solitaire
             if (m_isCard)
             {
                 Card topCard = m_currentObject.GetComponent<Card>();
+                m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
 
                 // Normalize y position to compsensate of touch offset
                 float yPos = m_draggedCards.Length > 1 ? touch.position.y - GameManager.FOUNDATION_Y_OFFSET : touch.position.y;
-
-                m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, yPos, 10));
-                Vector3 curPosition = m_screenPoint;
+                Vector3 curPosition = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, yPos, m_screenPoint.z));
 
                 // Don't animate dragging if within click threshold (smooths up animations)
-                if (IsClick(curPosition))
+                if (IsClick(m_screenPoint))
                 {
                     return;
                 }

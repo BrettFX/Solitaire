@@ -83,9 +83,6 @@ namespace Solitaire
         private SnapManager[] m_foundationSnapManagers;
         private SnapManager[] m_tableauSnapManagers;
 
-        // Globally track if cards are being dragged to prevent multi-touch scenarios
-        private ObjectDragger m_activeDragger = null;
-
         // Used to update displayed time (maintains an accurate time accumulation)
         private System.Diagnostics.Stopwatch m_stopWatch;
 
@@ -691,35 +688,6 @@ namespace Solitaire
             {
                 SetGameState(paused ? GameStates.PAUSED : GameStates.PLAYING);
             }
-        }
-
-        /**
-         * Register an object dragger to track if there are other draggers activated
-         * through multi-touch
-         */
-        public void RegisterObjectDragger(ObjectDragger dragger)
-        {
-            m_activeDragger = dragger;
-        }
-
-        /*
-         * Unregister an object dragger. Only unregisters if the object dragger
-         * was the currently active object dragger.
-         */
-        public void UnregisterObjectDragger(ObjectDragger dragger)
-        {
-            // Only unregister if the object dragger is the active dragger
-            if (m_activeDragger.Equals(dragger))
-                m_activeDragger = null;
-        }
-
-        /**
-         * Get the registered object dragger to compare for preventing
-         * multi-touch scenarios.
-         */
-        public ObjectDragger GetRegisteredObjectDragger()
-        {
-            return m_activeDragger;
         }
 
         public Transform GetTalonPile()
