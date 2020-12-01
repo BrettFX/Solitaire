@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Solitaire
@@ -13,7 +11,6 @@ namespace Solitaire
         private const float CLICK_DIFF_TIME_THRESHOLD = 0.3f;   // Difference time threshold between clicks
 
         private Vector3 m_screenPoint;
-        private Vector3 m_offset;
 
         private Vector3 m_startPos;
 
@@ -150,15 +147,7 @@ namespace Solitaire
             // If card, we need to get a list of the cards that are to be dragged (through the use of the Snap Manager)
             if (m_isCard && m_currentObject.transform.parent != null)
             {
-                //m_screenPoint = Camera.main.WorldToScreenPoint(m_currentObject.transform.position);
-                //Vector3 curScreenPoint = new Vector3(touch.position.x, touch.position.y, m_screenPoint.z);
-                //m_offset = m_currentObject.transform.position - Camera.main.ScreenToWorldPoint(curScreenPoint);
-
-                //// Keep track of the starting position for future validation
-                //m_startPos = Camera.main.ScreenToWorldPoint(curScreenPoint) + m_offset;
-
                 m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
-                //m_offset = m_currentObject.transform.position - Camera.main.ScreenToWorldPoint(m_screenPoint);
                 m_startPos = m_screenPoint;
 
                 Card targetCard = m_currentObject.GetComponent<Card>();
@@ -223,10 +212,11 @@ namespace Solitaire
             {
                 Card topCard = m_currentObject.GetComponent<Card>();
 
-                m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
-                //Vector3 curPosition = Camera.main.ScreenToWorldPoint(m_screenPoint) + m_offset;
+                // Normalize y position to compsensate of touch offset
+                float yPos = m_draggedCards.Length > 1 ? touch.position.y - GameManager.FOUNDATION_Y_OFFSET : touch.position.y;
+
+                m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, yPos, 10));
                 Vector3 curPosition = m_screenPoint;
-                //Vector3 curPosition = new Vector3(touch.position.x, touch.position.y, 10);
 
                 // Don't animate dragging if within click threshold (smooths up animations)
                 if (IsClick(curPosition))
@@ -272,12 +262,6 @@ namespace Solitaire
                 {
                     Debug.Log("Unexpected issue with dragging occurred but handled (" + e.GetType() + ")");
                 }
-
-                //if (m_currentObject != null)
-                //{
-                //    Transform t = m_currentObject.transform;
-                //    t.position = new Vector3(m_screenPoint.x, m_screenPoint.y, t.position.z);
-                //}
             }
         }
 
