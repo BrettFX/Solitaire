@@ -536,6 +536,15 @@ namespace Solitaire
                     }
                 }
 
+                // Need to do one last check to determine if the cards were moved to the same location
+                if (valid)
+                {
+                    Card topCard = m_draggedCards[0];
+                    Vector3 topCardStartPos = topCard.GetStartPos();
+                    valid = !(topCard.transform.position.x == topCardStartPos.x &&
+                              topCard.transform.position.y == topCardStartPos.y);
+                }
+
                 if (!valid)
                 {
                     if (GameManager.DEBUG_MODE) Debug.Log("Invalid Move.");
@@ -575,6 +584,8 @@ namespace Solitaire
                 }
                 else
                 {
+                    Debug.Log("Valid move!");
+
                     // Register the manual move if it was valid
                     Move move = new Move();
                     move.SetCards(m_draggedCards);
