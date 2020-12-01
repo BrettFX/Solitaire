@@ -9,7 +9,7 @@ namespace Solitaire
         public GameManager.Sections belongingSection;
         private Card[] m_attachedCards;
         private MeshCollider m_snapCollider;
-        private bool m_waiting = false;
+        private volatile bool m_waiting = false;
 
         private void Start()
         {
@@ -47,7 +47,7 @@ namespace Solitaire
                     if (i == m_attachedCards.Length - 1 && belongingSection.Equals(GameManager.Sections.TABLEAU) && !m_waiting)
                     {
                         // Only flip it face up if it's face down and the previous card move was valid
-                        if (card.IsFaceDown())
+                        if (card.IsFaceDown() && !card.IsAnimating())
                         {
                             card.Flip();
 

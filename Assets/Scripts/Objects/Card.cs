@@ -170,20 +170,17 @@ namespace Solitaire
                             // Re-enable the mesh colliders on this card
                             GetComponent<MeshCollider>().enabled = true;
                         }
-
-                        // Only reattach to parent here if the snap target isn't the talon OR if it's a redo move
-                        //if (!targetSnapManager.BelongsTo(GameManager.Sections.TALON) || m_moveType.Equals(Move.MoveTypes.REDO))
-                        //{
-                        //    transform.parent = m_targetTranslateSnap;
-
-                        //    // Re-enable the mesh colliders on this card
-                        //    GetComponent<MeshCollider>().enabled = true;
-                        //}
                     }
 
                     // Need to remove any locks and blocks on parent snap manager and game manager instance caused by events
                     targetSnapManager.SetWaiting(false);
                     GameManager.Instance.SetBlocked(false);
+
+                    // Also tell the original snap manager to stop waiting if it is
+                    if (m_startParent != null)
+                    {
+                        m_startParent.GetComponent<SnapManager>().SetWaiting(false);
+                    }
 
                     // Reset the total time for correct linear interpolation (lerp)
                     m_totalTime = 0.0f;
@@ -234,6 +231,15 @@ namespace Solitaire
             m_startPos = transform.position;
 
             m_draggedCards = cardSet;
+
+            // Tell the snap manager currently associated with the card(s) to wait until animations are complete
+            SnapManager currentSnap = GetComponentInParent<SnapManager>();
+            if (currentSnap != null)
+            {
+                // Set the start parent here so that the current snap can be told to stop waiting later
+                SetStartParent(currentSnap.transform);
+                currentSnap.SetWaiting(true);
+            }
 
             // Process a bit differently if a card set has been provided
             if (m_draggedCards != null && m_draggedCards.Length > 1)
@@ -354,6 +360,15 @@ namespace Solitaire
             return m_flipping;
         }
 
+        /**
+         * Determine if this card is actively performing any animations.
+         * Quickest way to catch-all animation actions.
+         */
+        public bool IsAnimating()
+        {
+            return IsTranslating() || IsFlipping();
+        }
+
         public void SetStartPos(Vector3 pos)
         {
             m_startPos = pos;
@@ -423,7 +438,10 @@ namespace Solitaire
                 {
                     SnapManager snapManager = m_originalParent.GetComponent<SnapManager>();
                     if (snapManager != null)
+                    {
                         snapManager.SetWaiting(true);
+                    }
+                        
                 }
                 // Handle corner case when original parent is null and when card came from stock
                 else
@@ -479,7 +497,7 @@ namespace Solitaire
             if (!m_translating)
             {
                 // Handle corner cases with flipping cards between stock and talon
-                SnapManager originalSnap = null;
+                SnapManager originalSnap;
                 if (m_originalParent != null)
                 {
                     originalSnap = m_originalParent.GetComponent<SnapManager>();

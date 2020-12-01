@@ -140,7 +140,14 @@ namespace Solitaire
                 m_isCard = raycastHit.collider.CompareTag("Card");
                 if (m_isCard)
                 {
+                    // Assert that the card isn't face down (permit if card is in stock pile)
                     m_currentObject = raycastHit.collider.gameObject;
+
+                    Card targetCard = m_currentObject.GetComponent<Card>();
+                    SnapManager parentSnap = targetCard.GetComponentInParent<SnapManager>();
+
+                    // Don't deem as card if the target card is face down and doesn't belong to the stock
+                    m_isCard = !(targetCard.IsFaceDown() && !parentSnap.BelongsTo(GameManager.Sections.STOCK));
                 }
             }
 
@@ -184,6 +191,10 @@ namespace Solitaire
                         i++;
                     }
                 }
+            }
+            else
+            {
+                Init();
             }
         }
 
@@ -350,7 +361,7 @@ namespace Solitaire
                                     cardOfInterest.MoveTo(nextMove, m_draggedCards);
 
                                     // Have to notify that waiting is complete for destination snap manager
-                                    m_originSnapManager.GetComponent<SnapManager>().SetWaiting(false);
+                                    //m_originSnapManager.GetComponent<SnapManager>().SetWaiting(false);
                                 }
                             }
 
@@ -584,8 +595,6 @@ namespace Solitaire
                 }
                 else
                 {
-                    Debug.Log("Valid move!");
-
                     // Register the manual move if it was valid
                     Move move = new Move();
                     move.SetCards(m_draggedCards);
@@ -601,14 +610,14 @@ namespace Solitaire
                     StatsManager.Instance.TallyMove();
                 }
 
-                // Can stop waiting now that the move is complete
-                // Evaluate only if origin snap manager isn't null
-                if (m_originSnapManager != null)
-                    m_originSnapManager.SetWaiting(false);
-
                 // Remove temporary locks set during dragging
                 if (m_dragged)
                 {
+                    // Can stop waiting now that the move is complete
+                    // Evaluate only if origin snap manager isn't null
+                    if (m_originSnapManager != null)
+                        m_originSnapManager.SetWaiting(false);
+
                     GameManager.Instance.SetBlocked(false);
                     m_dragged = false;
                 }
