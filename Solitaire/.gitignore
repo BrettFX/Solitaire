@@ -69,11 +69,3 @@ crashlytics-build.properties
 [Aa]ssets/[Ss]treamingAssets/aa/*
 
 .DS_Store
-
-
-libil2cpp.a
-libil2cpp.dbg.so
-libil2cpp.sym.so
-libil2cpp.dbg.so
-libil2cpp.sym.so
-libiPhone-lib.a
