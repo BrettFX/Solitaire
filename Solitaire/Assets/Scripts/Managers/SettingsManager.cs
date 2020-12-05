@@ -22,6 +22,7 @@ namespace Solitaire
         [Header("Settings Pages")]
         public GameObject mainSettingsPage;
         public GameObject winSettingsPage;
+        public GameObject gameplayPage;
         public GameObject audioPage;
         public GameObject statsPage;
 
@@ -152,6 +153,23 @@ namespace Solitaire
         {
             TextMeshProUGUI txtPercent = slider.GetComponentInChildren<TextMeshProUGUI>();
             txtPercent.text = (slider.value < 1.0 ? slider.value * 100 : slider.value) + "%";
+        }
+
+        public void CloseGameplaySettings(bool save)
+        {
+            if (save)
+            {
+                // TODO Save to player prefs
+                
+            }
+            else
+            {
+                // Otherwise, reload the previously saved settings
+                LoadSettings();
+            }
+
+            gameplayPage.SetActive(false);
+            mainSettingsPage.SetActive(true);
         }
 
         public void CloseAudioSettings(bool save)
