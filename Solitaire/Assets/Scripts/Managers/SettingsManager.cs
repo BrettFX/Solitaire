@@ -18,6 +18,11 @@ namespace Solitaire
         public const string MASTER_VOL_KEY = "MasterVolume";
         public const string MUSIC_VOL_KEY = "MusicVolume";
         public const string SFX_VOL_KEY = "SFXVolume";
+        public const string AUTO_COMPLETE_TRIGGER_KEY = "AutoCompleteTrigger";
+        public const string TIMER_VISIBILITY_KEY = "TimerVisibility";
+
+        public const int AUTO_COMPLETE_SINGLE_TAP = 0;
+        public const int AUTO_COMPLETE_DOUBLE_TAP = 1;
 
         [Header("Settings Pages")]
         public GameObject mainSettingsPage;
@@ -51,6 +56,8 @@ namespace Solitaire
 
         [Header("Miscellaneous")]
         public GameObject lblHighScoreNotification;
+        public TMP_Dropdown dpnAutoCompleteTrigger;
+        public Toggle tglTimerLable;
 
         private Dictionary<Button, SettingsPage> m_settingsPagesLookup;
 
@@ -60,8 +67,14 @@ namespace Solitaire
         private float m_musicVol;
         private float m_sfxVol;
 
+        private int m_autoCompleteTriggerCode;
+        private bool m_timerVisible;
+
         private bool m_loadingSettings = false;
 
+        /**
+        * Apply singleton logic to this SettingsManager instance
+        */
         private void Awake()
         {
             // If the instance variable is already assigned...
@@ -83,7 +96,9 @@ namespace Solitaire
             Instance = GetComponent<SettingsManager>();
         }
 
-        // Start is called before the first frame update
+        /**
+        * Start is called before the first frame update
+        */
         void Start()
         {
             // Treat music audio source as singleton
@@ -119,6 +134,9 @@ namespace Solitaire
             }
         }
 
+        /**
+        * 
+        */
         private void Update()
         {
             // Keep the volume settings up to date
@@ -146,21 +164,56 @@ namespace Solitaire
 
             sldSfxVol.value = PlayerPrefs.GetFloat(SFX_VOL_KEY, 1.0f) * 100.0f;
             OnAudioSliderChange(sldSfxVol);
+
+            m_autoCompleteTriggerCode = PlayerPrefs.GetInt(AUTO_COMPLETE_TRIGGER_KEY, 0);
+            dpnAutoCompleteTrigger.SetValueWithoutNotify(m_autoCompleteTriggerCode);
+
+            m_timerVisible = PlayerPrefs.GetInt(TIMER_VISIBILITY_KEY, 1) == 1;
+            tglTimerLable.SetIsOnWithoutNotify(m_timerVisible);
+
+            // TODO toggle visibility of timer as needed
+
+
             m_loadingSettings = false;
         }
 
+        /**
+        * 
+        */
         private void SetSliderPercentLabel(Slider slider)
         {
             TextMeshProUGUI txtPercent = slider.GetComponentInChildren<TextMeshProUGUI>();
             txtPercent.text = (slider.value < 1.0 ? slider.value * 100 : slider.value) + "%";
         }
 
+        /**
+         * Determine whether the current auto complete trigger configuration
+         * is for single tap or not.
+         * 
+         * @return bool single tap or not.
+         */
+        public bool IsSingleTapAutoCompleteTrigger()
+        {
+            return m_autoCompleteTriggerCode == AUTO_COMPLETE_SINGLE_TAP;
+        }
+
+        /**
+         * 
+         */
+        public bool IsTimerVisible()
+        {
+            return m_timerVisible;
+        }
+
+        /**
+         * 
+         */
         public void CloseGameplaySettings(bool save)
         {
             if (save)
             {
-                // TODO Save to player prefs
-                
+                PlayerPrefs.SetInt(AUTO_COMPLETE_TRIGGER_KEY, m_autoCompleteTriggerCode);
+                PlayerPrefs.SetInt(TIMER_VISIBILITY_KEY, m_timerVisible ? 1 : 0);
             }
             else
             {
@@ -172,6 +225,9 @@ namespace Solitaire
             mainSettingsPage.SetActive(true);
         }
 
+        /**
+         * 
+         */
         public void CloseAudioSettings(bool save)
         {
             if (save)
@@ -192,12 +248,18 @@ namespace Solitaire
 
         }
 
+        /**
+         * 
+         */
         public void CloseStatsSettings()
         {
             statsPage.SetActive(false);
             mainSettingsPage.SetActive(true);
         }
 
+        /**
+         * 
+         */
         public void OnAudioSliderChange(Slider slider)
         {
             SetSliderPercentLabel(slider);
@@ -239,6 +301,21 @@ namespace Solitaire
                 {
                     sfxTestSource.Play();
                 }
+            }
+        } 
+
+        /**
+         * Handle value changed events from the auto complete trigger dropdown
+         * @param TMP_Dropdown dropdown the TextMeshPro Dropdown component controlling
+         *                              the autocomplete trigger.
+         */
+        public void OnAutoCompleteTriggerChanged(TMP_Dropdown dropdown)
+        {
+            m_autoCompleteTriggerCode = dropdown.value;
+            if (GameManager.DEBUG_MODE)
+            {
+                Debug.Log("Set auto complete trigger to: " + dropdown.itemText +
+                    "( " + m_autoCompleteTriggerCode + ")");
             }
         }
 
