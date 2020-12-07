@@ -57,7 +57,7 @@ namespace Solitaire
         [Header("Miscellaneous")]
         public GameObject lblHighScoreNotification;
         public TMP_Dropdown dpnAutoCompleteTrigger;
-        public Toggle tglTimerLable;
+        public Slider sldTimerLabel;
 
         private Dictionary<Button, SettingsPage> m_settingsPagesLookup;
 
@@ -169,7 +169,7 @@ namespace Solitaire
             dpnAutoCompleteTrigger.SetValueWithoutNotify(m_autoCompleteTriggerCode);
 
             m_timerVisible = PlayerPrefs.GetInt(TIMER_VISIBILITY_KEY, 1) == 1;
-            tglTimerLable.SetIsOnWithoutNotify(m_timerVisible);
+            sldTimerLabel.SetValueWithoutNotify(m_timerVisible ? 1 : 0);
 
             // TODO toggle visibility of timer as needed
 
