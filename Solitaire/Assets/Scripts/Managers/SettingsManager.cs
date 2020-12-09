@@ -165,7 +165,8 @@ namespace Solitaire
             sldSfxVol.value = PlayerPrefs.GetFloat(SFX_VOL_KEY, 1.0f) * 100.0f;
             OnAudioSliderChange(sldSfxVol);
 
-            m_autoCompleteTriggerCode = PlayerPrefs.GetInt(AUTO_COMPLETE_TRIGGER_KEY, 0);
+            // Double tap is the default (1)
+            m_autoCompleteTriggerCode = PlayerPrefs.GetInt(AUTO_COMPLETE_TRIGGER_KEY, 1);
             dpnAutoCompleteTrigger.SetValueWithoutNotify(m_autoCompleteTriggerCode);
 
             m_timerVisible = PlayerPrefs.GetInt(TIMER_VISIBILITY_KEY, 1) == 1;
