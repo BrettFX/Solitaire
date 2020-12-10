@@ -188,6 +188,18 @@ namespace Solitaire
         }
 
         /**
+         * Toggle the visibility of the timer label based on the current state
+         * of the timer slider toggle.
+         * 
+         * @param Slider timerLblSlider the slider that acts as a toggle between 1 and 0
+         */
+        public void OnTimerVisibilityChanged(Slider timerLblSlider)
+        {
+            m_timerVisible = timerLblSlider.value == 1;
+            Debug.Log("Timer lable visibility set to " + m_timerVisible);
+        }
+
+        /**
          * Determine whether the current auto complete trigger configuration
          * is for single tap or not.
          * 
