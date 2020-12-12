@@ -54,6 +54,10 @@ namespace Solitaire
         public List<GameObject> currPages = new List<GameObject>();
         public List<GameObject> nextPages = new List<GameObject>();
 
+        [Header("Animators")]
+        public Animator timerAnimator;
+        public Animator actionBarAnimator;
+
         [Header("Miscellaneous")]
         public GameObject lblHighScoreNotification;
         public TMP_Dropdown dpnAutoCompleteTrigger;
@@ -172,8 +176,8 @@ namespace Solitaire
             m_timerVisible = PlayerPrefs.GetInt(TIMER_VISIBILITY_KEY, 1) == 1;
             sldTimerLabel.SetValueWithoutNotify(m_timerVisible ? 1 : 0);
 
-            // TODO toggle visibility of timer as needed
-
+            // Toggle visibility of timer as needed (don't animate)
+            HandleTimerVisibility(false);
 
             m_loadingSettings = false;
         }
@@ -197,6 +201,29 @@ namespace Solitaire
         {
             m_timerVisible = timerLblSlider.value == 1;
             Debug.Log("Timer lable visibility set to " + m_timerVisible);
+
+            // Handle timer label animation
+            HandleTimerVisibility();
+        }
+
+        /**
+         * Invoke the appropriate timer visibility animation based on the current
+         * value of the timer visible flag.
+         */
+        private void HandleTimerVisibility(bool animate=true)
+        {
+            // Only animate if desired
+            if (animate)
+            {
+                timerAnimator.SetTrigger(m_timerVisible ? "Show" : "Hide");
+                actionBarAnimator.SetTrigger(m_timerVisible ? "MoveDown" : "MoveUp");
+            }
+            else
+            {
+                // Otherwise, manually set the anchor positions (based on animator)
+                timerAnimator.Play(m_timerVisible ? "ShowTimerLabel" : "HideTimerLabel", 0, 1.0f);
+                actionBarAnimator.Play(m_timerVisible ? "MoveActionBarDown" : "MoveActionBarUp", 0, 1.0f);
+            }
         }
 
         /**
