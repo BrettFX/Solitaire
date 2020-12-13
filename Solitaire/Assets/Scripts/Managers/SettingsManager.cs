@@ -67,6 +67,9 @@ namespace Solitaire
 
         private Slider[] m_settingsSliders;
 
+        // Queue to store extraneous data for the purpose of determining if there are animation playing
+        private Queue<bool> m_timerAnimationQueue;
+
         private float m_masterVol;
         private float m_musicVol;
         private float m_sfxVol;
@@ -105,6 +108,8 @@ namespace Solitaire
         */
         void Start()
         {
+            m_timerAnimationQueue = new Queue<bool>();
+
             // Treat music audio source as singleton
             music = GameObject.FindGameObjectWithTag("Music").GetComponent<AudioSource>();
 
@@ -212,7 +217,13 @@ namespace Solitaire
          */
         private void HandleTimerVisibility(bool animate=true)
         {
-            // Only animate if desired
+            // Don't allow multiple animations at a time
+            if (m_timerAnimationQueue.Count > 0)
+            {
+                return;
+            }
+
+            // Only animate if desired and if there aren't any animations playing
             if (animate)
             {
                 timerAnimator.SetTrigger(m_timerVisible ? "Show" : "Hide");
@@ -370,6 +381,37 @@ namespace Solitaire
                 SettingsPage settingsPage = m_settingsPagesLookup[drivingButton];
                 settingsPage.currPage.SetActive(false);
                 settingsPage.nextPage.SetActive(true);
+            }
+        }
+
+        /**
+         * Invoked by animation event to notify when the timer animation(s)
+         * start.
+         */
+        public void OnTimerAnimationStart()
+        {
+            if (GameManager.DEBUG_MODE) Debug.Log("Starting timer animation...");
+
+            // Add value to queue to notify that there is animation playing
+            m_timerAnimationQueue.Enqueue(true);
+        }
+
+        /**
+         * Invoked by animation event to notify when the timer animation(s)
+         * complete.
+         */
+        public void OnTimerAnimationComplete()
+        {
+            if (GameManager.DEBUG_MODE) Debug.Log("Timer animation complete");
+
+            // Remove animation from the queue
+            if (m_timerAnimationQueue.Count > 0)
+                m_timerAnimationQueue.Dequeue();
+
+            // Make sure the visibility state is correct (handles spamming case)
+            if (m_timerAnimationQueue.Count == 0)
+            {
+                HandleTimerVisibility(false);
             }
         }
     }
