@@ -200,7 +200,7 @@ namespace Solitaire
         public void OnTimerVisibilityChanged(Slider timerLblSlider)
         {
             m_timerVisible = timerLblSlider.value == 1;
-            Debug.Log("Timer lable visibility set to " + m_timerVisible);
+            if (GameManager.DEBUG_MODE) Debug.Log("Timer lable visibility set to " + m_timerVisible);
 
             // Handle timer label animation
             HandleTimerVisibility();
@@ -220,7 +220,7 @@ namespace Solitaire
             }
             else
             {
-                // Otherwise, manually set the anchor positions (based on animator)
+                // Otherwise, invoke the appropriate animation and jump to last frame (setting speed to 100%)
                 timerAnimator.Play(m_timerVisible ? "ShowTimerLabel" : "HideTimerLabel", 0, 1.0f);
                 actionBarAnimator.Play(m_timerVisible ? "MoveActionBarDown" : "MoveActionBarUp", 0, 1.0f);
             }
