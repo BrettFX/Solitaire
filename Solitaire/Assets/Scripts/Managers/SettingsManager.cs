@@ -15,13 +15,57 @@ namespace Solitaire
             public GameObject nextPage;
         }
 
+        public struct AnimatorTriggerRef
+        {
+            public string trigger;
+            public Animator animator;
+            public bool animate;
+
+            /**
+             * Initialize this AnimatorTriggerRef instance.
+             * 
+             * @param Animator animator the animator to reference and invoke triggers on.
+             */
+            public AnimatorTriggerRef Init(Animator animator)
+            {
+                this.animator = animator;
+                trigger = "";
+                animate = true;
+                return this;
+            }
+
+            /**
+             * Invoke the associated trigger for this animator reference.
+             * 
+             * Animate if desired to invoke the trigger from first key frame.
+             * Otherwise, play the animation from the last key frame, skipping
+             * the animation.
+             */
+            public void DoTrigger()
+            {
+                if (animate)
+                    animator.SetTrigger(trigger);
+                else
+                    animator.Play(trigger, 0, 1.0f);
+            }
+        }
+
         public const string MASTER_VOL_KEY = "MasterVolume";
         public const string MUSIC_VOL_KEY = "MusicVolume";
         public const string SFX_VOL_KEY = "SFXVolume";
+        public const string AUTO_COMPLETE_TRIGGER_KEY = "AutoCompleteTrigger";
+        public const string TIMER_VISIBILITY_KEY = "TimerVisibility";
+
+        public const int AUTO_COMPLETE_SINGLE_TAP = 0;
+        public const int AUTO_COMPLETE_DOUBLE_TAP = 1;
+
+        // Constitutes the total amount of time after last event to wait before invoking animations
+        public const float TIMER_ANIM_LISTEN_THRESHOLD = 500.0f; // In milliseconds
 
         [Header("Settings Pages")]
         public GameObject mainSettingsPage;
         public GameObject winSettingsPage;
+        public GameObject gameplayPage;
         public GameObject audioPage;
         public GameObject statsPage;
 
@@ -48,19 +92,36 @@ namespace Solitaire
         public List<GameObject> currPages = new List<GameObject>();
         public List<GameObject> nextPages = new List<GameObject>();
 
+        [Header("Animators")]
+        public Animator timerAnimator;
+        public Animator actionBarAnimator;
+
         [Header("Miscellaneous")]
         public GameObject lblHighScoreNotification;
+        public TMP_Dropdown dpnAutoCompleteTrigger;
+        public Slider sldTimerLabel;
 
         private Dictionary<Button, SettingsPage> m_settingsPagesLookup;
 
         private Slider[] m_settingsSliders;
 
+        private AnimatorTriggerRef m_timerAnimTriggerRef;
+        private AnimatorTriggerRef m_actionBarAnimTriggerRef;
+
         private float m_masterVol;
         private float m_musicVol;
         private float m_sfxVol;
 
+        private int m_autoCompleteTriggerCode;
+        private bool m_timerVisible;
+
         private bool m_loadingSettings = false;
 
+        private System.Diagnostics.Stopwatch m_timerAnimListenStopwatch;
+
+        /**
+        * Apply singleton logic to this SettingsManager instance
+        */
         private void Awake()
         {
             // If the instance variable is already assigned...
@@ -82,9 +143,17 @@ namespace Solitaire
             Instance = GetComponent<SettingsManager>();
         }
 
-        // Start is called before the first frame update
+        /**
+        * Start is called before the first frame update
+        */
         void Start()
         {
+            m_timerAnimListenStopwatch = new System.Diagnostics.Stopwatch();
+
+            // Initialize timer and action bar animation trigger references
+            m_timerAnimTriggerRef = new AnimatorTriggerRef().Init(timerAnimator);
+            m_actionBarAnimTriggerRef = new AnimatorTriggerRef().Init(actionBarAnimator);
+
             // Treat music audio source as singleton
             music = GameObject.FindGameObjectWithTag("Music").GetComponent<AudioSource>();
 
@@ -118,8 +187,33 @@ namespace Solitaire
             }
         }
 
+        /**
+        * 
+        */
         private void Update()
         {
+            // Run animation event once time threshold has been met
+            if (m_timerAnimListenStopwatch.IsRunning)
+            {
+                if (m_timerAnimListenStopwatch.ElapsedMilliseconds >= TIMER_ANIM_LISTEN_THRESHOLD)
+                {
+                    if (GameManager.DEBUG_MODE)
+                    {
+                        Debug.Log("Invoking animation after waiting for " +
+                                  (TIMER_ANIM_LISTEN_THRESHOLD / 1000.0f) +
+                                  " second(s).");
+                    }
+
+                    // Invoke the target animations
+                    m_timerAnimTriggerRef.DoTrigger();
+                    m_actionBarAnimTriggerRef.DoTrigger();
+
+                    // Stop the stopwatch and reset it
+                    m_timerAnimListenStopwatch.Stop();
+                    m_timerAnimListenStopwatch.Reset();
+                }
+            }
+
             // Keep the volume settings up to date
             AudioListener.volume = sldMasterVol.value / 100.0f;
             music.volume = sldMusicVol.value / 100.0f;
@@ -145,15 +239,122 @@ namespace Solitaire
 
             sldSfxVol.value = PlayerPrefs.GetFloat(SFX_VOL_KEY, 1.0f) * 100.0f;
             OnAudioSliderChange(sldSfxVol);
+
+            // Double tap is the default (1)
+            m_autoCompleteTriggerCode = PlayerPrefs.GetInt(AUTO_COMPLETE_TRIGGER_KEY, 1);
+            dpnAutoCompleteTrigger.SetValueWithoutNotify(m_autoCompleteTriggerCode);
+
+            m_timerVisible = PlayerPrefs.GetInt(TIMER_VISIBILITY_KEY, 1) == 1;
+            sldTimerLabel.SetValueWithoutNotify(m_timerVisible ? 1 : 0);
+
+            // Toggle visibility of timer as needed (don't animate)
+            HandleTimerVisibility(false);
+
             m_loadingSettings = false;
         }
 
+        /**
+        * 
+        */
         private void SetSliderPercentLabel(Slider slider)
         {
             TextMeshProUGUI txtPercent = slider.GetComponentInChildren<TextMeshProUGUI>();
             txtPercent.text = (slider.value < 1.0 ? slider.value * 100 : slider.value) + "%";
         }
 
+        /**
+         * Toggle the visibility of the timer label based on the current state
+         * of the timer slider toggle.
+         * 
+         * @param Slider timerLblSlider the slider that acts as a toggle between 1 and 0
+         */
+        public void OnTimerVisibilityChanged(Slider timerLblSlider)
+        {
+            m_timerVisible = timerLblSlider.value == 1;
+            if (GameManager.DEBUG_MODE) Debug.Log("Timer lable visibility set to " + m_timerVisible);
+
+            // Handle timer label animation
+            HandleTimerVisibility();
+        }
+
+        /**
+         * Invoke the appropriate timer visibility animation based on the current
+         * value of the timer visible flag.
+         * 
+         * @param bool animate whether to plan to animate or not once the time elapsed since
+         *                     this function was invoked meets the specified threshold time
+         *                     in milliseconds.
+         */
+        private void HandleTimerVisibility(bool animate=true)
+        {
+            // Add buffer before executing animation to prevent spamming
+            // Only play animation once the time after visibility changed is greater than or equal to the defined threshold time
+            if (m_timerAnimListenStopwatch.IsRunning)
+                m_timerAnimListenStopwatch.Stop();
+
+            m_timerAnimListenStopwatch.Reset();
+            m_timerAnimListenStopwatch.Start();
+
+            // Set animation flags to determine appropriate course of action
+            m_timerAnimTriggerRef.animate = animate;
+            m_actionBarAnimTriggerRef.animate = animate;
+
+            // Only animate if desired
+            if (animate)
+            {
+                m_timerAnimTriggerRef.trigger = m_timerVisible ? "Show" : "Hide";
+                m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveDown" : "MoveUp";
+            }
+            else
+            {
+                // Otherwise, plan to invoke the appropriate animation and jump to last frame (setting speed to 100%)
+                m_timerAnimTriggerRef.trigger = m_timerVisible ? "ShowTimerLabel" : "HideTimerLabel";
+                m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveActionBarDown" : "MoveActionBarUp";
+            }
+        }
+
+        /**
+         * Determine whether the current auto complete trigger configuration
+         * is for single tap or not.
+         * 
+         * @return bool single tap or not.
+         */
+        public bool IsSingleTapAutoCompleteTrigger()
+        {
+            return m_autoCompleteTriggerCode == AUTO_COMPLETE_SINGLE_TAP;
+        }
+
+        /**
+         * 
+         */
+        public bool IsTimerVisible()
+        {
+            return m_timerVisible;
+        }
+
+        /**
+         * 
+         */
+        public void CloseGameplaySettings(bool save)
+        {
+            if (save)
+            {
+                PlayerPrefs.SetInt(AUTO_COMPLETE_TRIGGER_KEY, m_autoCompleteTriggerCode);
+                PlayerPrefs.SetInt(TIMER_VISIBILITY_KEY, m_timerVisible ? 1 : 0);
+            }
+            else
+            {
+                // Otherwise, reload the previously saved settings
+                LoadSettings();
+            }
+
+            gameplayPage.SetActive(false);
+            mainSettingsPage.SetActive(true);
+        }
+
+        /**
+         * 
+         */
         public void CloseAudioSettings(bool save)
         {
             if (save)
@@ -174,12 +375,18 @@ namespace Solitaire
 
         }
 
+        /**
+         * 
+         */
         public void CloseStatsSettings()
         {
             statsPage.SetActive(false);
             mainSettingsPage.SetActive(true);
         }
 
+        /**
+         * 
+         */
         public void OnAudioSliderChange(Slider slider)
         {
             SetSliderPercentLabel(slider);
@@ -222,6 +429,21 @@ namespace Solitaire
                     sfxTestSource.Play();
                 }
             }
+        } 
+
+        /**
+         * Handle value changed events from the auto complete trigger dropdown
+         * @param TMP_Dropdown dropdown the TextMeshPro Dropdown component controlling
+         *                              the autocomplete trigger.
+         */
+        public void OnAutoCompleteTriggerChanged(TMP_Dropdown dropdown)
+        {
+            m_autoCompleteTriggerCode = dropdown.value;
+            if (GameManager.DEBUG_MODE)
+            {
+                Debug.Log("Set auto complete trigger to: " + dropdown.itemText +
+                    "( " + m_autoCompleteTriggerCode + ")");
+            }
         }
 
         /**
@@ -236,6 +458,24 @@ namespace Solitaire
                 settingsPage.currPage.SetActive(false);
                 settingsPage.nextPage.SetActive(true);
             }
+        }
+
+        /**
+         * Invoked by animation event to notify when the timer animation(s)
+         * start.
+         */
+        public void OnTimerAnimationStart()
+        {
+            if (GameManager.DEBUG_MODE) Debug.Log("Starting timer animation...");
+        }
+
+        /**
+         * Invoked by animation event to notify when the timer animation(s)
+         * complete.
+         */
+        public void OnTimerAnimationComplete()
+        {
+            if (GameManager.DEBUG_MODE) Debug.Log("Timer animation complete");
         }
     }
 }

@@ -349,16 +349,12 @@ namespace Solitaire
                                 GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events
                                 cardOfInterest.MoveTo(GameManager.Instance.GetTalonPile());
                             }
-                            else if (doubleClick)
+                            else if (doubleClick || SettingsManager.Instance.IsSingleTapAutoCompleteTrigger())
                             {
                                 // Determine the next valid move. Supply the dragged cards count so prevent the scenario in which
                                 // more than one card is dragged to a foundation in one event.
                                 nextMove = GameManager.Instance.GetNextAvailableMove(cardOfInterest, m_draggedCards.Length);
-                                if (GameManager.DEBUG_MODE)
-                                {
-                                    Debug.Log("Double clicked!");
-                                    Debug.Log("Next Move: " + nextMove);
-                                }
+                                if (GameManager.DEBUG_MODE) Debug.Log("Next Move: " + nextMove);
 
                                 // If double click and there is a valid next move
                                 // Then, automatically move the double clicked card to the most appropriate location.
@@ -367,9 +363,6 @@ namespace Solitaire
                                     // Move all cards in set of dragged cards (can be 1)
                                     GameManager.Instance.SetBlocked(true); // Place temporary lock to prevent concurrent actions/events
                                     cardOfInterest.MoveTo(nextMove, m_draggedCards);
-
-                                    // Have to notify that waiting is complete for destination snap manager
-                                    //m_originSnapManager.GetComponent<SnapManager>().SetWaiting(false);
                                 }
                             }
 

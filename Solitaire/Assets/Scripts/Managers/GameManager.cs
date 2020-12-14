@@ -96,6 +96,7 @@ namespace Solitaire
         private bool m_playingResetBtnPulse = false;
 
         private bool m_firstTimeFocused = true;
+        private bool m_demoMode = false;
 
         private GameStates m_currentGameState = GameStates.PLAYING;
 
@@ -135,7 +136,8 @@ namespace Solitaire
             m_firstTimeFocused = true;
 
             // Only load card sprites and spawn stack if not using the demo scene (for unit testing support)
-            if (!SceneManager.GetActiveScene().name.Contains("Demo"))
+            m_demoMode = SceneManager.GetActiveScene().name.Contains("Demo");
+            if (!m_demoMode)
             {
                 LoadCardSprites();
                 SpawnStack();
@@ -1124,6 +1126,24 @@ namespace Solitaire
                 // Remove the card reference from the deck and move to the next card
                 deck.RemoveAt(0);
             }
+        }
+
+        /**
+         * Reset player prefs by deleting all keys. This should only be used
+         * for testing and NOT in production.
+         */
+        public void ResetPlayerPrefs()
+        {
+            if (DEBUG_MODE || m_demoMode)
+            {
+                PlayerPrefs.DeleteAll();
+                Debug.LogWarning("Player prefs have been successfully deleted.");
+            }
+            else
+            {
+                Debug.Log("Cannot reset player prefs because not in a valid game state (only supported in debug mode or demo mode).");
+            }
+           
         }
 
         /**
