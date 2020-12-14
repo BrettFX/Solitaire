@@ -15,6 +15,41 @@ namespace Solitaire
             public GameObject nextPage;
         }
 
+        public struct AnimatorTriggerRef
+        {
+            public string trigger;
+            public Animator animator;
+            public bool animate;
+
+            /**
+             * Initialize this AnimatorTriggerRef instance.
+             * 
+             * @param Animator animator the animator to reference and invoke triggers on.
+             */
+            public AnimatorTriggerRef Init(Animator animator)
+            {
+                this.animator = animator;
+                trigger = "";
+                animate = true;
+                return this;
+            }
+
+            /**
+             * Invoke the associated trigger for this animator reference.
+             * 
+             * Animate if desired to invoke the trigger from first key frame.
+             * Otherwise, play the animation from the last key frame, skipping
+             * the animation.
+             */
+            public void DoTrigger()
+            {
+                if (animate)
+                    animator.SetTrigger(trigger);
+                else
+                    animator.Play(trigger, 0, 1.0f);
+            }
+        }
+
         public const string MASTER_VOL_KEY = "MasterVolume";
         public const string MUSIC_VOL_KEY = "MusicVolume";
         public const string SFX_VOL_KEY = "SFXVolume";
@@ -23,6 +58,9 @@ namespace Solitaire
 
         public const int AUTO_COMPLETE_SINGLE_TAP = 0;
         public const int AUTO_COMPLETE_DOUBLE_TAP = 1;
+
+        // Constitutes the total amount of time after last event to wait before invoking animations
+        public const float TIMER_ANIM_LISTEN_THRESHOLD = 500.0f; // In milliseconds
 
         [Header("Settings Pages")]
         public GameObject mainSettingsPage;
@@ -67,8 +105,8 @@ namespace Solitaire
 
         private Slider[] m_settingsSliders;
 
-        // Queue to store extraneous data for the purpose of determining if there are animation playing
-        private Queue<bool> m_timerAnimationQueue;
+        private AnimatorTriggerRef m_timerAnimTriggerRef;
+        private AnimatorTriggerRef m_actionBarAnimTriggerRef;
 
         private float m_masterVol;
         private float m_musicVol;
@@ -78,6 +116,8 @@ namespace Solitaire
         private bool m_timerVisible;
 
         private bool m_loadingSettings = false;
+
+        private System.Diagnostics.Stopwatch m_timerAnimListenStopwatch;
 
         /**
         * Apply singleton logic to this SettingsManager instance
@@ -108,7 +148,11 @@ namespace Solitaire
         */
         void Start()
         {
-            m_timerAnimationQueue = new Queue<bool>();
+            m_timerAnimListenStopwatch = new System.Diagnostics.Stopwatch();
+
+            // Initialize timer and action bar animation trigger references
+            m_timerAnimTriggerRef = new AnimatorTriggerRef().Init(timerAnimator);
+            m_actionBarAnimTriggerRef = new AnimatorTriggerRef().Init(actionBarAnimator);
 
             // Treat music audio source as singleton
             music = GameObject.FindGameObjectWithTag("Music").GetComponent<AudioSource>();
@@ -148,6 +192,28 @@ namespace Solitaire
         */
         private void Update()
         {
+            // Run animation event once time threshold has been met
+            if (m_timerAnimListenStopwatch.IsRunning)
+            {
+                if (m_timerAnimListenStopwatch.ElapsedMilliseconds >= TIMER_ANIM_LISTEN_THRESHOLD)
+                {
+                    if (GameManager.DEBUG_MODE)
+                    {
+                        Debug.Log("Invoking animation after waiting for " +
+                                  (TIMER_ANIM_LISTEN_THRESHOLD / 1000.0f) +
+                                  " second(s).");
+                    }
+
+                    // Invoke the target animations
+                    m_timerAnimTriggerRef.DoTrigger();
+                    m_actionBarAnimTriggerRef.DoTrigger();
+
+                    // Stop the stopwatch and reset it
+                    m_timerAnimListenStopwatch.Stop();
+                    m_timerAnimListenStopwatch.Reset();
+                }
+            }
+
             // Keep the volume settings up to date
             AudioListener.volume = sldMasterVol.value / 100.0f;
             music.volume = sldMusicVol.value / 100.0f;
@@ -214,26 +280,36 @@ namespace Solitaire
         /**
          * Invoke the appropriate timer visibility animation based on the current
          * value of the timer visible flag.
+         * 
+         * @param bool animate whether to plan to animate or not once the time elapsed since
+         *                     this function was invoked meets the specified threshold time
+         *                     in milliseconds.
          */
         private void HandleTimerVisibility(bool animate=true)
         {
-            // Don't allow multiple animations at a time
-            if (m_timerAnimationQueue.Count > 0)
-            {
-                return;
-            }
+            // Add buffer before executing animation to prevent spamming
+            // Only play animation once the time after visibility changed is greater than or equal to the defined threshold time
+            if (m_timerAnimListenStopwatch.IsRunning)
+                m_timerAnimListenStopwatch.Stop();
 
-            // Only animate if desired and if there aren't any animations playing
+            m_timerAnimListenStopwatch.Reset();
+            m_timerAnimListenStopwatch.Start();
+
+            // Set animation flags to determine appropriate course of action
+            m_timerAnimTriggerRef.animate = animate;
+            m_actionBarAnimTriggerRef.animate = animate;
+
+            // Only animate if desired
             if (animate)
             {
-                timerAnimator.SetTrigger(m_timerVisible ? "Show" : "Hide");
-                actionBarAnimator.SetTrigger(m_timerVisible ? "MoveDown" : "MoveUp");
+                m_timerAnimTriggerRef.trigger = m_timerVisible ? "Show" : "Hide";
+                m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveDown" : "MoveUp";
             }
             else
             {
-                // Otherwise, invoke the appropriate animation and jump to last frame (setting speed to 100%)
-                timerAnimator.Play(m_timerVisible ? "ShowTimerLabel" : "HideTimerLabel", 0, 1.0f);
-                actionBarAnimator.Play(m_timerVisible ? "MoveActionBarDown" : "MoveActionBarUp", 0, 1.0f);
+                // Otherwise, plan to invoke the appropriate animation and jump to last frame (setting speed to 100%)
+                m_timerAnimTriggerRef.trigger = m_timerVisible ? "ShowTimerLabel" : "HideTimerLabel";
+                m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveActionBarDown" : "MoveActionBarUp";
             }
         }
 
@@ -391,9 +467,6 @@ namespace Solitaire
         public void OnTimerAnimationStart()
         {
             if (GameManager.DEBUG_MODE) Debug.Log("Starting timer animation...");
-
-            // Add value to queue to notify that there is animation playing
-            m_timerAnimationQueue.Enqueue(true);
         }
 
         /**
@@ -403,16 +476,6 @@ namespace Solitaire
         public void OnTimerAnimationComplete()
         {
             if (GameManager.DEBUG_MODE) Debug.Log("Timer animation complete");
-
-            // Remove animation from the queue
-            if (m_timerAnimationQueue.Count > 0)
-                m_timerAnimationQueue.Dequeue();
-
-            // Make sure the visibility state is correct (handles spamming case)
-            if (m_timerAnimationQueue.Count == 0)
-            {
-                HandleTimerVisibility(false);
-            }
         }
     }
 }
