@@ -260,19 +260,19 @@ namespace Solitaire
                     // (only the first card in the the set of dragged cards should have the face down y-offset applied in this case).
                     if (faceDownTarget && i == 0)
                     {
-                        yOffset = GameManager.FACE_DOWN_Y_OFFSET;
+                        yOffset = GameManager.Instance.GetFaceDownYOffset();
                     }
                     else
                     {
                         if (faceDownTarget)
                         {
                             // Need to compensate for the fact that the first card applied face down y-offset
-                            yOffset = (GameManager.FOUNDATION_Y_OFFSET * i) + GameManager.FACE_DOWN_Y_OFFSET;
+                            yOffset = (GameManager.Instance.GetFoundationYOffset() * i) + GameManager.Instance.GetFaceDownYOffset();
                         }
                         else
                         {
                             // Process normally (e.g., not undoing a flip event)
-                            yOffset = GameManager.FOUNDATION_Y_OFFSET * (snapManager.HasCard() ? i + 1 : i);
+                            yOffset = GameManager.Instance.GetFoundationYOffset() * (snapManager.HasCard() ? i + 1 : i);
                         }
                     }
 
@@ -301,7 +301,7 @@ namespace Solitaire
 
                     Vector3 newTargetPos = new Vector3(
                        tableauHasCardTarget.position.x,
-                       tableauHasCardTarget.position.y - (faceDownTarget ? GameManager.FACE_DOWN_Y_OFFSET : GameManager.FOUNDATION_Y_OFFSET),
+                       tableauHasCardTarget.position.y - (faceDownTarget ? GameManager.Instance.GetFaceDownYOffset() : GameManager.Instance.GetFoundationYOffset()),
                        tableauHasCardTarget.position.z - 1
                     );
 

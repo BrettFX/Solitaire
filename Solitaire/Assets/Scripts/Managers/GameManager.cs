@@ -26,8 +26,10 @@ namespace Solitaire
         public const float CARD_TRANSLATION_SPEED_FAST = 0.05f;
 
         public const float Z_OFFSET_DRAGGING = 70.0f;
-        public const float FOUNDATION_Y_OFFSET = 37.5f;
-        public const float FACE_DOWN_Y_OFFSET = FOUNDATION_Y_OFFSET / 3; // Face down cards will have a smaller y-offset
+        public const float Y_OFFSET_BASE_SCALE = 0.256f;
+
+        private float m_foundationYOffset;
+        private float m_faceDownYOffset; // Face down cards will have a smaller y-offset
 
         public static readonly string[] VALUE_REF =
         {
@@ -98,6 +100,8 @@ namespace Solitaire
         private bool m_firstTimeFocused = true;
         private bool m_demoMode = false;
 
+        private Vector3 m_targetCardScale;
+
         private GameStates m_currentGameState = GameStates.PLAYING;
 
         /**
@@ -127,6 +131,19 @@ namespace Solitaire
         // Start is called before the first frame update
         void Start()
         {
+            // Determine/Set scale for card assets based on scale of card containers (using tableau as basis)
+            m_targetCardScale = tableau.GetComponentInChildren<SnapManager>().transform.localScale;
+            cardPrefab.transform.localScale = m_targetCardScale;
+
+            Debug.Log("Set scale for cards to: " + cardPrefab.transform.localScale);
+
+            // Compute the foundation y-offset based on card scale
+            m_foundationYOffset = m_targetCardScale.y * Y_OFFSET_BASE_SCALE;
+            m_faceDownYOffset = m_foundationYOffset / 3; // Face down cards will have a smaller y-offset
+
+            Debug.Log("Foundation y-offset has been set to: " + m_foundationYOffset);
+            Debug.Log("Face down y-offset has been set to: " + m_faceDownYOffset);
+
             m_stockPile = stock.GetComponentInChildren<SnapManager>().transform;
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
             m_foundationSnapManagers = foundations.GetComponentsInChildren<SnapManager>();
@@ -253,6 +270,26 @@ namespace Solitaire
             // Toggle interactability of reset button based on auto win state
             btnConfirmReset.interactable = !m_doingAutoWin && !IsPaused();
             btnSettings.interactable = !m_doingAutoWin && !IsPaused();
+        }
+
+        /**
+         * Get the foundation y-offset for cards that are face up.
+         * 
+         * @return float the foundation y-offset
+         */
+        public float GetFoundationYOffset()
+        {
+            return m_foundationYOffset;
+        }
+
+        /**
+         * Get the y-offset for all cards that are face down.
+         * 
+         * @return float the face down y-offset
+         */
+        public float GetFaceDownYOffset()
+        {
+            return m_faceDownYOffset;
         }
 
         public float GetCardTranslationSpeed()
@@ -1065,7 +1102,7 @@ namespace Solitaire
 
                     Vector3 posOffset = new Vector3(
                        stackTarget.position.x,
-                       stackTarget.position.y - (FACE_DOWN_Y_OFFSET * j),
+                       stackTarget.position.y - (m_faceDownYOffset * j),
                        stackTarget.position.z - zOffset
                     );
 

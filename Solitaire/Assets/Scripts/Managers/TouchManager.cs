@@ -234,7 +234,7 @@ namespace Solitaire
                 m_screenPoint = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y, 10));
 
                 // Normalize y position to compsensate of touch offset
-                float yPos = m_draggedCards.Length > 1 ? touch.position.y - GameManager.FOUNDATION_Y_OFFSET : touch.position.y;
+                float yPos = m_draggedCards.Length > 1 ? touch.position.y - GameManager.Instance.GetFoundationYOffset() : touch.position.y;
                 Vector3 curPosition = Camera.main.ScreenToWorldPoint(new Vector3(touch.position.x, yPos, m_screenPoint.z));
 
                 // Don't animate dragging if within click threshold (smooths up animations)
@@ -260,7 +260,7 @@ namespace Solitaire
                 curPosition.z = -GameManager.Z_OFFSET_DRAGGING;
 
                 // Need to iterate the set of dragged cards and adjust the position accordingly
-                float yOffset = GameManager.FOUNDATION_Y_OFFSET;
+                float yOffset = GameManager.Instance.GetFoundationYOffset();
                 int i = 0;
                 try
                 {
@@ -450,7 +450,7 @@ namespace Solitaire
                                 valid = snapManager.IsValidMove(m_draggedCards[0]);
                                 if (valid)
                                 {
-                                    float yOffset = isFoundation ? 0.0f : GameManager.FOUNDATION_Y_OFFSET;
+                                    float yOffset = isFoundation ? 0.0f : GameManager.Instance.GetFoundationYOffset();
                                     int j = 0;
                                     foreach (Card card in m_draggedCards)
                                     {
@@ -506,7 +506,7 @@ namespace Solitaire
                                     valid = snapManager.IsValidMove(m_draggedCards[0]);
                                     if (valid)
                                     {
-                                        float yOffset = isFoundation ? 0.0f : GameManager.FOUNDATION_Y_OFFSET;
+                                        float yOffset = isFoundation ? 0.0f : GameManager.Instance.GetFoundationYOffset();
 
                                         // Offset y position by specified foundation y-offset
                                         // so that the card that is below is still shown

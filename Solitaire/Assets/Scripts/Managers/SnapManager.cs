@@ -91,7 +91,7 @@ namespace Solitaire
                     }
 
                     // Track the sum of y offset so that the proper y offset can be applied to the next card 
-                    yOffsetSum += card.IsFaceDown() ? GameManager.FACE_DOWN_Y_OFFSET : GameManager.FOUNDATION_Y_OFFSET;
+                    yOffsetSum += card.IsFaceDown() ? GameManager.Instance.GetFaceDownYOffset() : GameManager.Instance.GetFoundationYOffset();
                     card.SetStartPos(card.transform.position);
                 }
             }
