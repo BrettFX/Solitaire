@@ -33,7 +33,7 @@ namespace Solitaire
          * x and y axes. Set the Left, Top, Pos Z, Right, and Bottom should all
          * to 0 so that the RectTransform stretches to fit the screen.
          */
-        private RectTransform m_rectTransform;
+        private RectTransform m_rectTransform; // Determines the current screen res
 
         private System.Diagnostics.Stopwatch m_stopwatch;
 
@@ -57,12 +57,32 @@ namespace Solitaire
             // Assign the instance variable as the Game Manager script on this object.
             Instance = GetComponent<OrientationManager>();
 
-            m_rectTransform = GetComponent<RectTransform>();
-
-            m_stopwatch = new System.Diagnostics.Stopwatch();
+            Init();
             m_stopwatch.Start();
 
             HandleOrientationChange();
+        }
+
+        /**
+         * Initialize members only if they are null.
+         */
+        private void Init()
+        {
+            // Initialize the stop watch if it hasn't been initalized yet
+            if (m_stopwatch == null)
+            {
+                m_stopwatch = new System.Diagnostics.Stopwatch();
+
+                // Stop and reset to prevent from missing first frame
+                m_stopwatch.Reset();
+            }
+
+            // Initialize the rect transform if it hasn't been initialized yet
+            if (m_rectTransform == null)
+            {
+                m_rectTransform = GetComponent<RectTransform>();
+                Debug.Log("Initial screen dimensions are: " + m_rectTransform.rect);
+            }
         }
 
         public void SetOrientation(Orientations orientation)
@@ -73,6 +93,58 @@ namespace Solitaire
         public Orientations GetOrientation()
         {
             return m_currentOrientation;
+        }
+
+        /**
+         * Compute the scale for the cards and snaps relative to the given screen orientation's
+         * resolution. This ensures that the width and height of the cards and snaps maintain the
+         * same dimensions on devices of varying screen sizes.
+         * 
+         * NOTE: This will only compute the correct relative x and y values if the rect transform 
+         * associated with this orientation manager changes with respect to the given orientation.
+         * In other words, this will not work if this function is tested via a simulated unit test
+         * in which the screen resolution doesn't actually change.
+         * 
+         * @param Orientations orientation the screen orientation used to determine the relative 
+         *                     x and y values for the cards and snaps.
+         *                     
+         * @return Vector3 the computed scale of the cards and snaps.
+         */
+        public Vector3 GetCardAndPortraitScaleByOrientation(Orientations orientation)
+        {
+            float relX;
+            float relY;
+
+            m_rectTransform.ForceUpdateRectTransforms();
+
+            float w = m_rectTransform.rect.width;
+            float h = m_rectTransform.rect.height;
+
+            Debug.Log("Current rect transform width: " + w);
+            Debug.Log("Current rect transform height: " + h);
+
+            Debug.Log("Processing orientation: " + orientation);
+
+            // Compute values based on a percentage relative to the current screen dimensions
+            switch (orientation)
+            {
+                case Orientations.PORTRAIT:
+                    relX = w * (55.0f / portraitRes.x);    // Should yield value relative to 55.0f
+                    relY = h * (100.0f / portraitRes.y);   // Should yield value relative to 100.0f
+                    break;
+
+                case Orientations.LANDSCAPE:
+                    relX = w * (101.25f / landscapeRes.x); // Should yield value relative to 101.25f
+                    relY = h * (146.25f / landscapeRes.y); // Should yield value relative to 146.25f
+                    break;
+
+                default:
+                    relX = 0.0f;
+                    relY = 0.0f;
+                    break;
+            }
+
+            return new Vector3(relX, relY, 1.0f);
         }
 
         /**
@@ -93,6 +165,8 @@ namespace Solitaire
             m_stopwatch.Start();
 
             if (m_rectTransform == null) return;
+
+            Debug.Log("Current screen dimensions are: " + m_rectTransform.rect);
 
             bool verticalOrientation = m_rectTransform.rect.width < m_rectTransform.rect.height;
             m_currentOrientation = verticalOrientation ? Orientations.PORTRAIT : Orientations.LANDSCAPE;
@@ -120,21 +194,7 @@ namespace Solitaire
          */
         private void OnRectTransformDimensionsChange()
         {
-            // Initialize the stop watch if it hasn't been initalized yet
-            if (m_stopwatch == null)
-            {
-                m_stopwatch = new System.Diagnostics.Stopwatch();
-
-                // Stop and reset to prevent from missing first frame
-                m_stopwatch.Reset(); 
-            }
-
-            // Initialize the rect transform if it hasn't been initialized yet
-            if (m_rectTransform == null)
-            {
-                m_rectTransform = GetComponent<RectTransform>();
-            }
-
+            Init(); // Only initializes members if they are null (safe to invoke multiple times)
             HandleOrientationChange();
         }
 

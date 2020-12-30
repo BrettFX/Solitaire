@@ -283,10 +283,12 @@ namespace Solitaire
         public void RescaleGameObjectsByOrientation(Orientations orientation)
         {
             // CONFIGURATION
-            Vector3 cardAndTilePortraitScale = new Vector3(55.0f, 100.0f, 1.0f);
-            Vector3 cardAndTileLandscapeScale = new Vector3(101.25f, 146.25f, 1.0f);
-            Vector3 newCardAndTileScale = orientation.Equals(Orientations.PORTRAIT) ?
-                                          cardAndTilePortraitScale : cardAndTileLandscapeScale;
+            //Vector3 cardAndTilePortraitScale = new Vector3(55.0f, 100.0f, 1.0f);
+            //Vector3 cardAndTileLandscapeScale = new Vector3(101.25f, 146.25f, 1.0f);
+            //Vector3 newCardAndTileScale = orientation.Equals(Orientations.PORTRAIT) ?
+            //                              cardAndTilePortraitScale : cardAndTileLandscapeScale;
+
+            Vector3 newCardAndTileScale = OrientationManager.Instance.GetCardAndPortraitScaleByOrientation(orientation);
 
             Debug.Log("New scale for cards and snaps is: " + newCardAndTileScale);
 
