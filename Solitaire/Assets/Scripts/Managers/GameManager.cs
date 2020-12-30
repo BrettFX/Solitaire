@@ -132,18 +132,8 @@ namespace Solitaire
         // Start is called before the first frame update
         void Start()
         {
-            // Determine/Set scale for card assets based on scale of card containers (using tableau as basis)
-            m_targetCardScale = tableau.GetComponentInChildren<SnapManager>().transform.localScale;
-            cardPrefab.transform.localScale = m_targetCardScale;
-
-            Debug.Log("Set scale for cards to: " + cardPrefab.transform.localScale);
-
-            // Compute the foundation y-offset based on card scale
-            m_foundationYOffset = m_targetCardScale.y * Y_OFFSET_BASE_SCALE;
-            m_faceDownYOffset = m_foundationYOffset / 3; // Face down cards will have a smaller y-offset
-
-            Debug.Log("Foundation y-offset has been set to: " + m_foundationYOffset);
-            Debug.Log("Face down y-offset has been set to: " + m_faceDownYOffset);
+            // Perform an initial calibration for cards to ensure the appropriate amount of spacing
+            CalibrateCards();
 
             m_stockPile = stock.GetComponentInChildren<SnapManager>().transform;
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
@@ -274,6 +264,32 @@ namespace Solitaire
         }
 
         /**
+         * Calibrate the configuration for card positions based current local scale of
+         * snap managers.
+         */
+        private void CalibrateCards()
+        {
+            Debug.Log("Calibrating cards...");
+
+            // Determine/Set scale for card assets based on scale of card containers (using tableau as basis)
+            m_targetCardScale = tableau.GetComponentInChildren<SnapManager>().transform.localScale;
+            cardPrefab.transform.localScale = m_targetCardScale;
+
+            if (DEBUG_MODE) Debug.Log("Set scale for cards to: " + cardPrefab.transform.localScale);
+
+            // Compute the foundation y-offset based on card scale
+            m_foundationYOffset = m_targetCardScale.y * Y_OFFSET_BASE_SCALE;
+            m_faceDownYOffset = m_foundationYOffset / 3; // Face down cards will have a smaller y-offset
+
+            if (DEBUG_MODE)
+            {
+                Debug.Log("Foundation y-offset has been set to: " + m_foundationYOffset);
+                Debug.Log("Face down y-offset has been set to: " + m_faceDownYOffset);
+            }
+           
+        }
+
+        /**
          * Rescale all game objects in the scene based on the current screen orientation setting.
          * Handles rescaling of the following:
          * - Cards
@@ -282,12 +298,6 @@ namespace Solitaire
          */
         public void RescaleGameObjectsByOrientation(Orientations orientation)
         {
-            // CONFIGURATION
-            //Vector3 cardAndTilePortraitScale = new Vector3(55.0f, 100.0f, 1.0f);
-            //Vector3 cardAndTileLandscapeScale = new Vector3(101.25f, 146.25f, 1.0f);
-            //Vector3 newCardAndTileScale = orientation.Equals(Orientations.PORTRAIT) ?
-            //                              cardAndTilePortraitScale : cardAndTileLandscapeScale;
-
             Vector3 newCardAndTileScale = OrientationManager.Instance.GetCardAndPortraitScaleByOrientation(orientation);
 
             Debug.Log("New scale for cards and snaps is: " + newCardAndTileScale);
@@ -320,6 +330,29 @@ namespace Solitaire
 
                 snapManager.SetWaiting(false);
             }
+
+            // Need to recalibrate the spacing between cards now that they've been rescaled.
+            CalibrateCards();
+
+            /***********************************************
+             * CANVAS OBJECTS
+             ***********************************************/
+
+        }
+
+        /**
+         * Reposition all game objects in the scene based on the current screen orientation setting.
+         * Handles rescaling of the following:
+         * - Cards
+         * - Snaps
+         * - Canvas objects
+         */
+        public void RepositionGameObjectsByOrientation(Orientations orientation)
+        {
+            /***********************************************
+             * CARDS & SNAPS
+             ***********************************************/
+
 
             /***********************************************
              * CANVAS OBJECTS
