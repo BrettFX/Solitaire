@@ -352,7 +352,39 @@ namespace Solitaire
             /***********************************************
              * CARDS & SNAPS
              ***********************************************/
+            // Spacing is calculated differently for talon, stock, tableau, and foundations:
 
+            // Stock:
+            // |-- LANDSCAPE
+            // |---- X: -600
+            // |---- Y: 150
+            // |-- PORTRAIT
+            // |---- X: -407.07
+            // |---- Y: 150
+
+            // Talon:
+            // |-- LANDSCAPE
+            // |---- X: -450
+            // |---- Y: 150
+            // |-- PORTRAIT
+            // |---- X: -348.01
+            // |---- Y: 150
+
+            // Foundations:
+            // |-- LANDSCAPE (contiguous stacks 1 through 4)
+            // |---- X: -150,   0, 150, 300
+            // |---- Y:  150, 150, 150, 150
+            // |-- PORTRAIT (contiguous stacks 1 through 4)
+            // |---- X: -229.67, -170.61, -111.44, -52.37
+            // |---- Y:     150,     150,     150,    150
+
+            // Tableau:
+            // |-- LANDSCAPE (contiguous piles 1 through 7)
+            // |---- X: -600, -450, -300, -150, 0, 150, 300
+            // |---- Y:    0,    0,    0,    0, 0,   0,   0
+            // |-- PORTRAIT (contiguous piles 1 through 7)
+            // |---- X: -407.07, -348.01, -288.84, -288.84, -170.61, -111.44, -52.37
+            // |---- Y:      70,      70,      70,      70,      70,      70,     70
 
             /***********************************************
              * CANVAS OBJECTS
