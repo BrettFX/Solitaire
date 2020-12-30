@@ -16,6 +16,8 @@ TagManager:
   - MusicVolume
   - SFXVolume
   - Music
+  - Landscape
+  - Portrait
   layers:
   - Default
   - TransparentFX

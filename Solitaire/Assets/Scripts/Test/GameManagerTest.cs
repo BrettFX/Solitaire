@@ -10,12 +10,17 @@ namespace Solitaire
 
         [Header("Card Prefab Unit Test")]
         public GameObject cardPrefab;
+
         private GameObject m_spawnedCardObj;
+
+        private bool m_portraitOrientation;
 
         public void Start()
         {
-            if (testCards[0].isActiveAndEnabled)
+            if (testCards != null && testCards.Length > 0 && testCards[0].isActiveAndEnabled)
                 InstantiateCardTest();
+
+            m_portraitOrientation = OrientationManager.Instance.GetOrientation().Equals(OrientationManager.Orientations.PORTRAIT);
         }
 
         public void SimulateAutoWin(Toggle toggle)
@@ -56,6 +61,18 @@ namespace Solitaire
             }
 
             m_spawnedCardObj.GetComponent<Card>().Flip();
+        }
+
+        /**
+         * Toggle between scaling for portrait and landscape screen orientations
+         */
+        public void ToggleGameObjectsScaleTest()
+        {
+            m_portraitOrientation = !m_portraitOrientation;
+            OrientationManager.Orientations newOrientation = m_portraitOrientation ?
+                                                             OrientationManager.Orientations.PORTRAIT :
+                                                             OrientationManager.Orientations.LANDSCAPE;
+            GameManager.Instance.RescaleGameObjectsByOrientation(newOrientation);
         }
     }
 }

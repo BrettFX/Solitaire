@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static Solitaire.Card;
 using static Solitaire.Move;
+using static Solitaire.OrientationManager;
 
 namespace Solitaire
 {
@@ -270,6 +271,58 @@ namespace Solitaire
             // Toggle interactability of reset button based on auto win state
             btnConfirmReset.interactable = !m_doingAutoWin && !IsPaused();
             btnSettings.interactable = !m_doingAutoWin && !IsPaused();
+        }
+
+        /**
+         * Rescale all game objects in the scene based on the current screen orientation setting.
+         * Handles rescaling of the following:
+         * - Cards
+         * - Snaps
+         * - Canvas objects
+         */
+        public void RescaleGameObjectsByOrientation(Orientations orientation)
+        {
+            // CONFIGURATION
+            Vector3 cardAndTilePortraitScale = new Vector3(55.0f, 100.0f, 1.0f);
+            Vector3 cardAndTileLandscapeScale = new Vector3(101.25f, 146.25f, 1.0f);
+            Vector3 newCardAndTileScale = orientation.Equals(Orientations.PORTRAIT) ?
+                                          cardAndTilePortraitScale : cardAndTileLandscapeScale;
+
+            Debug.Log("New scale for cards and snaps is: " + newCardAndTileScale);
+
+            /***********************************************
+             * CARDS & SNAPS
+             ***********************************************/
+            SnapManager[] snapManagers = FindObjectsOfType<SnapManager>();
+
+            // Scale each set of cards from the snap manager level
+            foreach(SnapManager snapManager in snapManagers)
+            {
+                snapManager.SetWaiting(true);
+
+                Card[] belongingCards = snapManager.GetCardSet();
+                foreach(Card card in belongingCards)
+                {
+                    card.transform.parent = null;
+                    card.transform.localScale = newCardAndTileScale;
+                }
+
+                // Rescale snap now that there are no cards attached to it
+                snapManager.transform.localScale = newCardAndTileScale;
+
+                // Iterate the cards again to set the parent back to the snap
+                foreach(Card card in belongingCards)
+                {
+                    card.transform.parent = snapManager.transform;
+                }
+
+                snapManager.SetWaiting(false);
+            }
+
+            /***********************************************
+             * CANVAS OBJECTS
+             ***********************************************/
+
         }
 
         /**
