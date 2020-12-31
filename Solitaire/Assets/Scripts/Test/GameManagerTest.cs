@@ -20,7 +20,7 @@ namespace Solitaire
             if (testCards != null && testCards.Length > 0 && testCards[0].isActiveAndEnabled)
                 InstantiateCardTest();
 
-            m_portraitOrientation = OrientationManager.Instance.GetOrientation().Equals(OrientationManager.Orientations.PORTRAIT);
+            m_portraitOrientation = OrientationManager.GetCurrentOrientation().Equals(OrientationManager.Orientations.PORTRAIT);
         }
 
         public void SimulateAutoWin(Toggle toggle)

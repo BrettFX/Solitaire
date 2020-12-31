@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -105,6 +106,8 @@ namespace Solitaire
 
         private GameStates m_currentGameState = GameStates.PLAYING;
 
+        private static Queue<Action> m_actionQueue = new Queue<Action>();
+
         /**
          * Ensure this class remains a singleton instance
          * */
@@ -132,9 +135,7 @@ namespace Solitaire
         // Start is called before the first frame update
         void Start()
         {
-            // Perform an initial calibration for cards to ensure the appropriate amount of spacing
             CalibrateCards();
-
             m_stockPile = stock.GetComponentInChildren<SnapManager>().transform;
             m_talonPile = talon.GetComponentInChildren<SnapManager>().transform;
             m_foundationSnapManagers = foundations.GetComponentsInChildren<SnapManager>();
@@ -158,10 +159,23 @@ namespace Solitaire
 
             m_stopWatch = new System.Diagnostics.Stopwatch();
             m_stopWatch.Start();
+
+            // Perform rescale and reposition upon instantiation to ensure the correct scaling based on starting orientation
+            //RescaleGameObjectsByOrientation(OrientationManager.GetCurrentOrientation());
+            //RepositionGameObjectsByOrientation(OrientationManager.GetCurrentOrientation());
+            //RescaleGameObjectsByOrientation(Orientations.PORTRAIT);
+            //RepositionGameObjectsByOrientation(Orientations.PORTRAIT);
         }
 
         private void Update()
         {
+            // Dequeue any action events and process them
+            if (m_actionQueue.Count > 0)
+            {
+                Action action = m_actionQueue.Dequeue();
+                action.Invoke();
+            }
+
             // Only process if the game has not been won
             if (!HasWon())
             {
@@ -264,6 +278,17 @@ namespace Solitaire
         }
 
         /**
+         * Add an action to the action queue to execute all once this game manager has
+         * been instantiated.
+         * 
+         * @param Action action the action to put in the queue
+         */
+        public static void ProcessLater(Action action)
+        {
+            m_actionQueue.Enqueue(action);
+        }
+
+        /**
          * Calibrate the configuration for card positions based current local scale of
          * snap managers.
          */
@@ -313,7 +338,8 @@ namespace Solitaire
                 snapManager.SetWaiting(true);
 
                 Card[] belongingCards = snapManager.GetCardSet();
-                foreach(Card card in belongingCards)
+                
+                foreach (Card card in belongingCards)
                 {
                     card.transform.parent = null;
                     card.transform.localScale = newCardAndTileScale;
@@ -323,7 +349,7 @@ namespace Solitaire
                 snapManager.transform.localScale = newCardAndTileScale;
 
                 // Iterate the cards again to set the parent back to the snap
-                foreach(Card card in belongingCards)
+                foreach (Card card in belongingCards)
                 {
                     card.transform.parent = snapManager.transform;
                 }

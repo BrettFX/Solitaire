@@ -25,7 +25,7 @@ namespace Solitaire
         public Vector2 portraitRes;
         public Vector2 landscapeRes;
 
-        private Orientations m_currentOrientation = Orientations.UNKNOWN;
+        private static Orientations m_currentOrientation = Orientations.UNKNOWN;
 
         /**
          * IMPORTANT: Attach this script to an empty game object within a Canvas and
@@ -85,12 +85,12 @@ namespace Solitaire
             }
         }
 
-        public void SetOrientation(Orientations orientation)
+        public static void SetCurrentOrientation(Orientations orientation)
         {
             m_currentOrientation = orientation;
         }
 
-        public Orientations GetOrientation()
+        public static Orientations GetCurrentOrientation()
         {
             return m_currentOrientation;
         }
@@ -182,12 +182,20 @@ namespace Solitaire
             scaler.referenceResolution = newRes;
 
             // Notify game manager of orientation change
-            // TODO need to ensure that objects are properly scaled based on starting orientation
-            // Game manager is only null when this function is invoked from the OnRectTransformDimensionsChange function.
+            // Game manager is only null when this function is invoked from the OnRectTransformDimensionsChange function when the app launches.
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.RescaleGameObjectsByOrientation(m_currentOrientation);
                 GameManager.Instance.RepositionGameObjectsByOrientation(m_currentOrientation);
+            }
+            else
+            {
+                // Need to broadcast that rescaling and reposition is needed once the game manager instance is not null
+                GameManager.ProcessLater(() =>
+                {
+                    GameManager.Instance.RescaleGameObjectsByOrientation(m_currentOrientation);
+                    GameManager.Instance.RepositionGameObjectsByOrientation(m_currentOrientation);
+                });
             }
             
         }
