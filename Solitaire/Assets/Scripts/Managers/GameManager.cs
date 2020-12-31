@@ -269,7 +269,7 @@ namespace Solitaire
          */
         private void CalibrateCards()
         {
-            Debug.Log("Calibrating cards...");
+           if (DEBUG_MODE) Debug.Log("Calibrating cards...");
 
             // Determine/Set scale for card assets based on scale of card containers (using tableau as basis)
             m_targetCardScale = tableau.GetComponentInChildren<SnapManager>().transform.localScale;
@@ -300,7 +300,7 @@ namespace Solitaire
         {
             Vector3 newCardAndTileScale = OrientationManager.Instance.GetCardAndPortraitScaleByOrientation(orientation);
 
-            Debug.Log("New scale for cards and snaps is: " + newCardAndTileScale);
+            if (DEBUG_MODE) Debug.Log("New scale for cards and snaps is: " + newCardAndTileScale);
 
             /***********************************************
              * CARDS & SNAPS

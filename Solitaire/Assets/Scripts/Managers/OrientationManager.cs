@@ -81,7 +81,7 @@ namespace Solitaire
             if (m_rectTransform == null)
             {
                 m_rectTransform = GetComponent<RectTransform>();
-                Debug.Log("Initial screen dimensions are: " + m_rectTransform.rect);
+                if (GameManager.DEBUG_MODE) Debug.Log("Initial screen dimensions are: " + m_rectTransform.rect);
             }
         }
 
@@ -120,10 +120,13 @@ namespace Solitaire
             float w = m_rectTransform.rect.width;
             float h = m_rectTransform.rect.height;
 
-            Debug.Log("Current rect transform width: " + w);
-            Debug.Log("Current rect transform height: " + h);
+            if (GameManager.DEBUG_MODE)
+            {
+                Debug.Log("Current rect transform width: " + w);
+                Debug.Log("Current rect transform height: " + h);
 
-            Debug.Log("Processing orientation: " + orientation);
+                Debug.Log("Processing orientation: " + orientation);
+            }
 
             // Compute values based on a percentage relative to the current screen dimensions
             switch (orientation)
@@ -166,7 +169,7 @@ namespace Solitaire
 
             if (m_rectTransform == null) return;
 
-            Debug.Log("Current screen dimensions are: " + m_rectTransform.rect);
+            if (GameManager.DEBUG_MODE) Debug.Log("Current screen dimensions are: " + m_rectTransform.rect);
 
             bool verticalOrientation = m_rectTransform.rect.width < m_rectTransform.rect.height;
             m_currentOrientation = verticalOrientation ? Orientations.PORTRAIT : Orientations.LANDSCAPE;
