@@ -173,6 +173,7 @@ namespace Solitaire
             if (m_actionQueue.Count > 0)
             {
                 Action action = m_actionQueue.Dequeue();
+                Debug.Log("Invoking processes that were noted to run later from " + this);
                 action.Invoke();
             }
 

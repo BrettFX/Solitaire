@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -37,6 +38,8 @@ namespace Solitaire
 
         private System.Diagnostics.Stopwatch m_stopwatch;
 
+        private bool m_hasLoaded = false;
+
         private void Awake()
         {
             // If the instance variable is already assigned...
@@ -56,11 +59,15 @@ namespace Solitaire
 
             // Assign the instance variable as the Game Manager script on this object.
             Instance = GetComponent<OrientationManager>();
+        }
 
+        private void Start()
+        {
+            Debug.Log("Got here 0");
+            m_hasLoaded = true;
             Init();
             m_stopwatch.Start();
-
-            HandleOrientationChange();
+            HandleOrientationChange(true);
         }
 
         /**
@@ -156,18 +163,26 @@ namespace Solitaire
          * screen orientation. Also, configure the CanvasScaler to conform to the
          * new screen resolution.
          */
-        private void HandleOrientationChange()
+        private void HandleOrientationChange(bool overrideSpamGuard=false)
         {
+            // Return if this instance hasn't fully loaded yet
+            if (!m_hasLoaded) return;
+
+
             if (m_stopwatch != null && m_stopwatch.IsRunning)
             {
                 // Add spam guard with stopwatch (only allow orientation change events every n second(s))
-                if (m_stopwatch.ElapsedMilliseconds < ORIENTATION_CHANGE_TIME_THRESHOLD) return;
+                // Enable ability to override spam guard
+                if (!overrideSpamGuard) 
+                    if (m_stopwatch.ElapsedMilliseconds < ORIENTATION_CHANGE_TIME_THRESHOLD) return;
             }
 
             m_stopwatch.Reset();
             m_stopwatch.Start();
 
             if (m_rectTransform == null) return;
+
+            m_rectTransform.ForceUpdateRectTransforms();
 
             if (GameManager.DEBUG_MODE) Debug.Log("Current screen dimensions are: " + m_rectTransform.rect);
 
@@ -183,13 +198,15 @@ namespace Solitaire
 
             // Notify game manager of orientation change
             // Game manager is only null when this function is invoked from the OnRectTransformDimensionsChange function when the app launches.
-            if (GameManager.Instance != null)
+            try
             {
                 GameManager.Instance.RescaleGameObjectsByOrientation(m_currentOrientation);
                 GameManager.Instance.RepositionGameObjectsByOrientation(m_currentOrientation);
             }
-            else
+            catch (Exception e)
             {
+                Debug.Log("Broadcasing to GameManager to process rescaling and repositioning actions later due to " + e.GetType());
+
                 // Need to broadcast that rescaling and reposition is needed once the game manager instance is not null
                 GameManager.ProcessLater(() =>
                 {
@@ -197,7 +214,6 @@ namespace Solitaire
                     GameManager.Instance.RepositionGameObjectsByOrientation(m_currentOrientation);
                 });
             }
-            
         }
 
         /**
