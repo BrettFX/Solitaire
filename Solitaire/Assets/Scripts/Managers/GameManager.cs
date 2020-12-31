@@ -346,50 +346,78 @@ namespace Solitaire
          * - Cards
          * - Snaps
          * - Canvas objects
+         * 
+         * NOTE: all positions are relative to the snap managers when they are not wrapped within the
+         * empty game object parent.
          */
         public void RepositionGameObjectsByOrientation(Orientations orientation)
         {
             /***********************************************
              * CARDS & SNAPS
              ***********************************************/
+            SnapManager stockSnap = stock.GetComponentInChildren<SnapManager>();
+            SnapManager talonSnap = talon.GetComponentInChildren<SnapManager>();
+            SnapManager[] foundationsSnaps = foundations.GetComponentsInChildren<SnapManager>();
+            SnapManager[] tableauSnaps = tableau.GetComponentsInChildren<SnapManager>();
+
             // Spacing is calculated differently for talon, stock, tableau, and foundations:
-            switch(orientation)
+            switch (orientation)
             {
                 case Orientations.LANDSCAPE:
-                    // Stock:
-                    // |-- X: -600
-                    // |-- Y: 150
+                    // Stock (relative to 1920x1080 screen dimensions):
+                    // |-- X: -554
+                    // |-- Y: 160
+                    stockSnap.transform.position = new Vector3(-554.0f, 160.0f, 1.0f);
 
-                    // Talon:
-                    // |-- X: -450
-                    // |-- Y: 150
+                    // Talon (relative to 1920x1080 screen dimensions):
+                    // |-- X: -404
+                    // |-- Y: 160
+                    talonSnap.transform.position = new Vector3(-404.0f, 160.0f, 1.0f);
 
-                    // Foundations (contiguous stacks 1 through 4):
-                    // |-- X: -150,   0, 150, 300
-                    // |-- Y:  150, 150, 150, 150
+                    // Foundations (contiguous stacks 1 through 4) (relative to 1920x1080 screen dimensions):
+                    // |-- X: -104,   46, 196, 346
+                    // |-- Y:  160,  160, 160, 160
+                    for (int i = 0; i < foundationsSnaps.Length; i++)
+                    {
+                        foundationsSnaps[i].transform.position = new Vector3(-104.0f + (i * 150.0f), 160.0f, 1.0f);
+                    }
 
-                    // Tableau (contiguous piles 1 through 7):
-                    // |-- X: -600, -450, -300, -150, 0, 150, 300
-                    // |-- Y:    0,    0,    0,    0, 0,   0,   0
+                    // Tableau (contiguous piles 1 through 7) (relative to 1920x1080 screen dimensions):
+                    // |-- X: -554, -404, -254, -104, 46, 196, 346
+                    // |-- Y:  -14,  -14,  -14,  -14,-14, -14, -14
+                    for (int i = 0; i < tableauSnaps.Length; i++)
+                    {
+                        tableauSnaps[i].transform.position = new Vector3(-554.0f + (i * 150.0f), -14.0f, 1.0f);
+                    }
 
                     break;
 
                 case Orientations.PORTRAIT:
-                    // Stock:
-                    // |-- X: -407.07
-                    // |-- Y: 150
+                    // Stock (relative to 1080x1920 screen dimensions):
+                    // |-- X: -332.07
+                    // |-- Y: 135.0
+                    stockSnap.transform.position = new Vector3(-332.07f, 135.0f, 1.0f);
 
-                    // Talon:
-                    // |-- X: -348.01
-                    // |-- Y: 150
+                    // Talon (relative to 1080x1920 screen dimensions):
+                    // |-- X: -273.01
+                    // |-- Y: 135.0
+                    talonSnap.transform.position = new Vector3(-273.01f, 135.0f, 1.0f);
 
-                    // Foundations (contiguous stacks 1 through 4):
-                    // |-- X: -229.67, -170.61, -111.44, -52.37
-                    // |-- Y:     150,     150,     150,    150
+                    // Foundations (contiguous stacks 1 through 4) (relative to 1080x1920 screen dimensions):
+                    // |-- X: -154.67, -95.61, -36.55, 22.51
+                    // |-- Y:   135.0,  135.0,  135.0, 135.0
+                    for (int i = 0; i < foundationsSnaps.Length; i++)
+                    {
+                        foundationsSnaps[i].transform.position = new Vector3(-154.67f + (i * 59.06f), 135.0f, 1.0f);
+                    }
 
-                    // Tableau (contiguous piles 1 through 7):
-                    // |-- X: -407.07, -348.01, -288.84, -288.84, -170.61, -111.44, -52.37
-                    // |-- Y:      70,      70,      70,      70,      70,      70,     70
+                    // Tableau (contiguous piles 1 through 7) (relative to 1080x1920 screen dimensions):
+                    // |-- X: -332.07, -273.01, -213.95, -154.89, -95.83, -36.77, 22.29
+                    // |-- Y:    31.0,    31.0,    31.0,    31.0,   31.0,   31.0,  31.0
+                    for (int i = 0; i < tableauSnaps.Length; i++)
+                    {
+                        tableauSnaps[i].transform.position = new Vector3(-332.07f + (i * 59.06f), 31.0f, 1.0f);
+                    }
 
                     break;
 

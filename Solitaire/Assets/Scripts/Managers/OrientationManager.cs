@@ -155,7 +155,7 @@ namespace Solitaire
          */
         private void HandleOrientationChange()
         {
-            if (m_stopwatch.IsRunning)
+            if (m_stopwatch != null && m_stopwatch.IsRunning)
             {
                 // Add spam guard with stopwatch (only allow orientation change events every n second(s))
                 if (m_stopwatch.ElapsedMilliseconds < ORIENTATION_CHANGE_TIME_THRESHOLD) return;
@@ -182,7 +182,11 @@ namespace Solitaire
             // TODO need to ensure that objects are properly scaled based on starting orientation
             // Game manager is only null when this function is invoked from the OnRectTransformDimensionsChange function.
             if (GameManager.Instance != null)
+            {
                 GameManager.Instance.RescaleGameObjectsByOrientation(m_currentOrientation);
+                GameManager.Instance.RepositionGameObjectsByOrientation(m_currentOrientation);
+            }
+            
         }
 
         /**
