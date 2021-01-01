@@ -232,7 +232,7 @@ namespace Solitaire
         private void OnRectTransformDimensionsChange()
         {
             Init(); // Only initializes members if they are null (safe to invoke multiple times)
-            HandleOrientationChange();
+            HandleOrientationChange(m_hasLoaded);
         }
 
     }
