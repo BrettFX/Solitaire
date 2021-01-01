@@ -63,7 +63,6 @@ namespace Solitaire
 
         private void Start()
         {
-            Debug.Log("Got here 0");
             m_hasLoaded = true;
             Init();
             m_stopwatch.Start();
@@ -205,7 +204,8 @@ namespace Solitaire
             }
             catch (Exception e)
             {
-                Debug.Log("Broadcasing to GameManager to process rescaling and repositioning actions later due to " + e.GetType());
+                if (GameManager.DEBUG_MODE)
+                    Debug.Log("Broadcasing to GameManager to process rescaling and repositioning actions later due to " + e.GetType());
 
                 // Need to broadcast that rescaling and reposition is needed once the game manager instance is not null
                 GameManager.ProcessLater(() =>
@@ -214,6 +214,12 @@ namespace Solitaire
                     GameManager.Instance.RepositionGameObjectsByOrientation(m_currentOrientation);
                 });
             }
+        }
+
+        private void OnApplicationQuit()
+        {
+            // Need to set loaded flag to false so that the rescaling and repositioning functions are not triggered
+            m_hasLoaded = false;
         }
 
         /**

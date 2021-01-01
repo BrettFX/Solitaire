@@ -160,11 +160,6 @@ namespace Solitaire
             m_stopWatch = new System.Diagnostics.Stopwatch();
             m_stopWatch.Start();
 
-            // Perform rescale and reposition upon instantiation to ensure the correct scaling based on starting orientation
-            //RescaleGameObjectsByOrientation(OrientationManager.GetCurrentOrientation());
-            //RepositionGameObjectsByOrientation(OrientationManager.GetCurrentOrientation());
-            //RescaleGameObjectsByOrientation(Orientations.PORTRAIT);
-            //RepositionGameObjectsByOrientation(Orientations.PORTRAIT);
         }
 
         private void Update()
@@ -173,7 +168,7 @@ namespace Solitaire
             if (m_actionQueue.Count > 0)
             {
                 Action action = m_actionQueue.Dequeue();
-                Debug.Log("Invoking processes that were noted to run later from " + this);
+                if (DEBUG_MODE) Debug.Log("Invoking processes that were noted to run later from " + this);
                 action.Invoke();
             }
 
