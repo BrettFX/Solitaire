@@ -67,16 +67,20 @@ namespace Solitaire
 
         [Header("Utils")]
         public GameObject cardPrefab;
-        public TextMeshProUGUI lblTimer;
-        public GameObject resetModalOverlay;
-        public GameObject settingsModalOverlay;
 
-        [Header("Action Buttons")]
+        [Header("Canvas Objects")]
+        public GameObject portraitCanvasObjects;
+        public GameObject landscapeCanvasObjects;
+        public GameObject actionBar;
+        public GameObject settingsContainer;
         public Button btnUndo;
         public Button btnRedo;
         public GameObject btnAutoWin;
         public Button btnConfirmReset;
         public Button btnSettings;
+        public TextMeshProUGUI lblTimer;
+        public GameObject resetModalOverlay;
+        public GameObject settingsModalOverlay;
 
         private Sprite[] m_cardSprites;
         private Dictionary<CardSuit, Sprite[]> m_cardSpritesMap;
@@ -359,6 +363,39 @@ namespace Solitaire
             /***********************************************
              * CANVAS OBJECTS
              ***********************************************/
+            Debug.Log("Setting visibility of canvas objects for " + orientation + " orientation");
+            portraitCanvasObjects.SetActive(orientation.Equals(Orientations.PORTRAIT));
+            landscapeCanvasObjects.SetActive(orientation.Equals(Orientations.LANDSCAPE));
+
+            //RectTransform canvasObjParent;
+            //switch (orientation)
+            //{
+            //    case Orientations.PORTRAIT:
+            //        // Timer label
+            //        RectTransform timerRect = lblTimer.GetComponent<RectTransform>();
+
+            //        // Set Anchor to stretch on top of GUI
+            //        timerRect.anchorMin = new Vector2(0, 1);
+            //        timerRect.anchorMax = new Vector2(1, 1);
+
+            //        canvasObjParent = timerRect.GetComponentInParent<RectTransform>();
+            //        float left = 35.0f;  // TODO compute this value based on width of UI
+            //        float right = 35.0f; // TODO compute this value based on width of UI
+
+            //        float width = canvasObjParent.rect.x - left - right;
+            //        float height = 50.0f;
+            //        float yPos = -100.0f;
+
+            //        timerRect.rect.Set(left, yPos, width, height);
+
+            //        break;
+
+            //    case Orientations.LANDSCAPE:
+            //        break;
+
+            //    default:
+            //        break;
+            //}
 
         }
 
