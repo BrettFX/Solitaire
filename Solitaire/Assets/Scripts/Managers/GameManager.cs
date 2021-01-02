@@ -68,19 +68,43 @@ namespace Solitaire
         [Header("Utils")]
         public GameObject cardPrefab;
 
-        [Header("Canvas Objects")]
+        [Header("Portrait Canvas Objects")]
         public GameObject portraitCanvasObjects;
+        public GameObject portraitActionBar;
+        public GameObject portraitSettingsContainer;
+        public Button portraitBtnUndo;
+        public Button portraitBtnRedo;
+        public GameObject portraitBtnAutoWin;
+        public Button portraitBtnConfirmReset;
+        public Button portraitBtnSettings;
+        public TextMeshProUGUI portraitLblTimer;
+        public GameObject portraitResetModalOverlay;
+        public GameObject portraitSettingsModalOverlay;
+
+        [Header("Landscape Canvas Objects")]
         public GameObject landscapeCanvasObjects;
-        public GameObject actionBar;
-        public GameObject settingsContainer;
-        public Button btnUndo;
-        public Button btnRedo;
-        public GameObject btnAutoWin;
-        public Button btnConfirmReset;
-        public Button btnSettings;
-        public TextMeshProUGUI lblTimer;
-        public GameObject resetModalOverlay;
-        public GameObject settingsModalOverlay;
+        public GameObject landscapeActionBar;
+        public GameObject landscapeSettingsContainer;
+        public Button landscapeBtnUndo;
+        public Button landscapeBtnRedo;
+        public GameObject landscapeBtnAutoWin;
+        public Button landscapeBtnConfirmReset;
+        public Button landscapeBtnSettings;
+        public TextMeshProUGUI landscapeLblTimer;
+        public GameObject landscapeResetModalOverlay;
+        public GameObject landscapeSettingsModalOverlay;
+
+        // Same set of canvas objects that will be used as pointers to the target canvas objects based on current orientation
+        private GameObject actionBar;
+        private GameObject settingsContainer;
+        private Button btnUndo;
+        private Button btnRedo;
+        private GameObject btnAutoWin;
+        private Button btnConfirmReset;
+        private Button btnSettings;
+        private TextMeshProUGUI lblTimer;
+        private GameObject resetModalOverlay;
+        private GameObject settingsModalOverlay;
 
         private Sprite[] m_cardSprites;
         private Dictionary<CardSuit, Sprite[]> m_cardSpritesMap;
@@ -230,11 +254,11 @@ namespace Solitaire
 
                     // Show the win settings page (to start new game) and pause the game
                     SetPaused(true);
-                    SettingsManager.Instance.winSettingsPage.SetActive(true);
+                    SettingsManager.Instance.GetWinSettingsPage().SetActive(true);
 
                     // Set the new fastest time label visibility if a new fastest time was done
                     bool newFastestTime = StatsManager.Instance.IsNewFastestTime();
-                    SettingsManager.Instance.lblHighScoreNotification.SetActive(newFastestTime);
+                    SettingsManager.Instance.GetHighScoreLabel().SetActive(newFastestTime);
                 }
             }
 
@@ -286,6 +310,38 @@ namespace Solitaire
         public static void ProcessLater(Action action)
         {
             m_actionQueue.Enqueue(action);
+        }
+
+        /**
+         * Marshal the target canvas objects based on the specified orientation.
+         * The size and position of the canvas objects vary based on orientation. Thus,
+         * it's necessary to swap the set of canvas objects to use based on the current
+         * orientation. This function serves that purpose.
+         * 
+         * NOTE: will invoke equivalent function for all other relevant manager instances,
+         * making this version of the function the central.
+         * 
+         * @param orientation the screen orientation used to determine the set of target
+         *                    canvas objects to use.
+         */
+        public void SetTargetCanvasObjectsByOrientation(Orientations orientation)
+        {
+            bool portraitOrientation = orientation.Equals(Orientations.PORTRAIT);
+
+            // GameManager
+            actionBar = portraitOrientation ? portraitActionBar : landscapeActionBar;
+            settingsContainer = portraitOrientation ? portraitSettingsContainer : landscapeSettingsContainer;
+            btnUndo = portraitOrientation ? portraitBtnUndo : landscapeBtnUndo;
+            btnRedo = portraitOrientation ? portraitBtnRedo : landscapeBtnRedo;
+            btnAutoWin = portraitOrientation ? portraitBtnAutoWin : landscapeBtnAutoWin;
+            btnConfirmReset = portraitOrientation ? portraitBtnConfirmReset : landscapeBtnConfirmReset;
+            btnSettings = portraitOrientation ? portraitBtnSettings : landscapeBtnSettings;
+            lblTimer = portraitOrientation ? portraitLblTimer : landscapeLblTimer;
+            resetModalOverlay = portraitOrientation ? portraitResetModalOverlay : landscapeResetModalOverlay;
+            settingsModalOverlay = portraitOrientation ? portraitSettingsModalOverlay : landscapeSettingsModalOverlay;
+
+            // SettingsManager
+            SettingsManager.Instance.SetTargetCanvasObjectsByOrientation(orientation);
         }
 
         /**
@@ -366,37 +422,6 @@ namespace Solitaire
             Debug.Log("Setting visibility of canvas objects for " + orientation + " orientation");
             portraitCanvasObjects.SetActive(orientation.Equals(Orientations.PORTRAIT));
             landscapeCanvasObjects.SetActive(orientation.Equals(Orientations.LANDSCAPE));
-
-            //RectTransform canvasObjParent;
-            //switch (orientation)
-            //{
-            //    case Orientations.PORTRAIT:
-            //        // Timer label
-            //        RectTransform timerRect = lblTimer.GetComponent<RectTransform>();
-
-            //        // Set Anchor to stretch on top of GUI
-            //        timerRect.anchorMin = new Vector2(0, 1);
-            //        timerRect.anchorMax = new Vector2(1, 1);
-
-            //        canvasObjParent = timerRect.GetComponentInParent<RectTransform>();
-            //        float left = 35.0f;  // TODO compute this value based on width of UI
-            //        float right = 35.0f; // TODO compute this value based on width of UI
-
-            //        float width = canvasObjParent.rect.x - left - right;
-            //        float height = 50.0f;
-            //        float yPos = -100.0f;
-
-            //        timerRect.rect.Set(left, yPos, width, height);
-
-            //        break;
-
-            //    case Orientations.LANDSCAPE:
-            //        break;
-
-            //    default:
-            //        break;
-            //}
-
         }
 
         /**
@@ -648,7 +673,7 @@ namespace Solitaire
                 }
                 else
                 {
-                    SettingsManager.Instance.winSettingsPage.SetActive(false);
+                    SettingsManager.Instance.GetWinSettingsPage().SetActive(false);
                 }
 
                 // Display the modal overlay for settings
@@ -666,7 +691,7 @@ namespace Solitaire
 
             else
             {
-                SettingsManager.Instance.winSettingsPage.SetActive(true);
+                SettingsManager.Instance.GetWinSettingsPage().SetActive(true);
             }
 
             // Close the modal overlay for settings

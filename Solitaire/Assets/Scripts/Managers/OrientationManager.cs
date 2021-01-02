@@ -201,6 +201,7 @@ namespace Solitaire
             {
                 GameManager.Instance.RescaleGameObjectsByOrientation(m_currentOrientation);
                 GameManager.Instance.RepositionGameObjectsByOrientation(m_currentOrientation);
+                GameManager.Instance.SetTargetCanvasObjectsByOrientation(m_currentOrientation);
             }
             catch (Exception e)
             {
@@ -212,6 +213,7 @@ namespace Solitaire
                 {
                     GameManager.Instance.RescaleGameObjectsByOrientation(m_currentOrientation);
                     GameManager.Instance.RepositionGameObjectsByOrientation(m_currentOrientation);
+                    GameManager.Instance.SetTargetCanvasObjectsByOrientation(m_currentOrientation);
                 });
             }
         }

@@ -2,6 +2,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static Solitaire.OrientationManager;
 
 namespace Solitaire
 {
@@ -62,12 +63,26 @@ namespace Solitaire
         // Constitutes the total amount of time after last event to wait before invoking animations
         public const float TIMER_ANIM_LISTEN_THRESHOLD = 500.0f; // In milliseconds
 
-        [Header("Settings Pages")]
-        public GameObject mainSettingsPage;
-        public GameObject winSettingsPage;
-        public GameObject gameplayPage;
-        public GameObject audioPage;
-        public GameObject statsPage;
+        [Header("Portrait Settings Pages")]
+        public GameObject portraitMainSettingsPage;
+        public GameObject portraitWinSettingsPage;
+        public GameObject portraitGameplayPage;
+        public GameObject portraitAudioPage;
+        public GameObject portraitStatsPage;
+
+        [Header("Landscape Settings Pages")]
+        public GameObject landscapeMainSettingsPage;
+        public GameObject landscapeWinSettingsPage;
+        public GameObject landscapeGameplayPage;
+        public GameObject landscapeAudioPage;
+        public GameObject landscapeStatsPage;
+
+        // Pointers to respective portrait and landscape objects
+        private GameObject mainSettingsPage;
+        private GameObject winSettingsPage;
+        private GameObject gameplayPage;
+        private GameObject audioPage;
+        private GameObject statsPage;
 
         [Header("Audio Assets")]
         public AudioSource winSound;
@@ -81,25 +96,62 @@ namespace Solitaire
         public AudioSource[] sfxSources;
         private AudioSource music; // Need to treat as singleton
 
-        [Header("Audio Sliders")]
-        public Slider sldMasterVol;
-        public Slider sldMusicVol;
-        public Slider sldSfxVol;
+        [Header("Portrait Audio Sliders")]
+        public Slider portraitSldMasterVol;
+        public Slider portraitSldMusicVol;
+        public Slider portraitSldSfxVol;
 
+        [Header("Landscape Audio Sliders")]
+        public Slider landscapeSldMasterVol;
+        public Slider landscapeSldMusicVol;
+        public Slider landscapeSldSfxVol;
 
-        [Header("Settings Lookup")]
-        public List<Button> drivingButtons = new List<Button>();
-        public List<GameObject> currPages = new List<GameObject>();
-        public List<GameObject> nextPages = new List<GameObject>();
+        // Pointers to respective portrait and landscape objects
+        private Slider sldMasterVol;
+        private Slider sldMusicVol;
+        private Slider sldSfxVol;
 
-        [Header("Animators")]
-        public Animator timerAnimator;
-        public Animator actionBarAnimator;
+        [Header("Portrait Settings Lookup")]
+        public List<Button> portraitDrivingButtons = new List<Button>();
+        public List<GameObject> portraitCurrPages = new List<GameObject>();
+        public List<GameObject> portraitNextPages = new List<GameObject>();
 
-        [Header("Miscellaneous")]
-        public GameObject lblHighScoreNotification;
-        public TMP_Dropdown dpnAutoCompleteTrigger;
-        public Slider sldTimerLabel;
+        [Header("Landscape Settings Lookup")]
+        public List<Button> landscapeDrivingButtons = new List<Button>();
+        public List<GameObject> landscapeCurrPages = new List<GameObject>();
+        public List<GameObject> landscapeNextPages = new List<GameObject>();
+
+        // Pointers to respective portrait and landscape objects
+        private List<Button> drivingButtons;
+        private List<GameObject> currPages;
+        private List<GameObject> nextPages;
+
+        [Header("Portrait Animators")]
+        public Animator portraitTimerAnimator;
+        public Animator portraitActionBarAnimator;
+
+        [Header("Landscape Animators")]
+        public Animator landscapeTimerAnimator;
+        public Animator landscapeActionBarAnimator;
+
+        // Pointers to respective portrait and landscape objects
+        private Animator timerAnimator;
+        private Animator actionBarAnimator;
+
+        [Header("Portrait Miscellaneous")]
+        public GameObject portraitLblHighScoreNotification;
+        public TMP_Dropdown portraitDpnAutoCompleteTrigger;
+        public Slider portraitSldTimerLabel;
+
+        [Header("Landscape Miscellaneous")]
+        public GameObject landscapeLblHighScoreNotification;
+        public TMP_Dropdown landscapeDpnAutoCompleteTrigger;
+        public Slider landscapeSldTimerLabel;
+
+        // Pointers to respective portrait and landscape objects
+        private GameObject lblHighScoreNotification;
+        private TMP_Dropdown dpnAutoCompleteTrigger;
+        private Slider sldTimerLabel;
 
         private Dictionary<Button, SettingsPage> m_settingsPagesLookup;
 
@@ -151,14 +203,52 @@ namespace Solitaire
             m_timerAnimListenStopwatch = new System.Diagnostics.Stopwatch();
 
             // Initialize timer and action bar animation trigger references
-            m_timerAnimTriggerRef = new AnimatorTriggerRef().Init(timerAnimator);
-            m_actionBarAnimTriggerRef = new AnimatorTriggerRef().Init(actionBarAnimator);
+            //m_timerAnimTriggerRef = new AnimatorTriggerRef().Init(timerAnimator);
+            //m_actionBarAnimTriggerRef = new AnimatorTriggerRef().Init(actionBarAnimator);
 
             // Treat music audio source as singleton
             music = GameObject.FindGameObjectWithTag("Music").GetComponent<AudioSource>();
 
             // Load saved settings if they exist
             LoadSettings();
+
+            //m_settingsSliders = new Slider[]
+            //{
+            //    sldMasterVol,
+            //    sldMusicVol,
+            //    sldSfxVol
+            //};
+
+            //// Iterate through settings sliders and set the percent label accordingly
+            //foreach (Slider slider in m_settingsSliders)
+            //{
+            //    SetSliderPercentLabel(slider);
+            //}
+
+            //// Build settings pages lookup
+            //m_settingsPagesLookup = new Dictionary<Button, SettingsPage>();
+            //for (int i = 0; i < drivingButtons.Count; i++)
+            //{
+            //    SettingsPage settingsPage = new SettingsPage
+            //    {
+            //        currPage = currPages[i],
+            //        nextPage = nextPages[i]
+            //    };
+
+            //    m_settingsPagesLookup.Add(drivingButtons[i], settingsPage);
+            //}
+
+            InitizlizeConfiguration();
+        }
+
+        /**
+         * Initialize all references for canvas objects, assuming the pointers are not null.
+         */
+        private void InitizlizeConfiguration()
+        {
+            // Initialize timer and action bar animation trigger references
+            m_timerAnimTriggerRef = new AnimatorTriggerRef().Init(timerAnimator);
+            m_actionBarAnimTriggerRef = new AnimatorTriggerRef().Init(actionBarAnimator);
 
             m_settingsSliders = new Slider[]
             {
@@ -221,6 +311,59 @@ namespace Solitaire
             {
                 sfxSource.volume = sldSfxVol.value / 100.0f;
             }
+        }
+
+        /**
+         * Marshal the target canvas objects based on the specified orientation.
+         * The size and position of the canvas objects vary based on orientation. Thus,
+         * it's necessary to swap the set of canvas objects to use based on the current
+         * orientation. This function serves that purpose.
+         * 
+         * @param orientation the screen orientation used to determine the set of target
+         *                    canvas objects to use.
+         */
+        public void SetTargetCanvasObjectsByOrientation(Orientations orientation)
+        {
+            bool portraitOrientation = orientation.Equals(Orientations.PORTRAIT);
+
+            // Settings Pages
+            mainSettingsPage = portraitOrientation ? portraitMainSettingsPage : landscapeMainSettingsPage;
+            winSettingsPage = portraitOrientation ? portraitWinSettingsPage : landscapeWinSettingsPage;
+            gameplayPage = portraitOrientation ? portraitGameplayPage : landscapeGameplayPage;
+            audioPage = portraitOrientation ? portraitAudioPage : landscapeAudioPage;
+            statsPage = portraitOrientation ? portraitStatsPage : landscapeStatsPage;
+
+            // Audio Sliders
+            sldMasterVol = portraitOrientation ? portraitSldMasterVol : landscapeSldMasterVol;
+            sldMusicVol = portraitOrientation ? portraitSldMusicVol : landscapeSldMusicVol;
+            sldSfxVol = portraitOrientation ? portraitSldSfxVol : landscapeSldSfxVol;
+
+            // Settings Lookup
+            drivingButtons = portraitOrientation ? portraitDrivingButtons : landscapeDrivingButtons;
+            currPages = portraitOrientation ? portraitCurrPages : landscapeCurrPages;
+            nextPages = portraitOrientation ? portraitNextPages : landscapeNextPages;
+
+            // Animators
+            timerAnimator = portraitOrientation ? portraitTimerAnimator : landscapeTimerAnimator;
+            actionBarAnimator = portraitOrientation ? portraitActionBarAnimator : landscapeActionBarAnimator;
+
+            // Miscellaneous
+            lblHighScoreNotification = portraitOrientation ? portraitLblHighScoreNotification : landscapeLblHighScoreNotification;
+            dpnAutoCompleteTrigger = portraitOrientation ? portraitDpnAutoCompleteTrigger : landscapeDpnAutoCompleteTrigger;
+            sldTimerLabel = portraitOrientation ? portraitSldTimerLabel : landscapeSldTimerLabel;
+
+            // Need to reinitialize based on new values
+            InitizlizeConfiguration();
+        }
+
+        public GameObject GetWinSettingsPage()
+        {
+            return winSettingsPage;
+        }
+
+        public GameObject GetHighScoreLabel()
+        {
+            return lblHighScoreNotification;
         }
 
         /**
