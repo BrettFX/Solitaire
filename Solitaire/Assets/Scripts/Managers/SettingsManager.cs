@@ -202,44 +202,13 @@ namespace Solitaire
         {
             m_timerAnimListenStopwatch = new System.Diagnostics.Stopwatch();
 
-            // Initialize timer and action bar animation trigger references
-            //m_timerAnimTriggerRef = new AnimatorTriggerRef().Init(timerAnimator);
-            //m_actionBarAnimTriggerRef = new AnimatorTriggerRef().Init(actionBarAnimator);
-
             // Treat music audio source as singleton
             music = GameObject.FindGameObjectWithTag("Music").GetComponent<AudioSource>();
 
             SetTargetCanvasObjectsByOrientation(OrientationManager.GetCurrentOrientation());
 
-            // Load saved settings if they exist
+            // Load saved settings if they exist and initialize configurations
             LoadSettings();
-
-            //m_settingsSliders = new Slider[]
-            //{
-            //    sldMasterVol,
-            //    sldMusicVol,
-            //    sldSfxVol
-            //};
-
-            //// Iterate through settings sliders and set the percent label accordingly
-            //foreach (Slider slider in m_settingsSliders)
-            //{
-            //    SetSliderPercentLabel(slider);
-            //}
-
-            //// Build settings pages lookup
-            //m_settingsPagesLookup = new Dictionary<Button, SettingsPage>();
-            //for (int i = 0; i < drivingButtons.Count; i++)
-            //{
-            //    SettingsPage settingsPage = new SettingsPage
-            //    {
-            //        currPage = currPages[i],
-            //        nextPage = nextPages[i]
-            //    };
-
-            //    m_settingsPagesLookup.Add(drivingButtons[i], settingsPage);
-            //}
-
             InitizlizeConfiguration();
         }
 
