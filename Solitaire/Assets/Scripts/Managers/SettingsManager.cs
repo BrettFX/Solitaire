@@ -354,6 +354,9 @@ namespace Solitaire
             dpnAutoCompleteTrigger = portraitOrientation ? portraitDpnAutoCompleteTrigger : landscapeDpnAutoCompleteTrigger;
             sldTimerLabel = portraitOrientation ? portraitSldTimerLabel : landscapeSldTimerLabel;
 
+            // Load saved settings if they exist
+            LoadSettings();
+
             // Need to reinitialize based on new values
             InitizlizeConfiguration();
         }
