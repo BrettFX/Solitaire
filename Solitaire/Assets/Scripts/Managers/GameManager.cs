@@ -342,6 +342,9 @@ namespace Solitaire
 
             // SettingsManager
             SettingsManager.Instance.SetTargetCanvasObjectsByOrientation(orientation);
+
+            // StatsManager
+            StatsManager.Instance.SetTargetCanvasObjectsByOrientation(orientation);
         }
 
         /**

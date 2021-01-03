@@ -209,6 +209,8 @@ namespace Solitaire
             // Treat music audio source as singleton
             music = GameObject.FindGameObjectWithTag("Music").GetComponent<AudioSource>();
 
+            SetTargetCanvasObjectsByOrientation(OrientationManager.GetCurrentOrientation());
+
             // Load saved settings if they exist
             LoadSettings();
 

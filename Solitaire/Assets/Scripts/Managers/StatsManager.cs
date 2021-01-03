@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using static Solitaire.OrientationManager;
 
 namespace Solitaire
 {
@@ -44,19 +45,47 @@ namespace Solitaire
         private const string WIN_STREAK_KEY = "WinningStreak";
         private const string LOSE_STREAK_KEY = "LosingStreak";
 
-        [Header("Statistics Containers")]
-        public Statistic fastestTimeStat;
-        public Statistic longestTimeStat;
-        public Statistic averageTimeStat;
-        public Statistic leastMovesStat;
-        public Statistic mostMovesStat;
-        public Statistic averageMovesStat;
-        public Statistic totalMovesStat;
-        public Statistic totalWinsStat;
-        public Statistic totalLossesStat;
-        public Statistic winLossRatioStat;
-        public Statistic winStreakStat;
-        public Statistic loseStreakStat;
+        [Header("Portrait Statistics Containers")]
+        public Statistic portraitFastestTimeStat;
+        public Statistic portraitLongestTimeStat;
+        public Statistic portraitAverageTimeStat;
+        public Statistic portraitLeastMovesStat;
+        public Statistic portraitMostMovesStat;
+        public Statistic portraitAverageMovesStat;
+        public Statistic portraitTotalMovesStat;
+        public Statistic portraitTotalWinsStat;
+        public Statistic portraitTotalLossesStat;
+        public Statistic portraitWinLossRatioStat;
+        public Statistic portraitWinStreakStat;
+        public Statistic portraitLoseStreakStat;
+
+        [Header("Landscape Statistics Containers")]
+        public Statistic landscapeFastestTimeStat;
+        public Statistic landscapeLongestTimeStat;
+        public Statistic landscapeAverageTimeStat;
+        public Statistic landscapeLeastMovesStat;
+        public Statistic landscapeMostMovesStat;
+        public Statistic landscapeAverageMovesStat;
+        public Statistic landscapeTotalMovesStat;
+        public Statistic landscapeTotalWinsStat;
+        public Statistic landscapeTotalLossesStat;
+        public Statistic landscapeWinLossRatioStat;
+        public Statistic landscapeWinStreakStat;
+        public Statistic landscapeLoseStreakStat;
+
+        // Pointers to respective portrait and landscape objects
+        private Statistic fastestTimeStat;
+        private Statistic longestTimeStat;
+        private Statistic averageTimeStat;
+        private Statistic leastMovesStat;
+        private Statistic mostMovesStat;
+        private Statistic averageMovesStat;
+        private Statistic totalMovesStat;
+        private Statistic totalWinsStat;
+        private Statistic totalLossesStat;
+        private Statistic winLossRatioStat;
+        private Statistic winStreakStat;
+        private Statistic loseStreakStat;
 
         private string m_timeHistory;
         private string m_movesHistory;
@@ -104,6 +133,8 @@ namespace Solitaire
             m_currentMoves = 0;
             m_newFastestTime = false;
 
+            SetTargetCanvasObjectsByOrientation(OrientationManager.GetCurrentOrientation());
+
             // Init saved stats vars
             Init();
         }
@@ -144,6 +175,33 @@ namespace Solitaire
             DisplayStatistic(winStreakStat, m_winStreak.ToString(), false, FillStates.NO_FILL);
             DisplayStatistic(loseStreakStat, m_loseStreak.ToString(), false, FillStates.NO_FILL);
             DisplayStatistic(winLossRatioStat, m_winLossRatio.ToString(), false, m_totalWins + m_totalLoss > 0 ? FillStates.NO_FILL : FillStates.FILL_NA_ON_ZERO, 2);
+        }
+
+        /**
+         * Marshal the target canvas objects based on the specified orientation.
+         * The size and position of the canvas objects vary based on orientation. Thus,
+         * it's necessary to swap the set of canvas objects to use based on the current
+         * orientation. This function serves that purpose.
+         * 
+         * @param orientation the screen orientation used to determine the set of target
+         *                    canvas objects to use.
+         */
+        public void SetTargetCanvasObjectsByOrientation(Orientations orientation)
+        {
+            bool portraitOrientation = orientation.Equals(Orientations.PORTRAIT);
+
+            fastestTimeStat = portraitOrientation ? portraitFastestTimeStat : landscapeFastestTimeStat;
+            longestTimeStat = portraitOrientation ? portraitLongestTimeStat : landscapeLongestTimeStat;
+            averageTimeStat = portraitOrientation ? portraitAverageTimeStat : landscapeAverageTimeStat;
+            leastMovesStat = portraitOrientation ? portraitLeastMovesStat : landscapeLeastMovesStat;
+            mostMovesStat = portraitOrientation ? portraitMostMovesStat : landscapeMostMovesStat;
+            averageMovesStat = portraitOrientation ? portraitAverageMovesStat : landscapeAverageMovesStat;
+            totalMovesStat = portraitOrientation ? portraitTotalMovesStat : landscapeTotalMovesStat;
+            totalWinsStat = portraitOrientation ? portraitTotalWinsStat : landscapeTotalWinsStat;
+            totalLossesStat = portraitOrientation ? portraitTotalLossesStat : landscapeTotalLossesStat;
+            winLossRatioStat = portraitOrientation ? portraitWinLossRatioStat : landscapeWinLossRatioStat;
+            winStreakStat = portraitOrientation ? portraitWinStreakStat : landscapeWinStreakStat;
+            loseStreakStat = portraitOrientation ? portraitLoseStreakStat : landscapeLoseStreakStat;
         }
 
         /**
