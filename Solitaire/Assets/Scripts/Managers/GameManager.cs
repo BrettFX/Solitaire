@@ -390,8 +390,9 @@ namespace Solitaire
              * CARDS & SNAPS
              ***********************************************/
             SnapManager[] snapManagers = FindObjectsOfType<SnapManager>();
+            Card[] cards = FindObjectsOfType<Card>();
 
-            // Scale each set of cards from the snap manager level
+            // Iterate snaps and rescale belonging cards before rescaling respective snaps
             foreach(SnapManager snapManager in snapManagers)
             {
                 snapManager.SetWaiting(true);
@@ -416,6 +417,19 @@ namespace Solitaire
                 snapManager.SetWaiting(false);
             }
 
+            // Find any cards that do not currently have a parent and rescale them
+            // This may happen when cards are doing an animation, being dragged, etc.
+            foreach (Card card in cards)
+            {
+                if (card.transform.parent == null)
+                {
+                    card.transform.localScale = newCardAndTileScale;
+                }
+            }
+
+            // TODO If there is at least one card that didn't belong to a snap then all associated snaps (or the originating
+            // snap) of the card(s) should remain waiting until the card is back
+
             // Need to recalibrate the spacing between cards now that they've been rescaled.
             CalibrateCards();
 
@@ -432,7 +446,6 @@ namespace Solitaire
          * Handles rescaling of the following:
          * - Cards
          * - Snaps
-         * - Canvas objects
          * 
          * NOTE: all positions are relative to the snap managers when they are not wrapped within the
          * empty game object parent.
@@ -511,11 +524,6 @@ namespace Solitaire
                 default:
                     break;
             }
-
-            /***********************************************
-             * CANVAS OBJECTS
-             ***********************************************/
-
         }
 
         /**
