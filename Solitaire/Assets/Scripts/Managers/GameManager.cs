@@ -414,7 +414,9 @@ namespace Solitaire
                     card.transform.parent = snapManager.transform;
                 }
 
-                snapManager.SetWaiting(false);
+                // Only tell the snap manager to stop waiting if it wasn't already waiting (e.g., due to animation, etc.)
+                if (!snapManager.WasAlreadyWaiting())
+                    snapManager.SetWaiting(false);
             }
 
             // Find any cards that do not currently have a parent and rescale them
@@ -426,9 +428,6 @@ namespace Solitaire
                     card.transform.localScale = newCardAndTileScale;
                 }
             }
-
-            // TODO If there is at least one card that didn't belong to a snap then all associated snaps (or the originating
-            // snap) of the card(s) should remain waiting until the card is back
 
             // Need to recalibrate the spacing between cards now that they've been rescaled.
             CalibrateCards();

@@ -10,6 +10,7 @@ namespace Solitaire
         private Card[] m_attachedCards;
         private MeshCollider m_snapCollider;
         private volatile bool m_waiting = false;
+        private volatile bool m_alreadyWaiting = false; // Detect when attempting to set waiting when already waiting
 
         private void Start()
         {
@@ -143,7 +144,19 @@ namespace Solitaire
 
         public void SetWaiting(bool wait)
         {
+            // Set already waiting if attempting to set waiting when already waiting
+            m_alreadyWaiting = m_waiting == wait;
             m_waiting = wait;
+        }
+
+        public bool IsWaiting()
+        {
+            return m_waiting;
+        }
+
+        public bool WasAlreadyWaiting()
+        {
+            return m_alreadyWaiting;
         }
 
         /**
