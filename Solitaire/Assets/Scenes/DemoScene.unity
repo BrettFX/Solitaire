@@ -20129,7 +20129,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 230.00002, y: 70}
+  m_AnchoredPosition: {x: 230, y: 70}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1167255296
@@ -21338,7 +21338,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1203812678}
-  - component: {fileID: 1203812680}
   - component: {fileID: 1203812679}
   m_Layer: 5
   m_Name: ActionBar
@@ -21383,25 +21382,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80563afad89814373a8d9f7376043d09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!95 &1203812680
-Animator:
-  serializedVersion: 3
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1203812677}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: c6c29392a96d44e1fa44773d0859a53d, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &1203925851
 GameObject:
   m_ObjectHideFlags: 0
@@ -36684,7 +36664,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 45.000015, y: -0.5}
+  m_AnchoredPosition: {x: 45, y: -0.5}
   m_SizeDelta: {x: -30, y: -3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2133346377
@@ -37490,7 +37470,7 @@ PrefabInstance:
         type: 3}
       propertyPath: portraitActionBarAnimator
       value: 
-      objectReference: {fileID: 1203812680}
+      objectReference: {fileID: 0}
     - target: {fileID: 3532238972538092681, guid: 89b66039693f5470c83f57688f6d2fa8,
         type: 3}
       propertyPath: landscapeTimerAnimator

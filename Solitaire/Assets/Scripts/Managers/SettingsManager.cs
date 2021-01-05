@@ -128,7 +128,7 @@ namespace Solitaire
 
         [Header("Portrait Animators")]
         public Animator portraitTimerAnimator;
-        public Animator portraitActionBarAnimator;
+        //public Animator portraitActionBarAnimator;
 
         [Header("Landscape Animators")]
         public Animator landscapeTimerAnimator;
@@ -316,7 +316,7 @@ namespace Solitaire
 
             // Animators
             timerAnimator = portraitOrientation ? portraitTimerAnimator : landscapeTimerAnimator;
-            actionBarAnimator = portraitOrientation ? portraitActionBarAnimator : landscapeActionBarAnimator;
+            actionBarAnimator = landscapeActionBarAnimator; // Should always be set to landscape animator
 
             // Miscellaneous
             lblHighScoreNotification = portraitOrientation ? portraitLblHighScoreNotification : landscapeLblHighScoreNotification;
@@ -416,16 +416,24 @@ namespace Solitaire
             m_timerAnimTriggerRef.animate = animate;
             m_actionBarAnimTriggerRef.animate = animate;
 
+            bool portraitOrientation = OrientationManager.IsPortraitOrientation();
+
             // Only animate if desired
+            string showTrigger;
+            string hideTrigger;
             if (animate)
             {
-                m_timerAnimTriggerRef.trigger = m_timerVisible ? "Show" : "Hide";
+                showTrigger = portraitOrientation ? "ShowPortrait" : "ShowLandscape";
+                hideTrigger = portraitOrientation ? "HidePortrait" : "HideLandscape";
+                m_timerAnimTriggerRef.trigger = m_timerVisible ? showTrigger : hideTrigger;
                 m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveDown" : "MoveUp";
             }
             else
             {
                 // Otherwise, plan to invoke the appropriate animation and jump to last frame (setting speed to 100%)
-                m_timerAnimTriggerRef.trigger = m_timerVisible ? "ShowTimerLabel" : "HideTimerLabel";
+                showTrigger = portraitOrientation ? "ShowTimerLabelPortrait" : "ShowTimerLabelLandscape";
+                hideTrigger = portraitOrientation ? "HideTimerLabelPortrait" : "HideTimerLabelLandscape";
+                m_timerAnimTriggerRef.trigger = m_timerVisible ? showTrigger : hideTrigger;
                 m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveActionBarDown" : "MoveActionBarUp";
             }
         }

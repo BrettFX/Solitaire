@@ -101,6 +101,16 @@ namespace Solitaire
             return m_currentOrientation;
         }
 
+        public static bool IsPortraitOrientation()
+        {
+            return m_currentOrientation.Equals(Orientations.PORTRAIT);
+        }
+
+        public static bool IsLandscapeOrientation()
+        {
+            return m_currentOrientation.Equals(Orientations.LANDSCAPE);
+        }
+
         /**
          * Compute the scale for the cards and snaps relative to the given screen orientation's
          * resolution. This ensures that the width and height of the cards and snaps maintain the
