@@ -44,6 +44,15 @@ namespace Solitaire
              */
             public void DoTrigger()
             {
+                // Don't try to animate without a trigger
+                if (trigger == null || trigger.Equals(""))
+                    return;
+
+                // Don't allow animations if parent game object isn't active
+                if (!animator.gameObject.activeInHierarchy)
+                    return;
+
+                // Either animate or skip to last keyframe in animation (skipping animation)
                 if (animate)
                     animator.SetTrigger(trigger);
                 else
@@ -419,20 +428,16 @@ namespace Solitaire
             bool portraitOrientation = OrientationManager.IsPortraitOrientation();
 
             // Only animate if desired
-            string showTrigger;
-            string hideTrigger;
             if (animate)
             {
-                showTrigger = portraitOrientation ? "ShowPortrait" : "ShowLandscape";
-                hideTrigger = portraitOrientation ? "HidePortrait" : "HideLandscape";
-                m_timerAnimTriggerRef.trigger = m_timerVisible ? showTrigger : hideTrigger;
+                m_timerAnimTriggerRef.trigger = m_timerVisible ? "Show" : "Hide";
                 m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveDown" : "MoveUp";
             }
             else
             {
                 // Otherwise, plan to invoke the appropriate animation and jump to last frame (setting speed to 100%)
-                showTrigger = portraitOrientation ? "ShowTimerLabelPortrait" : "ShowTimerLabelLandscape";
-                hideTrigger = portraitOrientation ? "HideTimerLabelPortrait" : "HideTimerLabelLandscape";
+                string showTrigger = portraitOrientation ? "ShowTimerLabelPortrait" : "ShowTimerLabelLandscape";
+                string hideTrigger = portraitOrientation ? "HideTimerLabelPortrait" : "HideTimerLabelLandscape";
                 m_timerAnimTriggerRef.trigger = m_timerVisible ? showTrigger : hideTrigger;
                 m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveActionBarDown" : "MoveActionBarUp";
             }

@@ -30470,8 +30470,8 @@ GameObject:
   - component: {fileID: 1774911678}
   - component: {fileID: 1774911682}
   - component: {fileID: 1774911681}
-  - component: {fileID: 1774911680}
   - component: {fileID: 1774911679}
+  - component: {fileID: 1774911680}
   m_Layer: 5
   m_Name: lblTimer
   m_TagString: Untagged
@@ -30520,7 +30520,7 @@ Animator:
   m_GameObject: {fileID: 1774911677}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 3ecc76288e34447e699960d8bd7115ae, type: 2}
+  m_Controller: {fileID: 9100000, guid: 1300c0d8aee074d0797a0ea4b30f2cac, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
