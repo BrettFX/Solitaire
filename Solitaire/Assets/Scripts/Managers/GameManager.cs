@@ -348,6 +348,33 @@ namespace Solitaire
         }
 
         /**
+         * Keep the state of the canvas objects in sync between portrait and landscape orientations.
+         * EX: pause menus should be visible on both orientations.
+         * Canvas objects of interest:
+         * resetModalOverlay
+         * settingsModalOverlay
+         */
+        private void SyncCanvasObjectsBetweenOrientations()
+        {
+            bool portraitOrientation = OrientationManager.IsPortraitOrientation();
+
+            // Using xor logic to determine if one is active but not the other
+            // Need to ensure that they both are the same state
+            if (portraitResetModalOverlay.activeInHierarchy ^ landscapeResetModalOverlay.activeInHierarchy)
+            {
+                // Take precendence on game object based on current orientation
+                if (portraitOrientation)
+                {
+                    landscapeResetModalOverlay.SetActive(portraitResetModalOverlay.activeInHierarchy);
+                }
+                else
+                {
+                    portraitResetModalOverlay.SetActive(landscapeResetModalOverlay.activeInHierarchy);
+                }
+            }
+        }
+
+        /**
          * Calibrate the configuration for card positions based current local scale of
          * snap managers.
          */

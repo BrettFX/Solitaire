@@ -50,7 +50,7 @@ namespace Solitaire
 
                 // Don't allow animations if parent game object isn't active
                 if (!animator.gameObject.activeInHierarchy)
-                    return;
+                    animate = false;
 
                 // Either animate or skip to last keyframe in animation (skipping animation)
                 if (animate)
@@ -144,7 +144,7 @@ namespace Solitaire
         public Animator landscapeActionBarAnimator;
 
         // Pointers to respective portrait and landscape objects
-        private Animator timerAnimator;
+        //private Animator timerAnimator;
         private Animator actionBarAnimator;
 
         [Header("Portrait Miscellaneous")]
@@ -166,7 +166,8 @@ namespace Solitaire
 
         private Slider[] m_settingsSliders;
 
-        private AnimatorTriggerRef m_timerAnimTriggerRef;
+        private AnimatorTriggerRef m_landscapeTimerAnimTriggerRef;
+        private AnimatorTriggerRef m_portraitTimerAnimTriggerRef;
         private AnimatorTriggerRef m_actionBarAnimTriggerRef;
 
         private float m_masterVol;
@@ -216,8 +217,18 @@ namespace Solitaire
 
             SetTargetCanvasObjectsByOrientation(OrientationManager.GetCurrentOrientation());
 
+            // Initialize timer and action bar animation trigger references
+            m_landscapeTimerAnimTriggerRef = new AnimatorTriggerRef().Init(landscapeTimerAnimator);
+            m_portraitTimerAnimTriggerRef = new AnimatorTriggerRef().Init(portraitTimerAnimator);
+
+            // Set action bar animator permanently to landscape action bar animator
+            actionBarAnimator = landscapeActionBarAnimator;
+
+            m_actionBarAnimTriggerRef = new AnimatorTriggerRef().Init(actionBarAnimator);
+
             // Load saved settings if they exist and initialize configurations
             LoadSettings();
+
             InitizlizeConfiguration();
         }
 
@@ -226,10 +237,6 @@ namespace Solitaire
          */
         private void InitizlizeConfiguration()
         {
-            // Initialize timer and action bar animation trigger references
-            m_timerAnimTriggerRef = new AnimatorTriggerRef().Init(timerAnimator);
-            m_actionBarAnimTriggerRef = new AnimatorTriggerRef().Init(actionBarAnimator);
-
             m_settingsSliders = new Slider[]
             {
                 sldMasterVol,
@@ -275,7 +282,8 @@ namespace Solitaire
                     }
 
                     // Invoke the target animations
-                    m_timerAnimTriggerRef.DoTrigger();
+                    m_portraitTimerAnimTriggerRef.DoTrigger();
+                    m_landscapeTimerAnimTriggerRef.DoTrigger();
                     m_actionBarAnimTriggerRef.DoTrigger();
 
                     // Stop the stopwatch and reset it
@@ -322,10 +330,6 @@ namespace Solitaire
             drivingButtons = portraitOrientation ? portraitDrivingButtons : landscapeDrivingButtons;
             currPages = portraitOrientation ? portraitCurrPages : landscapeCurrPages;
             nextPages = portraitOrientation ? portraitNextPages : landscapeNextPages;
-
-            // Animators
-            timerAnimator = portraitOrientation ? portraitTimerAnimator : landscapeTimerAnimator;
-            actionBarAnimator = landscapeActionBarAnimator; // Should always be set to landscape animator
 
             // Miscellaneous
             lblHighScoreNotification = portraitOrientation ? portraitLblHighScoreNotification : landscapeLblHighScoreNotification;
@@ -422,7 +426,8 @@ namespace Solitaire
             m_timerAnimListenStopwatch.Start();
 
             // Set animation flags to determine appropriate course of action
-            m_timerAnimTriggerRef.animate = animate;
+            m_portraitTimerAnimTriggerRef.animate = animate;
+            m_landscapeTimerAnimTriggerRef.animate = animate;
             m_actionBarAnimTriggerRef.animate = animate;
 
             bool portraitOrientation = OrientationManager.IsPortraitOrientation();
@@ -430,15 +435,15 @@ namespace Solitaire
             // Only animate if desired
             if (animate)
             {
-                m_timerAnimTriggerRef.trigger = m_timerVisible ? "Show" : "Hide";
+                m_portraitTimerAnimTriggerRef.trigger = m_timerVisible ? "Show" : "Hide";
+                m_landscapeTimerAnimTriggerRef.trigger = m_timerVisible ? "Show" : "Hide";
                 m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveDown" : "MoveUp";
             }
             else
             {
                 // Otherwise, plan to invoke the appropriate animation and jump to last frame (setting speed to 100%)
-                string showTrigger = portraitOrientation ? "ShowTimerLabelPortrait" : "ShowTimerLabelLandscape";
-                string hideTrigger = portraitOrientation ? "HideTimerLabelPortrait" : "HideTimerLabelLandscape";
-                m_timerAnimTriggerRef.trigger = m_timerVisible ? showTrigger : hideTrigger;
+                m_portraitTimerAnimTriggerRef.trigger = m_timerVisible ? "ShowTimerLabelPortrait" : "HideTimerLabelPortrait";
+                m_landscapeTimerAnimTriggerRef.trigger = m_timerVisible ? "ShowTimerLabelLandscape" : "HideTimerLabelLandscape";
                 m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveActionBarDown" : "MoveActionBarUp";
             }
         }
