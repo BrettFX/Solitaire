@@ -10,6 +10,12 @@ namespace Solitaire
     {
         public static SettingsManager Instance { get; private set; }
 
+        private const float PORTRAIT_TIMER_LBL_ANCHORED_POS_X_HIDDEN = -1120.0f;
+        private const float PORTRAIT_TIMER_LBL_ANCHORED_POS_X_VISIBLE = 0.0f;
+
+        private const float LANDSCAPE_TIMER_LBL_ANCHORED_POS_X_HIDDEN = -150.0f;
+        private const float LANDSCAPE_TIMER_LBL_ANCHORED_POS_X_VISIBLE = 150.0f;
+
         public struct SettingsPage
         {
             public GameObject currPage;
@@ -50,7 +56,7 @@ namespace Solitaire
 
                 // Don't allow animations if parent game object isn't active
                 if (!animator.gameObject.activeInHierarchy)
-                    animate = false;
+                    return;
 
                 // Either animate or skip to last keyframe in animation (skipping animation)
                 if (animate)
@@ -144,7 +150,7 @@ namespace Solitaire
         public Animator landscapeActionBarAnimator;
 
         // Pointers to respective portrait and landscape objects
-        //private Animator timerAnimator;
+        private Animator timerAnimator;
         private Animator actionBarAnimator;
 
         [Header("Portrait Miscellaneous")]
@@ -168,6 +174,7 @@ namespace Solitaire
 
         private AnimatorTriggerRef m_landscapeTimerAnimTriggerRef;
         private AnimatorTriggerRef m_portraitTimerAnimTriggerRef;
+        AnimatorTriggerRef m_timerAnimTriggerRef;
         private AnimatorTriggerRef m_actionBarAnimTriggerRef;
 
         private float m_masterVol;
@@ -282,8 +289,7 @@ namespace Solitaire
                     }
 
                     // Invoke the target animations
-                    m_portraitTimerAnimTriggerRef.DoTrigger();
-                    m_landscapeTimerAnimTriggerRef.DoTrigger();
+                    m_timerAnimTriggerRef.DoTrigger();
                     m_actionBarAnimTriggerRef.DoTrigger();
 
                     // Stop the stopwatch and reset it
@@ -330,6 +336,10 @@ namespace Solitaire
             drivingButtons = portraitOrientation ? portraitDrivingButtons : landscapeDrivingButtons;
             currPages = portraitOrientation ? portraitCurrPages : landscapeCurrPages;
             nextPages = portraitOrientation ? portraitNextPages : landscapeNextPages;
+
+            // Animators
+            timerAnimator = portraitOrientation ? portraitTimerAnimator : landscapeTimerAnimator;
+            m_timerAnimTriggerRef = portraitOrientation ? m_portraitTimerAnimTriggerRef : m_landscapeTimerAnimTriggerRef;
 
             // Miscellaneous
             lblHighScoreNotification = portraitOrientation ? portraitLblHighScoreNotification : landscapeLblHighScoreNotification;
@@ -426,8 +436,7 @@ namespace Solitaire
             m_timerAnimListenStopwatch.Start();
 
             // Set animation flags to determine appropriate course of action
-            m_portraitTimerAnimTriggerRef.animate = animate;
-            m_landscapeTimerAnimTriggerRef.animate = animate;
+            m_timerAnimTriggerRef.animate = animate;
             m_actionBarAnimTriggerRef.animate = animate;
 
             bool portraitOrientation = OrientationManager.IsPortraitOrientation();
@@ -435,17 +444,36 @@ namespace Solitaire
             // Only animate if desired
             if (animate)
             {
-                m_portraitTimerAnimTriggerRef.trigger = m_timerVisible ? "Show" : "Hide";
-                m_landscapeTimerAnimTriggerRef.trigger = m_timerVisible ? "Show" : "Hide";
+                m_timerAnimTriggerRef.trigger = m_timerVisible ? "Show" : "Hide";
                 m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveDown" : "MoveUp";
             }
             else
             {
                 // Otherwise, plan to invoke the appropriate animation and jump to last frame (setting speed to 100%)
-                m_portraitTimerAnimTriggerRef.trigger = m_timerVisible ? "ShowTimerLabelPortrait" : "HideTimerLabelPortrait";
-                m_landscapeTimerAnimTriggerRef.trigger = m_timerVisible ? "ShowTimerLabelLandscape" : "HideTimerLabelLandscape";
+                string showTrigger = portraitOrientation ? "ShowTimerLabelPortrait" : "ShowTimerLabelLandscape";
+                string hideTrigger = portraitOrientation ? "HideTimerLabelPortrait" : "HideTimerLabelLandscape";
+
+                m_timerAnimTriggerRef.trigger = m_timerVisible ? showTrigger : hideTrigger;
                 m_actionBarAnimTriggerRef.trigger = m_timerVisible ? "MoveActionBarDown" : "MoveActionBarUp";
             }
+
+            // Determine which of the timer labels is not currently active based on screen orientation and set its
+            // anchored position accordingly to keep it in sync with the currently active/visible timer label
+            RectTransform oppositeTimerRect;
+            float newAnchoredX;
+            if (portraitOrientation)
+            {
+                oppositeTimerRect = landscapeTimerAnimator.GetComponent<RectTransform>();
+                newAnchoredX = m_timerVisible ? LANDSCAPE_TIMER_LBL_ANCHORED_POS_X_VISIBLE : LANDSCAPE_TIMER_LBL_ANCHORED_POS_X_HIDDEN;
+            }
+            else
+            {
+                oppositeTimerRect = portraitTimerAnimator.GetComponent<RectTransform>();
+                newAnchoredX = m_timerVisible ? PORTRAIT_TIMER_LBL_ANCHORED_POS_X_VISIBLE : PORTRAIT_TIMER_LBL_ANCHORED_POS_X_HIDDEN;
+            }
+
+            // Set the anchored position for the timer label that isn't currently active/visible
+            oppositeTimerRect.anchoredPosition = new Vector2(newAnchoredX, oppositeTimerRect.anchoredPosition.y);
         }
 
         /**

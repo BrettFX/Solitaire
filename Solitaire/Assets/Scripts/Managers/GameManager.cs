@@ -462,7 +462,7 @@ namespace Solitaire
             /***********************************************
              * CANVAS OBJECTS
              ***********************************************/
-            Debug.Log("Setting visibility of canvas objects for " + orientation + " orientation");
+            if (DEBUG_MODE) Debug.Log("Setting visibility of canvas objects for " + orientation + " orientation");
             portraitCanvasObjects.SetActive(orientation.Equals(Orientations.PORTRAIT));
             landscapeCanvasObjects.SetActive(orientation.Equals(Orientations.LANDSCAPE));
         }
