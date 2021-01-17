@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -66,6 +67,23 @@ namespace Solitaire
             }
         }
 
+        class CanvasObjectRef<T>
+        {
+            public T current;
+            public T previous;
+
+            public void Set(T portraitObj, T landscapeObj, bool portrait)
+            {
+                current = portrait ? portraitObj : landscapeObj;
+                previous = portrait ? landscapeObj : portraitObj;
+            }
+
+            public void DoAction(Action a)
+            {
+                a.Invoke();
+            }
+        }
+
         public const string MASTER_VOL_KEY = "MasterVolume";
         public const string MUSIC_VOL_KEY = "MusicVolume";
         public const string SFX_VOL_KEY = "SFXVolume";
@@ -93,11 +111,11 @@ namespace Solitaire
         public GameObject landscapeStatsPage;
 
         // Pointers to respective portrait and landscape objects
-        private GameObject mainSettingsPage;
-        private GameObject winSettingsPage;
-        private GameObject gameplayPage;
-        private GameObject audioPage;
-        private GameObject statsPage;
+        private CanvasObjectRef<GameObject> mainSettingsPageRef;
+        private CanvasObjectRef<GameObject> winSettingsPageRef;
+        private CanvasObjectRef<GameObject> gameplayPageRef;
+        private CanvasObjectRef<GameObject> audioPageRef;
+        private CanvasObjectRef<GameObject> statsPageRef;
 
         [Header("Audio Assets")]
         public AudioSource winSound;
@@ -222,6 +240,12 @@ namespace Solitaire
             // Treat music audio source as singleton
             music = GameObject.FindGameObjectWithTag("Music").GetComponent<AudioSource>();
 
+            mainSettingsPageRef = new CanvasObjectRef<GameObject>();
+            winSettingsPageRef = new CanvasObjectRef<GameObject>();
+            gameplayPageRef = new CanvasObjectRef<GameObject>();
+            audioPageRef = new CanvasObjectRef<GameObject>();
+            statsPageRef = new CanvasObjectRef<GameObject>();
+
             SetTargetCanvasObjectsByOrientation(OrientationManager.GetCurrentOrientation());
 
             // Initialize timer and action bar animation trigger references
@@ -321,11 +345,11 @@ namespace Solitaire
             bool portraitOrientation = orientation.Equals(Orientations.PORTRAIT);
 
             // Settings Pages
-            mainSettingsPage = portraitOrientation ? portraitMainSettingsPage : landscapeMainSettingsPage;
-            winSettingsPage = portraitOrientation ? portraitWinSettingsPage : landscapeWinSettingsPage;
-            gameplayPage = portraitOrientation ? portraitGameplayPage : landscapeGameplayPage;
-            audioPage = portraitOrientation ? portraitAudioPage : landscapeAudioPage;
-            statsPage = portraitOrientation ? portraitStatsPage : landscapeStatsPage;
+            mainSettingsPageRef.Set(portraitMainSettingsPage, landscapeMainSettingsPage, portraitOrientation);
+            winSettingsPageRef.Set(portraitWinSettingsPage, landscapeWinSettingsPage, portraitOrientation);
+            gameplayPageRef.Set(portraitGameplayPage, landscapeGameplayPage, portraitOrientation);
+            audioPageRef.Set(portraitAudioPage, landscapeAudioPage, portraitOrientation);
+            statsPageRef.Set(portraitStatsPage, landscapeStatsPage, portraitOrientation);
 
             // Audio Sliders
             sldMasterVol = portraitOrientation ? portraitSldMasterVol : landscapeSldMasterVol;
@@ -355,7 +379,7 @@ namespace Solitaire
 
         public GameObject GetWinSettingsPage()
         {
-            return winSettingsPage;
+            return winSettingsPageRef.current;
         }
 
         public GameObject GetHighScoreLabel()
@@ -511,8 +535,17 @@ namespace Solitaire
                 LoadSettings();
             }
 
-            gameplayPage.SetActive(false);
-            mainSettingsPage.SetActive(true);
+            gameplayPageRef.DoAction(() =>
+            {
+                gameplayPageRef.current.SetActive(false);
+                gameplayPageRef.previous.SetActive(false);
+            });
+
+            mainSettingsPageRef.DoAction(() =>
+            {
+                mainSettingsPageRef.current.SetActive(true);
+                mainSettingsPageRef.previous.SetActive(true);
+            });
         }
 
         /**
@@ -533,8 +566,17 @@ namespace Solitaire
                 LoadSettings();
             }
 
-            audioPage.SetActive(false);
-            mainSettingsPage.SetActive(true);
+            audioPageRef.DoAction(() =>
+            {
+                audioPageRef.current.SetActive(false);
+                audioPageRef.previous.SetActive(false);
+            });
+
+            mainSettingsPageRef.DoAction(() =>
+            {
+                mainSettingsPageRef.current.SetActive(true);
+                mainSettingsPageRef.previous.SetActive(true);
+            });
 
         }
 
@@ -543,8 +585,17 @@ namespace Solitaire
          */
         public void CloseStatsSettings()
         {
-            statsPage.SetActive(false);
-            mainSettingsPage.SetActive(true);
+            statsPageRef.DoAction(() =>
+            {
+                statsPageRef.current.SetActive(false);
+                statsPageRef.previous.SetActive(false);
+            });
+
+            mainSettingsPageRef.DoAction(() =>
+            {
+                mainSettingsPageRef.current.SetActive(true);
+                mainSettingsPageRef.previous.SetActive(true);
+            });
         }
 
         /**
