@@ -605,7 +605,8 @@ namespace Solitaire
             // Re-load settings in case an audio source lost scope
             if (hasFocus && !m_firstTimeFocused)
             {
-                SettingsManager.Instance.LoadSettings();
+                // TODO doesn't seem to be needed anymore. Need to ensure this is true
+                //SettingsManager.Instance.LoadSettings();
             }
 
             m_firstTimeFocused = false;

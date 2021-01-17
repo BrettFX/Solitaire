@@ -169,7 +169,7 @@ PlayerSettings:
     iPhone: com.trietech.games.solitaire
   buildNumber:
     iPhone: 5
-  AndroidBundleVersionCode: 6
+  AndroidBundleVersionCode: 7
   AndroidMinSdkVersion: 19
   AndroidTargetSdkVersion: 29
   AndroidPreferredInstallLocation: 1

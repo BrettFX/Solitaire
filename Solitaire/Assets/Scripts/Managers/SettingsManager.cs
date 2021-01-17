@@ -16,6 +16,8 @@ namespace Solitaire
 
         private const float LANDSCAPE_TIMER_LBL_ANCHORED_POS_X_HIDDEN = -150.0f;
         private const float LANDSCAPE_TIMER_LBL_ANCHORED_POS_X_VISIBLE = 150.0f;
+        private const float LANDSCAPE_ACTION_BAR_ANCHORED_POS_Y_HIDDEN = 0.0f;
+        private const float LANDSCAPE_ACTION_BAR_ANCHORED_POS_Y_VISIBLE = 120.0f;
 
         public struct SettingsPage
         {
@@ -140,9 +142,9 @@ namespace Solitaire
         public Slider landscapeSldSfxVol;
 
         // Pointers to respective portrait and landscape objects
-        private Slider sldMasterVol;
-        private Slider sldMusicVol;
-        private Slider sldSfxVol;
+        private CanvasObjectRef<Slider> sldMasterVolRef;
+        private CanvasObjectRef<Slider> sldMusicVolRef;
+        private CanvasObjectRef<Slider> sldSfxVolRef;
 
         [Header("Portrait Settings Lookup")]
         public List<Button> portraitDrivingButtons = new List<Button>();
@@ -182,9 +184,9 @@ namespace Solitaire
         public Slider landscapeSldTimerLabel;
 
         // Pointers to respective portrait and landscape objects
-        private GameObject lblHighScoreNotification;
-        private TMP_Dropdown dpnAutoCompleteTrigger;
-        private Slider sldTimerLabel;
+        private CanvasObjectRef<GameObject> lblHighScoreNotification;
+        private CanvasObjectRef<TMP_Dropdown> dpnAutoCompleteTrigger;
+        private CanvasObjectRef<Slider> sldTimerLabel;
 
         private Dictionary<Button, SettingsPage> m_settingsPagesLookup;
 
@@ -246,6 +248,14 @@ namespace Solitaire
             audioPageRef = new CanvasObjectRef<GameObject>();
             statsPageRef = new CanvasObjectRef<GameObject>();
 
+            sldMasterVolRef = new CanvasObjectRef<Slider>();
+            sldMusicVolRef = new CanvasObjectRef<Slider>();
+            sldSfxVolRef = new CanvasObjectRef<Slider>();
+
+            lblHighScoreNotification = new CanvasObjectRef<GameObject>();
+            dpnAutoCompleteTrigger = new CanvasObjectRef<TMP_Dropdown>();
+            sldTimerLabel = new CanvasObjectRef<Slider>();
+
             SetTargetCanvasObjectsByOrientation(OrientationManager.GetCurrentOrientation());
 
             // Initialize timer and action bar animation trigger references
@@ -270,9 +280,9 @@ namespace Solitaire
         {
             m_settingsSliders = new Slider[]
             {
-                sldMasterVol,
-                sldMusicVol,
-                sldSfxVol
+                sldMasterVolRef.current,
+                sldMusicVolRef.current,
+                sldSfxVolRef.current
             };
 
             // Iterate through settings sliders and set the percent label accordingly
@@ -323,12 +333,99 @@ namespace Solitaire
             }
 
             // Keep the volume settings up to date
-            AudioListener.volume = sldMasterVol.value / 100.0f;
-            music.volume = sldMusicVol.value / 100.0f;
+            AudioListener.volume = sldMasterVolRef.current.value / 100.0f;
+            music.volume = sldMusicVolRef.current.value / 100.0f;
             foreach (AudioSource sfxSource in sfxSources)
             {
-                sfxSource.volume = sldSfxVol.value / 100.0f;
+                sfxSource.volume = sldSfxVolRef.current.value / 100.0f;
             }
+
+            // Keep portrait and landscape sliders in sync with each other
+            // Audio Sliders
+            sldMasterVolRef.DoAction(() =>
+            {
+                if (sldMasterVolRef.previous != null)
+                {
+                    sldMasterVolRef.previous.SetValueWithoutNotify(sldMasterVolRef.current.value);
+                }
+            });
+
+            sldMusicVolRef.DoAction(() =>
+            {
+                if (sldMusicVolRef.previous != null)
+                {
+                    sldMusicVolRef.previous.SetValueWithoutNotify(sldMusicVolRef.current.value);
+                }
+            });
+
+            sldSfxVolRef.DoAction(() =>
+            {
+                if (sldSfxVolRef.previous != null)
+                {
+                    sldSfxVolRef.previous.SetValueWithoutNotify(sldSfxVolRef.current.value);
+                }
+            });
+
+            // Settings pages
+            mainSettingsPageRef.DoAction(() => {
+                if (mainSettingsPageRef.previous != null)
+                {
+                    mainSettingsPageRef.previous.SetActive(mainSettingsPageRef.current.activeInHierarchy);
+                }
+            });
+
+            winSettingsPageRef.DoAction(() => {
+                if (winSettingsPageRef.previous != null)
+                {
+                    winSettingsPageRef.previous.SetActive(winSettingsPageRef.current.activeInHierarchy);
+                }
+            });
+
+            gameplayPageRef.DoAction(() => {
+                if (gameplayPageRef.previous != null)
+                {
+                    gameplayPageRef.previous.SetActive(gameplayPageRef.current.activeInHierarchy);
+                }
+            });
+
+            audioPageRef.DoAction(() => {
+                if (audioPageRef.previous != null)
+                {
+                    audioPageRef.previous.SetActive(audioPageRef.current.activeInHierarchy);
+                }
+            });
+
+            statsPageRef.DoAction(() => {
+                if (statsPageRef.previous != null)
+                {
+                    statsPageRef.previous.SetActive(statsPageRef.current.activeInHierarchy);
+                }
+            });
+
+            // Miscellaneous
+            lblHighScoreNotification.DoAction(() =>
+            {
+                if (lblHighScoreNotification.previous != null)
+                {
+                    lblHighScoreNotification.previous.SetActive(lblHighScoreNotification.current.activeInHierarchy);
+                }
+            });
+
+            dpnAutoCompleteTrigger.DoAction(() =>
+            {
+                if (dpnAutoCompleteTrigger.previous != null)
+                {
+                    dpnAutoCompleteTrigger.previous.SetValueWithoutNotify(dpnAutoCompleteTrigger.current.value);
+                }
+            });
+
+            sldTimerLabel.DoAction(() =>
+            {
+                if (sldTimerLabel.previous != null)
+                {
+                    sldTimerLabel.previous.SetValueWithoutNotify(sldTimerLabel.current.value);
+                }
+            });
         }
 
         /**
@@ -352,9 +449,9 @@ namespace Solitaire
             statsPageRef.Set(portraitStatsPage, landscapeStatsPage, portraitOrientation);
 
             // Audio Sliders
-            sldMasterVol = portraitOrientation ? portraitSldMasterVol : landscapeSldMasterVol;
-            sldMusicVol = portraitOrientation ? portraitSldMusicVol : landscapeSldMusicVol;
-            sldSfxVol = portraitOrientation ? portraitSldSfxVol : landscapeSldSfxVol;
+            sldMasterVolRef.Set(portraitSldMasterVol, landscapeSldMasterVol, portraitOrientation);
+            sldMusicVolRef.Set(portraitSldMusicVol, landscapeSldMusicVol, portraitOrientation);
+            sldSfxVolRef.Set(portraitSldSfxVol, landscapeSldSfxVol, portraitOrientation);
 
             // Settings Lookup
             drivingButtons = portraitOrientation ? portraitDrivingButtons : landscapeDrivingButtons;
@@ -366,12 +463,14 @@ namespace Solitaire
             m_timerAnimTriggerRef = portraitOrientation ? m_portraitTimerAnimTriggerRef : m_landscapeTimerAnimTriggerRef;
 
             // Miscellaneous
-            lblHighScoreNotification = portraitOrientation ? portraitLblHighScoreNotification : landscapeLblHighScoreNotification;
-            dpnAutoCompleteTrigger = portraitOrientation ? portraitDpnAutoCompleteTrigger : landscapeDpnAutoCompleteTrigger;
-            sldTimerLabel = portraitOrientation ? portraitSldTimerLabel : landscapeSldTimerLabel;
+            lblHighScoreNotification.Set(portraitLblHighScoreNotification, landscapeLblHighScoreNotification, portraitOrientation);
+            dpnAutoCompleteTrigger.Set(portraitDpnAutoCompleteTrigger, landscapeDpnAutoCompleteTrigger, portraitOrientation);
+            sldTimerLabel.Set(portraitSldTimerLabel, landscapeSldTimerLabel, portraitOrientation);
 
             // Load saved settings if they exist
-            LoadSettings();
+            //LoadSettings();
+
+            HandleTimerVisibility(false);
 
             // Need to reinitialize based on new values
             InitizlizeConfiguration();
@@ -384,7 +483,7 @@ namespace Solitaire
 
         public GameObject GetHighScoreLabel()
         {
-            return lblHighScoreNotification;
+            return lblHighScoreNotification.current;
         }
 
         /**
@@ -395,21 +494,21 @@ namespace Solitaire
         public void LoadSettings()
         {
             m_loadingSettings = true;
-            sldMasterVol.value = PlayerPrefs.GetFloat(MASTER_VOL_KEY, 1.0f) * 100.0f;
-            OnAudioSliderChange(sldMasterVol);
+            sldMasterVolRef.current.value = PlayerPrefs.GetFloat(MASTER_VOL_KEY, 1.0f) * 100.0f;
+            OnAudioSliderChange(sldMasterVolRef.current);
 
-            sldMusicVol.value = PlayerPrefs.GetFloat(MUSIC_VOL_KEY, 1.0f) * 100.0f;
-            OnAudioSliderChange(sldMusicVol);
+            sldMusicVolRef.current.value = PlayerPrefs.GetFloat(MUSIC_VOL_KEY, 1.0f) * 100.0f;
+            OnAudioSliderChange(sldMusicVolRef.current);
 
-            sldSfxVol.value = PlayerPrefs.GetFloat(SFX_VOL_KEY, 1.0f) * 100.0f;
-            OnAudioSliderChange(sldSfxVol);
+            sldSfxVolRef.current.value = PlayerPrefs.GetFloat(SFX_VOL_KEY, 1.0f) * 100.0f;
+            OnAudioSliderChange(sldSfxVolRef.current);
 
             // Double tap is the default (1)
             m_autoCompleteTriggerCode = PlayerPrefs.GetInt(AUTO_COMPLETE_TRIGGER_KEY, 1);
-            dpnAutoCompleteTrigger.SetValueWithoutNotify(m_autoCompleteTriggerCode);
+            dpnAutoCompleteTrigger.current.SetValueWithoutNotify(m_autoCompleteTriggerCode);
 
             m_timerVisible = PlayerPrefs.GetInt(TIMER_VISIBILITY_KEY, 1) == 1;
-            sldTimerLabel.SetValueWithoutNotify(m_timerVisible ? 1 : 0);
+            sldTimerLabel.current.SetValueWithoutNotify(m_timerVisible ? 1 : 0);
 
             // Toggle visibility of timer as needed (don't animate)
             HandleTimerVisibility(false);
@@ -489,6 +588,14 @@ namespace Solitaire
             {
                 oppositeTimerRect = landscapeTimerAnimator.GetComponent<RectTransform>();
                 newAnchoredX = m_timerVisible ? LANDSCAPE_TIMER_LBL_ANCHORED_POS_X_VISIBLE : LANDSCAPE_TIMER_LBL_ANCHORED_POS_X_HIDDEN;
+
+                // Need to move the action buttons as well
+                float newAnchoredY = m_timerVisible ? LANDSCAPE_ACTION_BAR_ANCHORED_POS_Y_VISIBLE : LANDSCAPE_ACTION_BAR_ANCHORED_POS_Y_HIDDEN;
+                RectTransform actionBarRect = landscapeActionBarAnimator.GetComponent<RectTransform>();
+                actionBarRect.anchoredPosition = new Vector2(actionBarRect.anchoredPosition.x, newAnchoredY);
+
+                Debug.Log("Set Action Bar to new anchored position: " + actionBarRect.anchoredPosition);
+                Debug.Log("Set Action Bar to new position: " + actionBarRect.position);
             }
             else
             {
@@ -498,6 +605,10 @@ namespace Solitaire
 
             // Set the anchored position for the timer label that isn't currently active/visible
             oppositeTimerRect.anchoredPosition = new Vector2(newAnchoredX, oppositeTimerRect.anchoredPosition.y);
+
+            //Debug.Log("Portrait Orientation: " + portraitOrientation);
+            //Debug.Log("Opposite Timer Rect: " + oppositeTimerRect);
+            //Debug.Log("Timer Visible: " + m_timerVisible);
         }
 
         /**
@@ -566,18 +677,8 @@ namespace Solitaire
                 LoadSettings();
             }
 
-            audioPageRef.DoAction(() =>
-            {
-                audioPageRef.current.SetActive(false);
-                audioPageRef.previous.SetActive(false);
-            });
-
-            mainSettingsPageRef.DoAction(() =>
-            {
-                mainSettingsPageRef.current.SetActive(true);
-                mainSettingsPageRef.previous.SetActive(true);
-            });
-
+            audioPageRef.current.SetActive(false);
+            mainSettingsPageRef.current.SetActive(true);
         }
 
         /**
@@ -585,17 +686,8 @@ namespace Solitaire
          */
         public void CloseStatsSettings()
         {
-            statsPageRef.DoAction(() =>
-            {
-                statsPageRef.current.SetActive(false);
-                statsPageRef.previous.SetActive(false);
-            });
-
-            mainSettingsPageRef.DoAction(() =>
-            {
-                mainSettingsPageRef.current.SetActive(true);
-                mainSettingsPageRef.previous.SetActive(true);
-            });
+            statsPageRef.current.SetActive(false);
+            mainSettingsPageRef.current.SetActive(true);
         }
 
         /**
