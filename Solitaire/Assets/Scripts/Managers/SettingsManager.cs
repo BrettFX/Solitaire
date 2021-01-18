@@ -177,16 +177,19 @@ namespace Solitaire
         public GameObject portraitLblHighScoreNotification;
         public TMP_Dropdown portraitDpnAutoCompleteTrigger;
         public Slider portraitSldTimerLabel;
+        public ScrollRect portraitStatsScrollRect;
 
         [Header("Landscape Miscellaneous")]
         public GameObject landscapeLblHighScoreNotification;
         public TMP_Dropdown landscapeDpnAutoCompleteTrigger;
         public Slider landscapeSldTimerLabel;
+        public ScrollRect landscapeStatsScrollRect;
 
         // Pointers to respective portrait and landscape objects
-        private CanvasObjectRef<GameObject> lblHighScoreNotification;
-        private CanvasObjectRef<TMP_Dropdown> dpnAutoCompleteTrigger;
-        private CanvasObjectRef<Slider> sldTimerLabel;
+        private CanvasObjectRef<GameObject> lblHighScoreNotificationRef;
+        private CanvasObjectRef<TMP_Dropdown> dpnAutoCompleteTriggerRef;
+        private CanvasObjectRef<Slider> sldTimerLabelRef;
+        private CanvasObjectRef<ScrollRect> statsScrollRectRef;
 
         private Dictionary<Button, SettingsPage> m_settingsPagesLookup;
 
@@ -252,9 +255,10 @@ namespace Solitaire
             sldMusicVolRef = new CanvasObjectRef<Slider>();
             sldSfxVolRef = new CanvasObjectRef<Slider>();
 
-            lblHighScoreNotification = new CanvasObjectRef<GameObject>();
-            dpnAutoCompleteTrigger = new CanvasObjectRef<TMP_Dropdown>();
-            sldTimerLabel = new CanvasObjectRef<Slider>();
+            lblHighScoreNotificationRef = new CanvasObjectRef<GameObject>();
+            dpnAutoCompleteTriggerRef = new CanvasObjectRef<TMP_Dropdown>();
+            sldTimerLabelRef = new CanvasObjectRef<Slider>();
+            statsScrollRectRef = new CanvasObjectRef<ScrollRect>();
 
             SetTargetCanvasObjectsByOrientation(OrientationManager.GetCurrentOrientation());
 
@@ -403,27 +407,27 @@ namespace Solitaire
             });
 
             // Miscellaneous
-            lblHighScoreNotification.DoAction(() =>
+            lblHighScoreNotificationRef.DoAction(() =>
             {
-                if (lblHighScoreNotification.previous != null)
+                if (lblHighScoreNotificationRef.previous != null)
                 {
-                    lblHighScoreNotification.previous.SetActive(lblHighScoreNotification.current.activeInHierarchy);
+                    lblHighScoreNotificationRef.previous.SetActive(lblHighScoreNotificationRef.current.activeInHierarchy);
                 }
             });
 
-            dpnAutoCompleteTrigger.DoAction(() =>
+            dpnAutoCompleteTriggerRef.DoAction(() =>
             {
-                if (dpnAutoCompleteTrigger.previous != null)
+                if (dpnAutoCompleteTriggerRef.previous != null)
                 {
-                    dpnAutoCompleteTrigger.previous.SetValueWithoutNotify(dpnAutoCompleteTrigger.current.value);
+                    dpnAutoCompleteTriggerRef.previous.SetValueWithoutNotify(dpnAutoCompleteTriggerRef.current.value);
                 }
             });
 
-            sldTimerLabel.DoAction(() =>
+            sldTimerLabelRef.DoAction(() =>
             {
-                if (sldTimerLabel.previous != null)
+                if (sldTimerLabelRef.previous != null)
                 {
-                    sldTimerLabel.previous.SetValueWithoutNotify(sldTimerLabel.current.value);
+                    sldTimerLabelRef.previous.SetValueWithoutNotify(sldTimerLabelRef.current.value);
                 }
             });
         }
@@ -463,9 +467,21 @@ namespace Solitaire
             m_timerAnimTriggerRef = portraitOrientation ? m_portraitTimerAnimTriggerRef : m_landscapeTimerAnimTriggerRef;
 
             // Miscellaneous
-            lblHighScoreNotification.Set(portraitLblHighScoreNotification, landscapeLblHighScoreNotification, portraitOrientation);
-            dpnAutoCompleteTrigger.Set(portraitDpnAutoCompleteTrigger, landscapeDpnAutoCompleteTrigger, portraitOrientation);
-            sldTimerLabel.Set(portraitSldTimerLabel, landscapeSldTimerLabel, portraitOrientation);
+            lblHighScoreNotificationRef.Set(portraitLblHighScoreNotification, landscapeLblHighScoreNotification, portraitOrientation);
+            dpnAutoCompleteTriggerRef.Set(portraitDpnAutoCompleteTrigger, landscapeDpnAutoCompleteTrigger, portraitOrientation);
+            sldTimerLabelRef.Set(portraitSldTimerLabel, landscapeSldTimerLabel, portraitOrientation);
+
+            statsScrollRectRef.DoAction(() =>
+            {
+                if (statsScrollRectRef.previous != null)
+                {
+                    // Keep the vertical scroll position in sync between the screen orientations
+                    float currVertPos = statsScrollRectRef.current.verticalNormalizedPosition;
+                    statsScrollRectRef.previous.verticalNormalizedPosition = currVertPos;
+                }
+            });
+
+            statsScrollRectRef.Set(portraitStatsScrollRect, landscapeStatsScrollRect, portraitOrientation);
 
             // Load saved settings if they exist
             //LoadSettings();
@@ -483,7 +499,7 @@ namespace Solitaire
 
         public GameObject GetHighScoreLabel()
         {
-            return lblHighScoreNotification.current;
+            return lblHighScoreNotificationRef.current;
         }
 
         /**
@@ -505,10 +521,10 @@ namespace Solitaire
 
             // Double tap is the default (1)
             m_autoCompleteTriggerCode = PlayerPrefs.GetInt(AUTO_COMPLETE_TRIGGER_KEY, 1);
-            dpnAutoCompleteTrigger.current.SetValueWithoutNotify(m_autoCompleteTriggerCode);
+            dpnAutoCompleteTriggerRef.current.SetValueWithoutNotify(m_autoCompleteTriggerCode);
 
             m_timerVisible = PlayerPrefs.GetInt(TIMER_VISIBILITY_KEY, 1) == 1;
-            sldTimerLabel.current.SetValueWithoutNotify(m_timerVisible ? 1 : 0);
+            sldTimerLabelRef.current.SetValueWithoutNotify(m_timerVisible ? 1 : 0);
 
             // Toggle visibility of timer as needed (don't animate)
             HandleTimerVisibility(false);
