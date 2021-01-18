@@ -16,8 +16,8 @@ namespace Solitaire
 
         private const float LANDSCAPE_TIMER_LBL_ANCHORED_POS_X_HIDDEN = -150.0f;
         private const float LANDSCAPE_TIMER_LBL_ANCHORED_POS_X_VISIBLE = 150.0f;
-        private const float LANDSCAPE_ACTION_BAR_ANCHORED_POS_Y_HIDDEN = 0.0f;
-        private const float LANDSCAPE_ACTION_BAR_ANCHORED_POS_Y_VISIBLE = 120.0f;
+        private const float LANDSCAPE_ACTION_BAR_ANCHORED_POS_Y_HIDDEN = 120.0f;
+        private const float LANDSCAPE_ACTION_BAR_ANCHORED_POS_Y_VISIBLE = 0.0f;
 
         public struct SettingsPage
         {
@@ -591,11 +591,8 @@ namespace Solitaire
 
                 // Need to move the action buttons as well
                 float newAnchoredY = m_timerVisible ? LANDSCAPE_ACTION_BAR_ANCHORED_POS_Y_VISIBLE : LANDSCAPE_ACTION_BAR_ANCHORED_POS_Y_HIDDEN;
-                RectTransform actionBarRect = landscapeActionBarAnimator.GetComponent<RectTransform>();
+                RectTransform actionBarRect = actionBarAnimator.GetComponent<RectTransform>();
                 actionBarRect.anchoredPosition = new Vector2(actionBarRect.anchoredPosition.x, newAnchoredY);
-
-                Debug.Log("Set Action Bar to new anchored position: " + actionBarRect.anchoredPosition);
-                Debug.Log("Set Action Bar to new position: " + actionBarRect.position);
             }
             else
             {
@@ -605,10 +602,6 @@ namespace Solitaire
 
             // Set the anchored position for the timer label that isn't currently active/visible
             oppositeTimerRect.anchoredPosition = new Vector2(newAnchoredX, oppositeTimerRect.anchoredPosition.y);
-
-            //Debug.Log("Portrait Orientation: " + portraitOrientation);
-            //Debug.Log("Opposite Timer Rect: " + oppositeTimerRect);
-            //Debug.Log("Timer Visible: " + m_timerVisible);
         }
 
         /**
