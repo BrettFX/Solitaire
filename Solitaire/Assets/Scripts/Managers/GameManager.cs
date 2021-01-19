@@ -8,6 +8,7 @@ using UnityEngine.UI;
 using static Solitaire.Card;
 using static Solitaire.Move;
 using static Solitaire.OrientationManager;
+using static Solitaire.Utils;
 
 namespace Solitaire
 {
@@ -99,7 +100,7 @@ namespace Solitaire
         private GameObject settingsContainer;
         private Button btnUndo;
         private Button btnRedo;
-        private GameObject btnAutoWin;
+        private CanvasObjectRef<GameObject> btnAutoWinRef;
         private Button btnConfirmReset;
         private Button btnSettings;
         private TextMeshProUGUI lblTimer;
@@ -172,6 +173,8 @@ namespace Solitaire
             m_undoneMoves = new CustomStack<Move>();
             m_firstTimeFocused = true;
 
+            btnAutoWinRef = new CanvasObjectRef<GameObject>();
+
             // Only load card sprites and spawn stack if not using the demo scene (for unit testing support)
             m_demoMode = SceneManager.GetActiveScene().name.Contains("Demo");
             if (!m_demoMode)
@@ -219,13 +222,26 @@ namespace Solitaire
                     {
                         if (IsWinnableState())
                         {
-                            // Need various checks to make sure the auto-win button doesn't inadvertently reappear 
-                            if (!btnAutoWin.activeInHierarchy && !m_blocked && !m_autoWinComplete)
-                                btnAutoWin.SetActive(true);
+                            // Need various checks to make sure the auto-win button doesn't inadvertently reappear
+                            btnAutoWinRef.DoAction(() =>
+                            {
+                                if (!btnAutoWinRef.current.activeInHierarchy && !m_blocked && !m_autoWinComplete)
+                                {
+                                    btnAutoWinRef.current.SetActive(true);
+                                    btnAutoWinRef.previous.SetActive(true);
+                                }
+                            });
                         }
                         else
                         {
-                            if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
+                            btnAutoWinRef.DoAction(() =>
+                            {
+                                if (btnAutoWinRef.current.activeInHierarchy)
+                                {
+                                    btnAutoWinRef.current.SetActive(false);
+                                    btnAutoWinRef.previous.SetActive(false);
+                                }
+                            });
                         }
                     }
 
@@ -241,7 +257,14 @@ namespace Solitaire
                     m_moves.Clear();
                     m_undoneMoves.Clear();
 
-                    if (btnAutoWin.activeInHierarchy) btnAutoWin.SetActive(false);
+                    btnAutoWinRef.DoAction(() =>
+                    {
+                        if (btnAutoWinRef.current.activeInHierarchy)
+                        {
+                            btnAutoWinRef.current.SetActive(false);
+                            btnAutoWinRef.previous.SetActive(false);
+                        }
+                    });
 
                     // Play winning sound if it hasn't already been played
                     AudioSource winSound = SettingsManager.Instance.winSound;
@@ -333,7 +356,10 @@ namespace Solitaire
             settingsContainer = portraitOrientation ? portraitSettingsContainer : landscapeSettingsContainer;
             btnUndo = portraitOrientation ? portraitBtnUndo : landscapeBtnUndo;
             btnRedo = portraitOrientation ? portraitBtnRedo : landscapeBtnRedo;
-            btnAutoWin = portraitOrientation ? portraitBtnAutoWin : landscapeBtnAutoWin;
+
+            // Keep track of auto win button references to keep the active state in sync between orientations
+            btnAutoWinRef.Set(portraitBtnAutoWin, landscapeBtnAutoWin, portraitOrientation);
+
             btnConfirmReset = portraitOrientation ? portraitBtnConfirmReset : landscapeBtnConfirmReset;
             btnSettings = portraitOrientation ? portraitBtnSettings : landscapeBtnSettings;
             lblTimer = portraitOrientation ? portraitLblTimer : landscapeLblTimer;
@@ -748,8 +774,15 @@ namespace Solitaire
                 if (!IsWinnableState())
                     return;
 
-                btnAutoWin.SetActive(false);            // Hide the auto-win button while processing
-                StartCoroutine(AutoWinCoroutine());     // Win the game
+                // Hide the auto-win button while processing
+                btnAutoWinRef.DoAction(() =>
+                {
+                    btnAutoWinRef.current.SetActive(false);
+                    btnAutoWinRef.previous.SetActive(false);
+                });
+
+                // Win the game
+                StartCoroutine(AutoWinCoroutine());     
             }
         }
 

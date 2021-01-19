@@ -1,9 +1,27 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Solitaire
 {
     public class Utils
     {
+        public class CanvasObjectRef<T>
+        {
+            public T current;
+            public T previous;
+
+            public void Set(T portraitObj, T landscapeObj, bool portrait)
+            {
+                current = portrait ? portraitObj : landscapeObj;
+                previous = portrait ? landscapeObj : portraitObj;
+            }
+
+            public void DoAction(Action a)
+            {
+                a.Invoke();
+            }
+        }
+
         public static string GetTimestamp(float milliseconds)
         {
             float t = milliseconds / 1000.0f;

@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using static Solitaire.OrientationManager;
+using static Solitaire.Utils;
 
 namespace Solitaire
 {
@@ -69,22 +70,7 @@ namespace Solitaire
             }
         }
 
-        class CanvasObjectRef<T>
-        {
-            public T current;
-            public T previous;
-
-            public void Set(T portraitObj, T landscapeObj, bool portrait)
-            {
-                current = portrait ? portraitObj : landscapeObj;
-                previous = portrait ? landscapeObj : portraitObj;
-            }
-
-            public void DoAction(Action a)
-            {
-                a.Invoke();
-            }
-        }
+       
 
         public const string MASTER_VOL_KEY = "MasterVolume";
         public const string MUSIC_VOL_KEY = "MusicVolume";
